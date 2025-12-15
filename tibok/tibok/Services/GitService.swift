@@ -1,0 +1,397 @@
+//
+//  GitService.swift
+//  tibok
+//
+//  Git integration service for executing git commands and parsing results.
+//
+
+import Foundation
+
+// MARK: - Git File Status
+
+enum GitFileStatus: Hashable {
+    case untracked      // ? - New file not in git
+    case modified       // M - Modified in working tree (unstaged)
+    case added          // A - Staged new file
+    case deleted        // D - Deleted
+    case renamed        // R - Renamed
+    case copied         // C - Copied
+    case unmerged       // U - Conflict
+    case ignored        // ! - In .gitignore
+    case staged         // Staged modification
+    case stagedDeleted  // Staged deletion
+    case clean          // No changes
+
+    var color: String {
+        switch self {
+        case .modified: return "blue"
+        case .added, .staged: return "green"
+        case .untracked: return "yellow"
+        case .unmerged: return "red"
+        case .deleted, .stagedDeleted: return "gray"
+        default: return "clear"
+        }
+    }
+
+    var displayName: String {
+        switch self {
+        case .untracked: return "Untracked"
+        case .modified: return "Modified"
+        case .added: return "Added"
+        case .deleted: return "Deleted"
+        case .renamed: return "Renamed"
+        case .copied: return "Copied"
+        case .unmerged: return "Conflict"
+        case .ignored: return "Ignored"
+        case .staged: return "Staged"
+        case .stagedDeleted: return "Deleted (staged)"
+        case .clean: return "Clean"
+        }
+    }
+
+    var isStaged: Bool {
+        switch self {
+        case .added, .staged, .stagedDeleted, .renamed, .copied:
+            return true
+        default:
+            return false
+        }
+    }
+}
+
+// MARK: - Git Changed File
+
+struct GitChangedFile: Identifiable, Hashable {
+    let id: URL
+    let url: URL
+    let filename: String
+    let status: GitFileStatus
+    let isStaged: Bool
+
+    init(url: URL, status: GitFileStatus, isStaged: Bool) {
+        self.id = url
+        self.url = url
+        self.filename = url.lastPathComponent
+        self.status = status
+        self.isStaged = isStaged
+    }
+}
+
+// MARK: - Git Service
+
+@MainActor
+class GitService: ObservableObject {
+    static let shared = GitService()
+
+    private init() {}
+
+    // MARK: - Repository Detection
+
+    /// Check if directory is inside a git repository
+    func isGitRepository(at url: URL) -> Bool {
+        return getRepositoryRoot(for: url) != nil
+    }
+
+    /// Get the root directory of the git repository containing the given path
+    func getRepositoryRoot(for url: URL) -> URL? {
+        let result = runGitCommand(["rev-parse", "--show-toplevel"], in: url)
+        guard let output = result.output, result.exitCode == 0 else {
+            return nil
+        }
+        let path = output.trimmingCharacters(in: .whitespacesAndNewlines)
+        return path.isEmpty ? nil : URL(fileURLWithPath: path)
+    }
+
+    // MARK: - Branch Operations
+
+    /// Get the current branch name
+    func getCurrentBranch(for repoURL: URL) -> String? {
+        let result = runGitCommand(["branch", "--show-current"], in: repoURL)
+        guard let output = result.output, result.exitCode == 0 else {
+            return nil
+        }
+        let branch = output.trimmingCharacters(in: .whitespacesAndNewlines)
+        return branch.isEmpty ? nil : branch
+    }
+
+    /// Get list of all local branches
+    func getBranches(for repoURL: URL) -> [String] {
+        let result = runGitCommand(["branch", "--format=%(refname:short)"], in: repoURL)
+        guard let output = result.output, result.exitCode == 0 else {
+            return []
+        }
+        return output.components(separatedBy: .newlines)
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }
+    }
+
+    /// Switch to a different branch
+    func checkout(branch: String, in repoURL: URL) -> Bool {
+        let result = runGitCommand(["checkout", branch], in: repoURL)
+        return result.exitCode == 0
+    }
+
+    // MARK: - Status Operations
+
+    /// Get status for all changed files in the repository
+    func getChangedFiles(for repoURL: URL) -> [GitChangedFile] {
+        let result = runGitCommand(["status", "--porcelain", "-uall"], in: repoURL)
+        guard let output = result.output, result.exitCode == 0 else {
+            return []
+        }
+
+        var files: [GitChangedFile] = []
+
+        for line in output.components(separatedBy: .newlines) {
+            guard line.count >= 3 else { continue }
+
+            let indexStatus = line[line.startIndex]
+            let workTreeStatus = line[line.index(after: line.startIndex)]
+            let filePath = String(line.dropFirst(3))
+
+            // Handle renames (format: "R  old -> new")
+            let actualPath: String
+            if filePath.contains(" -> ") {
+                actualPath = String(filePath.split(separator: " -> ").last ?? Substring(filePath))
+            } else {
+                actualPath = filePath
+            }
+
+            let fileURL = repoURL.appendingPathComponent(actualPath)
+
+            // Parse staged status (index column)
+            if indexStatus != " " && indexStatus != "?" {
+                let status = parseGitStatus(index: indexStatus, workTree: " ")
+                if status != .clean {
+                    files.append(GitChangedFile(url: fileURL, status: status, isStaged: true))
+                }
+            }
+
+            // Parse unstaged status (work tree column)
+            if workTreeStatus != " " || indexStatus == "?" {
+                let status = parseGitStatus(index: indexStatus, workTree: workTreeStatus)
+                if status != .clean {
+                    // Don't duplicate if already added as staged
+                    if !files.contains(where: { $0.url == fileURL && $0.isStaged }) || workTreeStatus != " " {
+                        files.append(GitChangedFile(url: fileURL, status: status, isStaged: false))
+                    }
+                }
+            }
+        }
+
+        return files
+    }
+
+    /// Get status for a specific file
+    func getFileStatus(for fileURL: URL, in repoURL: URL) -> GitFileStatus {
+        let relativePath = fileURL.path.replacingOccurrences(of: repoURL.path + "/", with: "")
+        let result = runGitCommand(["status", "--porcelain", relativePath], in: repoURL)
+
+        guard let output = result.output, result.exitCode == 0 else {
+            return .clean
+        }
+
+        let line = output.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard line.count >= 2 else {
+            return .clean
+        }
+
+        let indexStatus = line[line.startIndex]
+        let workTreeStatus = line[line.index(after: line.startIndex)]
+
+        return parseGitStatus(index: indexStatus, workTree: workTreeStatus)
+    }
+
+    /// Get dictionary of file statuses for all files in repo
+    func getFileStatuses(for repoURL: URL) -> [URL: GitFileStatus] {
+        let changedFiles = getChangedFiles(for: repoURL)
+        var statuses: [URL: GitFileStatus] = [:]
+
+        for file in changedFiles {
+            // Prefer unstaged status for display (shows current working tree state)
+            if !file.isStaged || statuses[file.url] == nil {
+                statuses[file.url] = file.status
+            }
+        }
+
+        return statuses
+    }
+
+    private func parseGitStatus(index: Character, workTree: Character) -> GitFileStatus {
+        // Untracked files
+        if index == "?" && workTree == "?" {
+            return .untracked
+        }
+
+        // Ignored files
+        if index == "!" && workTree == "!" {
+            return .ignored
+        }
+
+        // Unmerged (conflict)
+        if index == "U" || workTree == "U" ||
+           (index == "A" && workTree == "A") ||
+           (index == "D" && workTree == "D") {
+            return .unmerged
+        }
+
+        // Check work tree status first (unstaged changes)
+        switch workTree {
+        case "M": return .modified
+        case "D": return .deleted
+        default: break
+        }
+
+        // Check index status (staged changes)
+        switch index {
+        case "M": return .staged
+        case "A": return .added
+        case "D": return .stagedDeleted
+        case "R": return .renamed
+        case "C": return .copied
+        default: break
+        }
+
+        return .clean
+    }
+
+    // MARK: - Staging Operations
+
+    /// Stage files for commit
+    func stageFiles(_ urls: [URL], in repoURL: URL) -> Bool {
+        let paths = urls.map { $0.path }
+        let result = runGitCommand(["add"] + paths, in: repoURL)
+        return result.exitCode == 0
+    }
+
+    /// Stage all changes
+    func stageAll(in repoURL: URL) -> Bool {
+        let result = runGitCommand(["add", "-A"], in: repoURL)
+        return result.exitCode == 0
+    }
+
+    /// Unstage files
+    func unstageFiles(_ urls: [URL], in repoURL: URL) -> Bool {
+        let paths = urls.map { $0.path }
+        let result = runGitCommand(["reset", "HEAD"] + paths, in: repoURL)
+        return result.exitCode == 0
+    }
+
+    /// Unstage all files
+    func unstageAll(in repoURL: URL) -> Bool {
+        let result = runGitCommand(["reset", "HEAD"], in: repoURL)
+        return result.exitCode == 0
+    }
+
+    /// Discard changes to files (restore to HEAD)
+    func discardChanges(_ urls: [URL], in repoURL: URL) -> Bool {
+        let paths = urls.map { $0.path }
+        let result = runGitCommand(["checkout", "--"] + paths, in: repoURL)
+        return result.exitCode == 0
+    }
+
+    // MARK: - Commit Operations
+
+    /// Commit staged changes with message
+    func commit(message: String, in repoURL: URL) -> (success: Bool, error: String?) {
+        let result = runGitCommand(["commit", "-m", message], in: repoURL)
+        if result.exitCode == 0 {
+            return (true, nil)
+        } else {
+            return (false, result.error ?? "Commit failed")
+        }
+    }
+
+    // MARK: - Remote Operations
+
+    /// Push to remote
+    func push(in repoURL: URL) -> (success: Bool, error: String?) {
+        let result = runGitCommand(["push"], in: repoURL)
+        if result.exitCode == 0 {
+            return (true, nil)
+        } else {
+            return (false, result.error ?? "Push failed")
+        }
+    }
+
+    /// Pull from remote
+    func pull(in repoURL: URL) -> (success: Bool, error: String?) {
+        let result = runGitCommand(["pull"], in: repoURL)
+        if result.exitCode == 0 {
+            return (true, nil)
+        } else {
+            return (false, result.error ?? "Pull failed")
+        }
+    }
+
+    /// Check if there are unpushed commits
+    func hasUnpushedCommits(in repoURL: URL) -> Bool {
+        let result = runGitCommand(["log", "@{u}..", "--oneline"], in: repoURL)
+        guard let output = result.output, result.exitCode == 0 else {
+            return false
+        }
+        return !output.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    /// Check if there are commits to pull
+    func hasUnpulledCommits(in repoURL: URL) -> Bool {
+        // First fetch to update remote refs
+        _ = runGitCommand(["fetch"], in: repoURL)
+
+        let result = runGitCommand(["log", "..@{u}", "--oneline"], in: repoURL)
+        guard let output = result.output, result.exitCode == 0 else {
+            return false
+        }
+        return !output.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    // MARK: - Diff Operations
+
+    /// Get diff for a file
+    func getDiff(for fileURL: URL, in repoURL: URL, staged: Bool = false) -> String? {
+        let relativePath = fileURL.path.replacingOccurrences(of: repoURL.path + "/", with: "")
+        var args = ["diff"]
+        if staged {
+            args.append("--cached")
+        }
+        args.append(relativePath)
+
+        let result = runGitCommand(args, in: repoURL)
+        return result.output
+    }
+
+    // MARK: - Git Command Execution
+
+    private struct GitResult {
+        let output: String?
+        let error: String?
+        let exitCode: Int32
+    }
+
+    private func runGitCommand(_ arguments: [String], in directory: URL) -> GitResult {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/git")
+        process.arguments = arguments
+        process.currentDirectoryURL = directory
+
+        let outputPipe = Pipe()
+        let errorPipe = Pipe()
+        process.standardOutput = outputPipe
+        process.standardError = errorPipe
+
+        do {
+            try process.run()
+            process.waitUntilExit()
+
+            let outputData = outputPipe.fileHandleForReading.readDataToEndOfFile()
+            let errorData = errorPipe.fileHandleForReading.readDataToEndOfFile()
+
+            let output = String(data: outputData, encoding: .utf8)
+            let error = String(data: errorData, encoding: .utf8)
+
+            return GitResult(output: output, error: error, exitCode: process.terminationStatus)
+        } catch {
+            return GitResult(output: nil, error: error.localizedDescription, exitCode: -1)
+        }
+    }
+}

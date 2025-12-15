@@ -1,0 +1,120 @@
+# macOS tibok - Swift Package Manager + Xcode Project
+
+# =====================================
+# Swift Package Manager
+# =====================================
+.build/
+.swiftpm/
+Package.resolved
+
+# =====================================
+# Xcode
+# =====================================
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata/
+*.moved-aside
+*.xccheckout
+*.xcscmblueprint
+*.swp
+*~
+
+# =====================================
+# macOS
+# =====================================
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# =====================================
+# Build Products
+# =====================================
+*.app
+*.dSYM
+*.framework
+*.xcarchive
+*.ipa
+*.xcframework
+*.bundle
+
+# =====================================
+# IDEs
+# =====================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# =====================================
+# Logs and Archives
+# =====================================
+*.log
+*.xcactivitylog
+build/
+DerivedData/
+
+# =====================================
+# Testing
+# =====================================
+*.xctest
+test_output/
+coverage/
+
+# =====================================
+# Temporary Files
+# =====================================
+*.tmp
+*.temp
+.cache/
+tmp/
+temp/
+
+# =====================================
+# App-specific
+# =====================================
+# Custom build script outputs
+tibok/.build/
+
+# =====================================
+# Secrets and Config
+# =====================================
+.env
+.env.local
+config.local.*
+secrets.*
+
+# =====================================
+# Documentation Build
+# =====================================
+docs/build/
+_site/
+
+# =====================================
+# Planning
+# =====================================
+planning/
+design_docs/
+/progress/
+.claude/
+.cursorrules
