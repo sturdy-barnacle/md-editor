@@ -94,5 +94,4 @@ This repository uses GitHub Actions for CI/CD and Claude Code integration. To en
 
 ## License
 
-Core: MIT
-Premium: Proprietary
+Core: GPL
