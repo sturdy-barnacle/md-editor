@@ -7,13 +7,14 @@ A native macOS markdown editor built with SwiftUI for Apple Silicon.
 ## Features
 
 - **Fast & Native** - Built with SwiftUI, optimized for Apple Silicon
-- **Live Preview** - Split view with synchronized scrolling
-- **Local-First** - Your files stay on your machine, with optional iCloud sync
-- **Git Integration** - Clone, commit, push without leaving the app
-- **Jekyll Publishing** - Export to Jekyll format and create PRs directly
-- **AI Assistance** - Writing suggestions powered by Claude
-- **Quick Actions** - Command palette (⌘K) and slash commands
-- **Export Options** - PDF, HTML, and Markdown with frontmatter
+- **Live Preview** - Side-by-side editor and rendered preview
+- **Local-First** - Your files stay on your machine
+- **Git Integration** - Stage, commit, push/pull without leaving the app
+- **35+ Slash Commands** - Quick formatting with `/` commands
+- **Command Palette** - Access all actions with ⌘K
+- **Export Options** - PDF, HTML, and plain text
+- **Tabs** - Multiple documents open simultaneously
+- **Math/LaTeX** - Offline KaTeX rendering
 
 ## Requirements
 
@@ -54,23 +55,17 @@ Build with Xcode 15+ and run on your Mac.
 ### Git Workflow
 1. Open a folder that's a Git repository
 2. Edit your markdown files
-3. Commit with `⌘⇧C`
-4. Push to remote
-
-### Jekyll Publishing
-1. Write your post
-2. Export → Jekyll Post
-3. Select target repository
-4. Create PR automatically
+3. Stage changes in the sidebar Git panel
+4. Commit with `⌘⇧K`
+5. Push to remote
 
 ## Documentation
 
-- [Architecture](ARCHITECTURE.md) - Technical design and system architecture
-- [PRD](PRD.md) - Product requirements and feature specifications
+- [Roadmap](tibok/planning/roadmap.md) - Development roadmap and milestones
 
 ## Development
 
-See [CLAUDE.md](CLAUDE.md) for development guidelines and [progress/](progress/) for daily progress notes.
+See [CLAUDE.md](tibok/CLAUDE.md) for development guidelines and [progress/](tibok/progress/) for daily progress notes.
 
 ### GitHub Actions Setup
 

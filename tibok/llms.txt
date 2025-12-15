@@ -1,0 +1,29 @@
+# tibok
+
+> A native macOS markdown editor built with SwiftUI for Apple Silicon. Features live preview, Git integration, 35+ slash commands, tabs, and offline KaTeX rendering.
+
+## Documentation
+
+- [User Guide](user_docs/README.md): Main documentation index with quick start and interface overview
+- [FAQ](user_docs/FAQ.md): Frequently asked questions and troubleshooting
+
+## Features
+
+- [Keyboard Shortcuts](user_docs/features/keyboard-shortcuts.md): Complete keyboard shortcut reference
+- [Slash Commands](user_docs/features/slash-commands.md): 30+ slash commands for quick formatting
+- [Git Integration](user_docs/features/git-integration.md): Stage, commit, push/pull workflows
+- [Preview](user_docs/features/preview.md): Markdown preview with syntax highlighting and KaTeX
+- [Workspace](user_docs/features/workspace.md): File and folder management
+- [Image Handling](user_docs/features/image-handling.md): Drag & drop, paste, and assets folder
+- [Find & Replace](user_docs/features/find-replace.md): Search and replace functionality
+
+## Development
+
+- [CLAUDE.md](CLAUDE.md): Development guidelines, architecture, and build instructions
+- [Changelog](CHANGELOG.md): Version history and release notes
+- [Roadmap](planning/roadmap.md): Development roadmap and future plans
+
+## Optional
+
+- [Progress Notes](progress/): Daily development session notes
+- [User Stories](planning/user-stories/): Feature planning documents
