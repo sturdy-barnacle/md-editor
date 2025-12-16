@@ -78,8 +78,8 @@ enum L10n {
 }
 
 enum AppURLs {
-    static let issues = URL(string: "https://github.com/anthropics/tibok/issues")!
-    static let website = URL(string: "https://github.com/anthropics/tibok")
+    static let issues = URL(string: "https://github.com/sturdy-barnacle/md-editor/issues")!
+    static let website = URL(string: "https://tibok.app")
 }
 
 enum SettingsKeys {

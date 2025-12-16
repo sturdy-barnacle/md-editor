@@ -230,7 +230,7 @@ struct tibokApp: App {
                 Divider()
 
                 Button("Report an Issue...") {
-                    if let url = URL(string: "https://github.com/anthropics/tibok/issues") {
+                    if let url = URL(string: "https://github.com/sturdy-barnacle/md-editor/issues") {
                         NSWorkspace.shared.open(url)
                     }
                 }
