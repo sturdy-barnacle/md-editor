@@ -29,7 +29,8 @@ let package = Package(
             exclude: ["Resources/tibok.entitlements", "Resources/Info.plist", "Resources/IconLayers"],
             resources: [
                 .process("Resources/Assets.xcassets"),
-                .copy("Resources/AppIcon.icns")
+                .copy("Resources/AppIcon.icns"),
+                .copy("Resources/katex")
             ]
         ),
         // Note: Tests require Xcode. Run with: xcodebuild test -scheme tibok -destination 'platform=macOS'
