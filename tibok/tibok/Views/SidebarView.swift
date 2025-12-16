@@ -6,6 +6,36 @@
 //
 
 import SwiftUI
+import AppKit
+
+// MARK: - Visual Effect Background
+
+/// NSVisualEffectView wrapper for SwiftUI - provides macOS translucent/vibrancy effect
+struct VisualEffectBackground: NSViewRepresentable {
+    var material: NSVisualEffectView.Material
+    var blendingMode: NSVisualEffectView.BlendingMode
+
+    init(
+        material: NSVisualEffectView.Material = .sidebar,
+        blendingMode: NSVisualEffectView.BlendingMode = .behindWindow
+    ) {
+        self.material = material
+        self.blendingMode = blendingMode
+    }
+
+    func makeNSView(context: Context) -> NSVisualEffectView {
+        let view = NSVisualEffectView()
+        view.material = material
+        view.blendingMode = blendingMode
+        view.state = .followsWindowActiveState
+        return view
+    }
+
+    func updateNSView(_ nsView: NSVisualEffectView, context: Context) {
+        nsView.material = material
+        nsView.blendingMode = blendingMode
+    }
+}
 
 /// Result of searching file contents
 struct ContentSearchResult: Identifiable {
@@ -250,7 +280,7 @@ struct SidebarView: View {
                 .padding(8)
             }
         }
-        .background(Color(NSColor.controlBackgroundColor))
+        .background(VisualEffectBackground(material: .sidebar))
         .sheet(isPresented: $showNewFileSheet) {
             NewFileSheet(fileName: $newFileName) {
                 if !newFileName.isEmpty {

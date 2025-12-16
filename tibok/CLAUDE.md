@@ -79,7 +79,11 @@ user_docs/
     ├── workspace.md             # File/folder management
     ├── preview.md               # Preview features
     ├── find-replace.md          # Find and replace
-    └── keyboard-shortcuts.md    # Shortcut reference
+    ├── keyboard-shortcuts.md    # Shortcut reference
+    ├── git-integration.md       # Git version control
+    ├── frontmatter.md           # Jekyll/Hugo metadata editor
+    ├── plugins.md               # Plugin management
+    └── webhooks.md              # HTTP webhook notifications
 ```
 
 ### When to Update Docs
@@ -125,10 +129,14 @@ Before completing any feature work, verify:
 - Dark/light mode support
 - Print support (⌘P)
 - Math/LaTeX rendering (bundled KaTeX)
+- Frontmatter editor (⌘I) for Jekyll/Hugo metadata
+- Plugin system with enable/disable support
+- Webhook system for triggering external services
+- Focus mode (Ctrl+⌘+.)
+- Translucent macOS sidebar styling
 
 ### Planned (see planning/ folder)
 - Cloud sync
-- Plugin system
 
 ## Notes for Claude
 

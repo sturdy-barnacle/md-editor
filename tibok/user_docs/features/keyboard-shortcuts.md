@@ -21,6 +21,7 @@ Complete reference for all keyboard shortcuts in Tibok.
 |--------|----------|
 | Toggle Sidebar | Cmd+0 |
 | Toggle Preview | Cmd+\ |
+| Toggle Inspector | Cmd+I |
 | Focus Mode | Ctrl+Cmd+. |
 | Command Palette | Cmd+K |
 | Next Tab | Cmd+Shift+] |

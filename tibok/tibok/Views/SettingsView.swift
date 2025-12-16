@@ -12,6 +12,9 @@ enum L10n {
         static let general = "General"
         static let editor = "Editor"
         static let preview = "Preview"
+        static let frontmatter = "Frontmatter"
+        static let plugins = "Plugins"
+        static let webhooks = "Webhooks"
         static let about = "About"
     }
     enum General {
@@ -98,6 +101,21 @@ enum SettingsKeys {
     static let previewFontSize = "preview.fontSize"
     static let previewMaxWidth = "preview.maxWidth"
     static let previewCodeTheme = "preview.codeTheme"
+    // Frontmatter defaults - Jekyll
+    static let jekyllDefaultAuthor = "frontmatter.jekyll.author"
+    static let jekyllDefaultLayout = "frontmatter.jekyll.layout"
+    static let jekyllDefaultDraft = "frontmatter.jekyll.draft"
+    static let jekyllDefaultTags = "frontmatter.jekyll.tags"
+    static let jekyllDefaultCategories = "frontmatter.jekyll.categories"
+    // Frontmatter defaults - Hugo
+    static let hugoDefaultAuthor = "frontmatter.hugo.author"
+    static let hugoDefaultLayout = "frontmatter.hugo.layout"
+    static let hugoDefaultDraft = "frontmatter.hugo.draft"
+    static let hugoDefaultTags = "frontmatter.hugo.tags"
+    static let hugoDefaultCategories = "frontmatter.hugo.categories"
+    static let hugoDefaultFormat = "frontmatter.hugo.format" // yaml or toml
+    // Timezone setting
+    static let frontmatterTimezone = "frontmatter.timezone"
 }
 
 enum AppearanceMode: String, CaseIterable {
@@ -143,12 +161,27 @@ struct SettingsView: View {
                     Label(L10n.Tabs.preview, systemImage: "eye")
                 }
 
+            FrontmatterSettingsView()
+                .tabItem {
+                    Label(L10n.Tabs.frontmatter, systemImage: "doc.badge.gearshape")
+                }
+
+            PluginSettingsView()
+                .tabItem {
+                    Label(L10n.Tabs.plugins, systemImage: "puzzlepiece.extension")
+                }
+
+            WebhookSettingsView()
+                .tabItem {
+                    Label(L10n.Tabs.webhooks, systemImage: "arrow.up.right.square")
+                }
+
             AboutSettingsView()
                 .tabItem {
                     Label(L10n.Tabs.about, systemImage: "info.circle")
                 }
         }
-        .frame(width: 450, height: 380)
+        .frame(width: 480, height: 400)
     }
 }
 
@@ -472,6 +505,125 @@ struct AboutSettingsView: View {
         }
         .formStyle(.grouped)
         .padding()
+    }
+}
+
+// MARK: - Frontmatter Settings
+
+struct FrontmatterSettingsView: View {
+    // Jekyll defaults
+    @AppStorage(SettingsKeys.jekyllDefaultAuthor) private var jekyllAuthor: String = ""
+    @AppStorage(SettingsKeys.jekyllDefaultLayout) private var jekyllLayout: String = "post"
+    @AppStorage(SettingsKeys.jekyllDefaultDraft) private var jekyllDraft: Bool = true
+    @AppStorage(SettingsKeys.jekyllDefaultTags) private var jekyllTags: String = ""
+    @AppStorage(SettingsKeys.jekyllDefaultCategories) private var jekyllCategories: String = ""
+
+    // Hugo defaults
+    @AppStorage(SettingsKeys.hugoDefaultAuthor) private var hugoAuthor: String = ""
+    @AppStorage(SettingsKeys.hugoDefaultLayout) private var hugoLayout: String = ""
+    @AppStorage(SettingsKeys.hugoDefaultDraft) private var hugoDraft: Bool = true
+    @AppStorage(SettingsKeys.hugoDefaultTags) private var hugoTags: String = ""
+    @AppStorage(SettingsKeys.hugoDefaultCategories) private var hugoCategories: String = ""
+    @AppStorage(SettingsKeys.hugoDefaultFormat) private var hugoFormat: String = "yaml"
+
+    // Timezone
+    @AppStorage(SettingsKeys.frontmatterTimezone) private var timezone: String = ""
+
+    // Common timezone identifiers for picker
+    private let commonTimezones: [(id: String, label: String)] = [
+        ("", "System Default"),
+        ("UTC", "UTC"),
+        ("America/New_York", "Eastern Time (US)"),
+        ("America/Chicago", "Central Time (US)"),
+        ("America/Denver", "Mountain Time (US)"),
+        ("America/Los_Angeles", "Pacific Time (US)"),
+        ("America/Anchorage", "Alaska Time"),
+        ("Pacific/Honolulu", "Hawaii Time"),
+        ("Europe/London", "London (GMT/BST)"),
+        ("Europe/Paris", "Central European"),
+        ("Europe/Berlin", "Berlin"),
+        ("Asia/Tokyo", "Tokyo"),
+        ("Asia/Shanghai", "China Standard"),
+        ("Asia/Singapore", "Singapore"),
+        ("Asia/Kolkata", "India Standard"),
+        ("Australia/Sydney", "Sydney"),
+        ("Pacific/Auckland", "New Zealand"),
+    ]
+
+    var body: some View {
+        Form {
+            Section("Date & Time") {
+                Picker("Timezone", selection: $timezone) {
+                    ForEach(commonTimezones, id: \.id) { tz in
+                        Text(tz.label).tag(tz.id)
+                    }
+                }
+                .help("Timezone used when formatting dates in frontmatter")
+
+                if !timezone.isEmpty {
+                    Text("Dates will be formatted with \(timezoneOffsetString(for: timezone)) offset")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+
+            Section("Jekyll Defaults") {
+                TextField("Author", text: $jekyllAuthor)
+                    .help("Default author for Jekyll posts")
+
+                TextField("Layout", text: $jekyllLayout)
+                    .help("Default layout template (e.g., post, page)")
+
+                Toggle("Draft by default", isOn: $jekyllDraft)
+                    .help("Mark new posts as drafts")
+
+                TextField("Default Tags", text: $jekyllTags)
+                    .help("Comma-separated list of default tags")
+
+                TextField("Default Categories", text: $jekyllCategories)
+                    .help("Comma-separated list of default categories")
+            }
+
+            Section("Hugo Defaults") {
+                Picker("Frontmatter Format", selection: $hugoFormat) {
+                    Text("YAML (---)").tag("yaml")
+                    Text("TOML (+++)").tag("toml")
+                }
+                .help("Default frontmatter format for Hugo posts")
+
+                TextField("Author", text: $hugoAuthor)
+                    .help("Default author for Hugo posts")
+
+                TextField("Layout", text: $hugoLayout)
+                    .help("Default layout template")
+
+                Toggle("Draft by default", isOn: $hugoDraft)
+                    .help("Mark new posts as drafts")
+
+                TextField("Default Tags", text: $hugoTags)
+                    .help("Comma-separated list of default tags")
+
+                TextField("Default Categories", text: $hugoCategories)
+                    .help("Comma-separated list of default categories")
+            }
+
+            Section {
+                Text("These defaults are applied when creating new frontmatter via the Inspector panel (⌘I) or slash commands.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .formStyle(.grouped)
+        .padding()
+    }
+
+    private func timezoneOffsetString(for identifier: String) -> String {
+        guard let tz = TimeZone(identifier: identifier) else { return "" }
+        let seconds = tz.secondsFromGMT()
+        let hours = abs(seconds) / 3600
+        let minutes = (abs(seconds) % 3600) / 60
+        let sign = seconds >= 0 ? "+" : "-"
+        return String(format: "%@%02d:%02d", sign, hours, minutes)
     }
 }
 

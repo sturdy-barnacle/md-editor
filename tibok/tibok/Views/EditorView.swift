@@ -125,74 +125,7 @@ class EmojiState: ObservableObject {
 }
 
 // MARK: - Slash Commands
-
-struct SlashCommand: Identifiable {
-    let id: String
-    let name: String
-    let description: String
-    let icon: String
-    let insert: String
-
-    static let all: [SlashCommand] = [
-        // Headings
-        SlashCommand(id: "h1", name: "Heading 1", description: "Large heading", icon: "textformat.size.larger", insert: "# {{CURSOR}}"),
-        SlashCommand(id: "h2", name: "Heading 2", description: "Medium heading", icon: "textformat.size", insert: "## {{CURSOR}}"),
-        SlashCommand(id: "h3", name: "Heading 3", description: "Small heading", icon: "textformat.size.smaller", insert: "### {{CURSOR}}"),
-        SlashCommand(id: "h4", name: "Heading 4", description: "Smaller heading", icon: "textformat.size.smaller", insert: "#### {{CURSOR}}"),
-        SlashCommand(id: "h5", name: "Heading 5", description: "Small heading", icon: "textformat.size.smaller", insert: "##### {{CURSOR}}"),
-        SlashCommand(id: "h6", name: "Heading 6", description: "Smallest heading", icon: "textformat.size.smaller", insert: "###### {{CURSOR}}"),
-
-        // Blocks
-        SlashCommand(id: "table", name: "Table", description: "Insert table", icon: "tablecells", insert: "| {{CURSOR}} | Column 2 | Column 3 |\n|----------|----------|----------|\n| Cell 1   | Cell 2   | Cell 3   |\n"),
-        SlashCommand(id: "code", name: "Code Block", description: "Fenced code block", icon: "chevron.left.forwardslash.chevron.right", insert: "```{{CURSOR}}\n\n```"),
-        SlashCommand(id: "quote", name: "Blockquote", description: "Quote block", icon: "text.quote", insert: "> {{CURSOR}}"),
-        SlashCommand(id: "callout", name: "Callout", description: "Note or warning block", icon: "exclamationmark.bubble", insert: "> [!NOTE]\n> {{CURSOR}}"),
-        SlashCommand(id: "collapse", name: "Collapsible", description: "Expandable section", icon: "chevron.down.circle", insert: "<details>\n<summary>{{CURSOR}}</summary>\n\n</details>"),
-        SlashCommand(id: "definition", name: "Definition List", description: "Term and definition", icon: "list.bullet.rectangle", insert: "{{CURSOR}}\n: Definition here"),
-
-        // Links & Media
-        SlashCommand(id: "link", name: "Link", description: "Insert hyperlink", icon: "link", insert: "[{{CURSOR}}](url)"),
-        SlashCommand(id: "image", name: "Image", description: "Insert image", icon: "photo", insert: "![{{CURSOR}}](image-url)"),
-        SlashCommand(id: "footnote", name: "Footnote", description: "Add footnote reference", icon: "text.append", insert: "[^{{CURSOR}}]"),
-
-        // Lists
-        SlashCommand(id: "list", name: "Bullet List", description: "Unordered list", icon: "list.bullet", insert: "- {{CURSOR}}\n- \n- \n"),
-        SlashCommand(id: "numbered", name: "Numbered List", description: "Ordered list", icon: "list.number", insert: "1. {{CURSOR}}\n2. \n3. \n"),
-        SlashCommand(id: "task", name: "Task List", description: "Checkbox list", icon: "checklist", insert: "- [ ] {{CURSOR}}\n- [ ] \n- [ ] \n"),
-
-        // Inline formatting
-        SlashCommand(id: "bold", name: "Bold", description: "Bold text", icon: "bold", insert: "**{{CURSOR}}**"),
-        SlashCommand(id: "italic", name: "Italic", description: "Italic text", icon: "italic", insert: "*{{CURSOR}}*"),
-        SlashCommand(id: "bolditalic", name: "Bold Italic", description: "Bold and italic text", icon: "bold.italic.underline", insert: "***{{CURSOR}}***"),
-        SlashCommand(id: "strikethrough", name: "Strikethrough", description: "Crossed out text", icon: "strikethrough", insert: "~~{{CURSOR}}~~"),
-        SlashCommand(id: "underline", name: "Underline", description: "Underlined text", icon: "underline", insert: "<u>{{CURSOR}}</u>"),
-        SlashCommand(id: "inlinecode", name: "Inline Code", description: "Code snippet", icon: "chevron.left.forwardslash.chevron.right", insert: "`{{CURSOR}}`"),
-        SlashCommand(id: "highlight", name: "Highlight", description: "Highlighted text", icon: "highlighter", insert: "=={{CURSOR}}=="),
-        SlashCommand(id: "subscript", name: "Subscript", description: "Subscript text (H₂O)", icon: "textformat.subscript", insert: "~{{CURSOR}}~"),
-        SlashCommand(id: "superscript", name: "Superscript", description: "Superscript text (x²)", icon: "textformat.superscript", insert: "^{{CURSOR}}^"),
-
-        // Math
-        SlashCommand(id: "math", name: "Math Inline", description: "Inline LaTeX formula", icon: "function", insert: "${{CURSOR}}$"),
-        SlashCommand(id: "mathblock", name: "Math Block", description: "Display LaTeX formula", icon: "function", insert: "$$\n{{CURSOR}}\n$$"),
-
-        // Separators & Structure
-        SlashCommand(id: "hr", name: "Divider", description: "Horizontal rule", icon: "minus", insert: "\n---\n"),
-        SlashCommand(id: "toc", name: "Table of Contents", description: "TOC placeholder", icon: "list.bullet.indent", insert: "[[toc]]"),
-
-        // Date & Time (special handling)
-        SlashCommand(id: "date", name: "Date", description: "Today (YYYY-MM-DD)", icon: "calendar", insert: "{{DATE:yyyy-MM-dd}}"),
-        SlashCommand(id: "datelong", name: "Date (Long)", description: "Today (Month Day, Year)", icon: "calendar", insert: "{{DATE:MMMM d, yyyy}}"),
-        SlashCommand(id: "time", name: "Time", description: "Current time (HH:MM)", icon: "clock", insert: "{{TIME:HH:mm}}"),
-        SlashCommand(id: "datetime", name: "Date & Time", description: "Full timestamp", icon: "calendar.badge.clock", insert: "{{DATE:yyyy-MM-dd}} {{TIME:HH:mm}}"),
-        SlashCommand(id: "pickdate", name: "Pick Date", description: "Choose from calendar", icon: "calendar.badge.plus", insert: "{{DATEPICKER}}"),
-    ]
-
-    static func filtered(by query: String) -> [SlashCommand] {
-        if query.isEmpty { return all }
-        let lower = query.lowercased()
-        return all.filter { $0.id.contains(lower) || $0.name.lowercased().contains(lower) }
-    }
-}
+// SlashCommand struct and registry now in Plugins/SlashCommandRegistry.swift
 
 // MARK: - Emoji Items
 
@@ -732,7 +665,15 @@ struct FindableTextEditor: NSViewRepresentable {
         }
 
         func showSlashMenu(at point: NSPoint, query: String, slashRange: NSRange) {
-            let commands = SlashCommand.filtered(by: query)
+            // Early exit if query hasn't changed and menu is already showing
+            // This avoids unnecessary filtering and state updates on each keystroke
+            if slashMenuWindow != nil && parent.slashState.query == query {
+                // Just update the range for insertion
+                parent.slashState.slashRange = slashRange
+                return
+            }
+
+            let commands = SlashCommandRegistry.syncShared.filtered(by: query)
             guard !commands.isEmpty else {
                 dismissSlashMenu()
                 return
@@ -775,15 +716,28 @@ struct FindableTextEditor: NSViewRepresentable {
                 slashMenuController?.updateCommands(commands, slashRange: slashRange)
             }
 
-            // Update position (below cursor)
-            slashMenuWindow?.setFrameTopLeftPoint(NSPoint(x: point.x, y: point.y - 4))
+            // Update window height based on command count and position
+            if let window = slashMenuWindow, let screen = NSScreen.main {
+                let menuHeight = min(CGFloat(commands.count * 44) + 8, 300)
+                let lineHeight: CGFloat = 20 // Approximate line height
 
-            // Update window height based on command count
-            if let window = slashMenuWindow {
+                // Check if there's enough space below the cursor
+                let spaceBelow = point.y - screen.visibleFrame.origin.y
+                let showAbove = spaceBelow < menuHeight + 20
+
                 var frame = window.frame
-                let newHeight = min(CGFloat(commands.count * 44) + 8, 300)
-                frame.origin.y += frame.size.height - newHeight
-                frame.size.height = newHeight
+                frame.size.height = menuHeight
+
+                if showAbove {
+                    // Position above the cursor
+                    frame.origin.x = point.x
+                    frame.origin.y = point.y + lineHeight
+                } else {
+                    // Position below the cursor (original behavior)
+                    frame.origin.x = point.x
+                    frame.origin.y = point.y - menuHeight - 4
+                }
+
                 window.setFrame(frame, display: true)
             }
 
@@ -793,6 +747,9 @@ struct FindableTextEditor: NSViewRepresentable {
         }
 
         func dismissSlashMenu() {
+            // Early exit if already dismissed to avoid unnecessary state updates
+            guard slashMenuWindow != nil || parent.slashState.isActive else { return }
+
             slashMenuWindow?.orderOut(nil)
             slashMenuWindow = nil
             slashMenuController = nil
@@ -810,6 +767,19 @@ struct FindableTextEditor: NSViewRepresentable {
             if insertText == "{{DATEPICKER}}" {
                 dismissSlashMenu()
                 showDatePicker(range: range)
+                return
+            }
+
+            // Handle frontmatter commands
+            if insertText.hasPrefix("{{FRONTMATTER:") {
+                dismissSlashMenu()
+                // Remove the slash command text first
+                if textView.shouldChangeText(in: range, replacementString: "") {
+                    textView.replaceCharacters(in: range, with: "")
+                    textView.didChangeText()
+                }
+                handleFrontmatterCommand(insertText)
+                SlashCommandRegistry.syncShared.recordUsage(command.id)
                 return
             }
 
@@ -867,6 +837,9 @@ struct FindableTextEditor: NSViewRepresentable {
                 }
                 textView.setSelectedRange(NSRange(location: newLocation, length: 0))
             }
+
+            // Track usage for recent commands
+            SlashCommandRegistry.syncShared.recordUsage(command.id)
 
             dismissSlashMenu()
         }
@@ -943,6 +916,133 @@ struct FindableTextEditor: NSViewRepresentable {
             }
 
             pendingDateRange = nil
+        }
+
+        // MARK: - Frontmatter Commands
+
+        func handleFrontmatterCommand(_ command: String) {
+            guard let textView = textView else { return }
+
+            // Extract the command type from {{FRONTMATTER:type}}
+            let pattern = try? NSRegularExpression(pattern: "\\{\\{FRONTMATTER:([^}]+)\\}\\}", options: [])
+            guard let match = pattern?.firstMatch(in: command, options: [], range: NSRange(command.startIndex..., in: command)),
+                  let typeRange = Range(match.range(at: 1), in: command) else { return }
+
+            let commandType = String(command[typeRange])
+
+            switch commandType {
+            case "jekyll":
+                insertJekyllFrontmatter(textView: textView)
+            case "hugo":
+                insertHugoFrontmatter(textView: textView)
+            case "toggle-draft":
+                toggleDraftStatus(textView: textView)
+            case "inspector":
+                NotificationCenter.default.post(name: .toggleInspector, object: nil)
+            default:
+                break
+            }
+        }
+
+        private func insertJekyllFrontmatter(textView: NSTextView) {
+            let content = textView.string
+            let (existingFrontmatter, _) = Frontmatter.parse(from: content)
+
+            // Don't add if frontmatter already exists
+            if existingFrontmatter != nil { return }
+
+            // Get defaults from settings
+            let jekyllAuthor = UserDefaults.standard.string(forKey: SettingsKeys.jekyllDefaultAuthor) ?? ""
+            let jekyllLayout = UserDefaults.standard.string(forKey: SettingsKeys.jekyllDefaultLayout) ?? "post"
+            let jekyllDraft = UserDefaults.standard.bool(forKey: SettingsKeys.jekyllDefaultDraft)
+            let jekyllTags = UserDefaults.standard.string(forKey: SettingsKeys.jekyllDefaultTags) ?? ""
+            let jekyllCategories = UserDefaults.standard.string(forKey: SettingsKeys.jekyllDefaultCategories) ?? ""
+
+            var fm = Frontmatter(format: .yaml)
+            // Get title from document URL or use default
+            let title = parent.documentURL()?.deletingPathExtension().lastPathComponent ?? "Untitled"
+            fm.title = title
+            fm.date = Date()
+            fm.draft = jekyllDraft
+            if !jekyllAuthor.isEmpty { fm.author = jekyllAuthor }
+            if !jekyllLayout.isEmpty { fm.layout = jekyllLayout }
+            if !jekyllTags.isEmpty {
+                fm.tags = jekyllTags.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+            }
+            if !jekyllCategories.isEmpty {
+                fm.categories = jekyllCategories.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+            }
+
+            let frontmatterStr = fm.toString() + "\n\n"
+            let range = NSRange(location: 0, length: 0)
+
+            if textView.shouldChangeText(in: range, replacementString: frontmatterStr) {
+                textView.replaceCharacters(in: range, with: frontmatterStr)
+                textView.didChangeText()
+                // Move cursor to end of frontmatter
+                textView.setSelectedRange(NSRange(location: frontmatterStr.count, length: 0))
+            }
+        }
+
+        private func insertHugoFrontmatter(textView: NSTextView) {
+            let content = textView.string
+            let (existingFrontmatter, _) = Frontmatter.parse(from: content)
+
+            // Don't add if frontmatter already exists
+            if existingFrontmatter != nil { return }
+
+            // Get defaults from settings
+            let hugoFormat = UserDefaults.standard.string(forKey: SettingsKeys.hugoDefaultFormat) ?? "yaml"
+            let hugoAuthor = UserDefaults.standard.string(forKey: SettingsKeys.hugoDefaultAuthor) ?? ""
+            let hugoLayout = UserDefaults.standard.string(forKey: SettingsKeys.hugoDefaultLayout) ?? ""
+            let hugoDraft = UserDefaults.standard.bool(forKey: SettingsKeys.hugoDefaultDraft)
+            let hugoTags = UserDefaults.standard.string(forKey: SettingsKeys.hugoDefaultTags) ?? ""
+            let hugoCategories = UserDefaults.standard.string(forKey: SettingsKeys.hugoDefaultCategories) ?? ""
+
+            let format: FrontmatterFormat = hugoFormat == "toml" ? .toml : .yaml
+            var fm = Frontmatter(format: format)
+            // Get title from document URL or use default
+            let title = parent.documentURL()?.deletingPathExtension().lastPathComponent ?? "Untitled"
+            fm.title = title
+            fm.date = Date()
+            fm.draft = hugoDraft
+            if !hugoAuthor.isEmpty { fm.author = hugoAuthor }
+            if !hugoLayout.isEmpty { fm.layout = hugoLayout }
+            if !hugoTags.isEmpty {
+                fm.tags = hugoTags.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+            }
+            if !hugoCategories.isEmpty {
+                fm.categories = hugoCategories.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+            }
+
+            let frontmatterStr = fm.toString() + "\n\n"
+            let range = NSRange(location: 0, length: 0)
+
+            if textView.shouldChangeText(in: range, replacementString: frontmatterStr) {
+                textView.replaceCharacters(in: range, with: frontmatterStr)
+                textView.didChangeText()
+                textView.setSelectedRange(NSRange(location: frontmatterStr.count, length: 0))
+            }
+        }
+
+        private func toggleDraftStatus(textView: NSTextView) {
+            let content = textView.string
+            let (frontmatter, body) = Frontmatter.parse(from: content)
+
+            guard var fm = frontmatter else { return }
+
+            // Toggle draft status
+            fm.draft = !fm.draft
+
+            // Rebuild the document
+            let newContent = fm.apply(to: body)
+
+            // Replace entire content
+            let fullRange = NSRange(location: 0, length: (content as NSString).length)
+            if textView.shouldChangeText(in: fullRange, replacementString: newContent) {
+                textView.replaceCharacters(in: fullRange, with: newContent)
+                textView.didChangeText()
+            }
         }
 
         func handleSlashMenuKeyDown(_ event: NSEvent) -> Bool {

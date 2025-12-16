@@ -18,6 +18,7 @@ struct Command: Identifiable, Hashable {
     let icon: String?
     let shortcut: KeyboardShortcut?
     let category: CommandCategory
+    let source: String
     let action: () -> Void
 
     init(
@@ -27,6 +28,7 @@ struct Command: Identifiable, Hashable {
         icon: String? = nil,
         shortcut: KeyboardShortcut? = nil,
         category: CommandCategory = .general,
+        source: String = "builtin",
         action: @escaping () -> Void
     ) {
         self.id = id
@@ -35,6 +37,7 @@ struct Command: Identifiable, Hashable {
         self.icon = icon
         self.shortcut = shortcut
         self.category = category
+        self.source = source
         self.action = action
     }
 
@@ -96,6 +99,11 @@ class CommandRegistry: ObservableObject {
         for command in commands {
             register(command)
         }
+    }
+
+    /// Unregister all commands from a specific source (plugin)
+    func unregister(source: String) {
+        commands.removeAll { $0.source == source }
     }
 
     func execute(_ command: Command) {
@@ -615,6 +623,11 @@ class AppState: ObservableObject {
         let result = GitService.shared.push(in: workspaceURL)
         if result.success {
             refreshGitStatus()
+
+            // Trigger git.push webhooks
+            Task {
+                await WebhookService.shared.triggerGitPush(repositoryPath: workspaceURL.path)
+            }
         }
         return result
     }
@@ -753,6 +766,16 @@ class AppState: ObservableObject {
             documents[index].title = url.deletingPathExtension().lastPathComponent
             addToRecentFiles(url)
             saveOpenTabs()
+
+            // Trigger document.save webhooks
+            let (frontmatter, _) = Frontmatter.parse(from: doc.content)
+            Task {
+                await WebhookService.shared.triggerDocumentSave(
+                    filename: url.lastPathComponent,
+                    title: frontmatter?.title,
+                    path: url.path
+                )
+            }
         } catch {
             showToast("Failed to save document", icon: "exclamationmark.triangle.fill")
         }
@@ -835,6 +858,17 @@ class AppState: ObservableObject {
         printOp.showsProgressPanel = false
 
         printOp.runModal(for: NSApp.mainWindow ?? NSWindow(), delegate: nil, didRun: nil, contextInfo: nil)
+
+        // Trigger document.export webhooks
+        let (frontmatter, _) = Frontmatter.parse(from: currentDocument.content)
+        Task {
+            await WebhookService.shared.triggerDocumentExport(
+                filename: url.lastPathComponent,
+                title: frontmatter?.title,
+                path: url.path,
+                exportFormat: "pdf"
+            )
+        }
 
         // Clean up after print
         exportWebView = nil
@@ -1082,6 +1116,17 @@ class AppState: ObservableObject {
 
         do {
             try html.write(to: url, atomically: true, encoding: .utf8)
+
+            // Trigger document.export webhooks
+            let (frontmatter, _) = Frontmatter.parse(from: currentDocument.content)
+            Task {
+                await WebhookService.shared.triggerDocumentExport(
+                    filename: url.lastPathComponent,
+                    title: frontmatter?.title,
+                    path: url.path,
+                    exportFormat: "html"
+                )
+            }
         } catch {
             showToast("Failed to export HTML", icon: "exclamationmark.triangle.fill")
         }
@@ -1202,6 +1247,17 @@ class AppState: ObservableObject {
 
         do {
             try rtfData.write(to: url)
+
+            // Trigger document.export webhooks
+            let (frontmatter, _) = Frontmatter.parse(from: currentDocument.content)
+            Task {
+                await WebhookService.shared.triggerDocumentExport(
+                    filename: url.lastPathComponent,
+                    title: frontmatter?.title,
+                    path: url.path,
+                    exportFormat: "rtf"
+                )
+            }
         } catch {
             showToast("Failed to export RTF", icon: "exclamationmark.triangle.fill")
         }
@@ -1216,6 +1272,17 @@ class AppState: ObservableObject {
 
         do {
             try currentDocument.content.write(to: url, atomically: true, encoding: .utf8)
+
+            // Trigger document.export webhooks
+            let (frontmatter, _) = Frontmatter.parse(from: currentDocument.content)
+            Task {
+                await WebhookService.shared.triggerDocumentExport(
+                    filename: url.lastPathComponent,
+                    title: frontmatter?.title,
+                    path: url.path,
+                    exportFormat: "txt"
+                )
+            }
         } catch {
             showToast("Failed to export text", icon: "exclamationmark.triangle.fill")
         }

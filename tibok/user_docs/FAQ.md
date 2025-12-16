@@ -113,11 +113,55 @@ Right-click any file in the workspace, recent files, or open tabs and select "Ad
 | Save As | Cmd+Shift+S |
 | Toggle Sidebar | Cmd+0 |
 | Toggle Preview | Cmd+\ |
+| Toggle Inspector | Cmd+I |
 | Command Palette | Cmd+K |
 | Find | Cmd+F |
 | Find and Replace | Cmd+Option+F |
 | Find Next | Cmd+G |
 | Find Previous | Cmd+Shift+G |
+
+---
+
+## Frontmatter (Inspector)
+
+### How do I edit frontmatter metadata?
+Open the Inspector panel with Cmd+I. If your document doesn't have frontmatter yet, choose Jekyll or Hugo and click "Add Frontmatter".
+
+### What frontmatter formats are supported?
+- Jekyll: YAML (`---` delimiters)
+- Hugo: YAML (`---`) or TOML (`+++`)
+
+### How do I set the timezone for dates?
+Go to Settings > Frontmatter and select your timezone from the dropdown. When using "Date & Time" mode, dates are formatted as ISO 8601 with the timezone offset.
+
+### Is frontmatter shown in the preview?
+No, frontmatter is automatically stripped from the preview so you see your content as readers will.
+
+See [Frontmatter Editor](features/frontmatter.md) for more details.
+
+---
+
+## Plugins
+
+### What are plugins?
+Plugins are extensions that add commands and features to Tibok. You can enable or disable them from Settings > Plugins.
+
+### Where are the slash commands?
+Slash commands are provided by the "Core Slash Commands" plugin. If slash commands aren't working, check Settings > Plugins to ensure it's enabled.
+
+See [Plugins](features/plugins.md) for more details.
+
+---
+
+## Webhooks
+
+### What are webhooks?
+Webhooks send HTTP requests to external services when events occur (like saving a document). This is useful for triggering builds or notifications.
+
+### How do I create a webhook?
+Go to Settings > Webhooks, click "Add Webhook", and configure the URL, events, and payload.
+
+See [Webhooks](features/webhooks.md) for more details.
 
 ---
 
@@ -144,4 +188,4 @@ Right-click any file in the workspace, recent files, or open tabs and select "Ad
 
 ### What features are coming next?
 See our roadmap for planned features:
-- **Future**: Cloud sync, plugin system, publishing integrations
+- **Future**: Cloud sync, publishing integrations

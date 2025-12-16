@@ -51,10 +51,11 @@ struct StatusBarView: View {
         HStack(spacing: 0) {
             // Left side - git branch (when in git repo) or word count
             if appState.isGitRepository, let branch = appState.currentBranch {
-                HStack(spacing: 4) {
+                HStack(alignment: .center, spacing: 4) {
                     Image(systemName: "arrow.triangle.branch")
                         .font(.system(size: 10))
                         .foregroundColor(.secondary)
+                        .frame(height: 12, alignment: .center)
                     Text(branch)
                         .font(.caption)
                         .foregroundColor(.secondary)
@@ -98,7 +99,7 @@ struct StatusBarView: View {
 
             // Right side - save status (only when document open)
             if !appState.hasNoDocuments {
-                HStack(spacing: 4) {
+                HStack(alignment: .center, spacing: 4) {
                     Circle()
                         .fill(saveStatusColor)
                         .frame(width: 6, height: 6)

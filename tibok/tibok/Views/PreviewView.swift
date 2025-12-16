@@ -54,22 +54,23 @@ struct PreviewView: View {
     }
 
     /// Get code theme colors based on selected theme
-    private var codeThemeCSS: (background: String, darkBackground: String) {
+    /// Returns: (lightBackground, darkBackground, lightText, darkText)
+    private var codeThemeCSS: (background: String, darkBackground: String, textColor: String, darkTextColor: String) {
         switch codeTheme {
         case "atom-one-dark":
-            return ("#282c34", "#282c34")
+            return ("#282c34", "#282c34", "#abb2bf", "#abb2bf")
         case "github":
-            return ("#f6f8fa", "#2d333b")
+            return ("#f6f8fa", "#2d333b", "#24292e", "#c9d1d9")
         case "monokai":
-            return ("#272822", "#272822")
+            return ("#272822", "#272822", "#f8f8f2", "#f8f8f2")
         case "vs":
-            return ("#ffffff", "#1e1e1e")
+            return ("#ffffff", "#1e1e1e", "#000000", "#d4d4d4")
         case "xcode":
-            return ("#ffffff", "#292a30")
+            return ("#ffffff", "#292a30", "#000000", "#ffffff")
         case "dracula":
-            return ("#282a36", "#282a36")
+            return ("#282a36", "#282a36", "#f8f8f2", "#f8f8f2")
         default:
-            return ("#f5f5f5", "#2d2d2d")
+            return ("#f5f5f5", "#2d2d2d", "#333333", "#e5e5e5")
         }
     }
 
@@ -92,6 +93,7 @@ struct PreviewView: View {
                     --preview-font-size: \(Int(fontSize))px;
                     --preview-max-width: \(maxWidthCSS);
                     --code-bg: \(themeColors.background);
+                    --code-text: \(themeColors.textColor);
                 }
                 * {
                     -webkit-user-modify: read-only !important;
@@ -116,6 +118,7 @@ struct PreviewView: View {
                 code {
                     font-family: 'SF Mono', Menlo, monospace;
                     background: var(--code-bg);
+                    color: var(--code-text);
                     padding: 2px 6px;
                     border-radius: 4px;
                     font-size: 0.875em;
@@ -132,6 +135,7 @@ struct PreviewView: View {
                     padding: 0;
                     font-size: 0.8125em;
                     line-height: 1.5;
+                    color: var(--code-text);
                 }
                 blockquote {
                     border-left: 4px solid #e5e5e5;
@@ -223,6 +227,7 @@ struct PreviewView: View {
                 @media (prefers-color-scheme: dark) {
                     :root {
                         --code-bg: \(themeColors.darkBackground);
+                        --code-text: \(themeColors.darkTextColor);
                     }
                     body { color: #e5e5e5; }
                     h1 { border-bottom-color: #3d3d3d; }
