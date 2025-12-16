@@ -17,10 +17,52 @@
 - Git menu in menu bar
 - Branch indicator in status bar
 
+### Plugin System Phase 1
+- Plugin protocol with lifecycle management
+- Enable/disable plugins from Settings > Plugins
+- Core Slash Commands as built-in plugin
+- Command source tracking for clean unregistration
+- Plugin state persists across app restarts (UserDefaults)
+- Plugin metadata: name, version, author, icon
+- PluginManager with reload functionality
+
+### Frontmatter Editor
+- Visual inspector panel for Jekyll/Hugo metadata (⌘I)
+- **YAML format** support with `---` delimiters (Jekyll/Hugo)
+- **TOML format** support with `+++` delimiters (Hugo)
+- Common fields: title, date, author, layout, draft, description, tags, categories
+- Custom field support (any key-value pairs)
+- **Date & Time mode** with timezone support
+  - Timezone configuration in Settings > Frontmatter
+  - ISO 8601 format with timezone offset: `2025-01-15T10:30:00-08:00`
+  - Date-only mode: `2025-01-15`
+- Default values configurable in Settings
+- Live sync between inspector and document
+- Frontmatter automatically hidden in preview
+
+### Webhooks
+- HTTP request triggers on document events
+- **Supported events**: Document Save, Document Export, Git Push
+- **Configurable HTTP methods**: GET, POST, PUT, DELETE
+- **Template variables** for dynamic payloads:
+  - `{{event}}` - Event type (e.g., `document.save`)
+  - `{{filename}}` - Document filename
+  - `{{title}}` - Document title (from frontmatter or filename)
+  - `{{path}}` - Full file path
+  - `{{timestamp}}` - ISO 8601 timestamp
+  - `{{content}}` - Document content (JSON-escaped)
+- Custom headers support (authentication, content-type)
+- Test button for validation before deployment
+- Enable/disable individual webhooks
+- 30-second timeout for requests
+- Settings > Webhooks for management
+
 ### Other Improvements
 - Print support (⌘P) with styled output
 - Offline math/LaTeX rendering with bundled KaTeX
 - Emoji picker with `:shortcode:` syntax
+- **Package.swift cleanup** - Fixed KaTeX resource warnings (23 files)
+- Syntax highlighting performance fix (color-only attributes)
 
 ---
 
