@@ -18,7 +18,7 @@ The sidebar provides quick access to your files when working with a workspace.
 
 ### Showing/Hiding
 - **Menu**: View > Toggle Sidebar
-- **Shortcut**: Cmd+Option+S
+- **Shortcut**: Cmd+0
 
 ### Sections
 

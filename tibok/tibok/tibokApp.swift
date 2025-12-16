@@ -42,6 +42,7 @@ struct tibokApp: App {
                 }
                 .onAppear {
                     applyAppearance()
+                    initializePlugins()
                 }
                 .onChange(of: appearanceMode) { _, _ in
                     applyAppearance()
@@ -134,6 +135,11 @@ struct tibokApp: App {
                     NotificationCenter.default.post(name: .togglePreview, object: nil)
                 }
                 .keyboardShortcut("\\", modifiers: .command)
+
+                Button("Toggle Inspector") {
+                    NotificationCenter.default.post(name: .toggleInspector, object: nil)
+                }
+                .keyboardShortcut("i", modifiers: .command)
 
                 Button("Focus Mode") {
                     NotificationCenter.default.post(name: .toggleFocusMode, object: nil)
@@ -286,6 +292,14 @@ struct tibokApp: App {
         case .dark:
             NSApp.appearance = NSAppearance(named: .darkAqua)
         }
+    }
+
+    private func initializePlugins() {
+        PluginManager.shared.initialize(
+            slashCommandRegistry: SlashCommandRegistry.shared,
+            commandRegistry: CommandRegistry.shared,
+            appState: appState
+        )
     }
 }
 

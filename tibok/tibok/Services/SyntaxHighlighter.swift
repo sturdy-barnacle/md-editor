@@ -28,124 +28,51 @@ struct SyntaxHighlighter {
 
     // MARK: - Highlighting (in-place on NSTextStorage)
 
-    /// Apply syntax highlighting to an NSTextStorage, preserving the base font
+    /// Apply syntax highlighting to an NSTextStorage using in-place attribute modification.
+    /// Only modifies colors, not fonts, to prevent any layout recalculation or flicker.
     static func highlight(_ textStorage: NSTextStorage, baseFont: NSFont, paragraphStyle: NSParagraphStyle?) {
         let fullRange = NSRange(location: 0, length: textStorage.length)
 
         guard fullRange.length > 0 else { return }
 
-        // Begin editing
         textStorage.beginEditing()
 
-        // Reset to base attributes
-        var baseAttributes: [NSAttributedString.Key: Any] = [
-            .font: baseFont,
-            .foregroundColor: NSColor.labelColor
-        ]
-        if let style = paragraphStyle {
-            baseAttributes[.paragraphStyle] = style
-        }
-        textStorage.setAttributes(baseAttributes, range: fullRange)
+        // Reset to base colors only - NO font changes to prevent flicker
+        textStorage.addAttributes([
+            .foregroundColor: NSColor.labelColor,
+            .backgroundColor: NSColor.clear
+        ], range: fullRange)
 
-        // Apply patterns in order (code blocks first to protect their content)
-        applyCodeBlocks(to: textStorage, baseFont: baseFont)
-        applyInlineCode(to: textStorage, baseFont: baseFont)
-        applyHeaders(to: textStorage, baseFont: baseFont)
-        applyBoldItalic(to: textStorage, baseFont: baseFont)
-        applyBold(to: textStorage, baseFont: baseFont)
-        applyItalic(to: textStorage, baseFont: baseFont)
+        if let style = paragraphStyle {
+            textStorage.addAttribute(.paragraphStyle, value: style, range: fullRange)
+        }
+
+        // Remove strikethrough from all text before reapplying
+        textStorage.removeAttribute(.strikethroughStyle, range: fullRange)
+
+        // Apply color-only highlighting patterns
+        applyHeaders(to: textStorage)
+        applyCodeBlocks(to: textStorage)
+        applyInlineCode(to: textStorage)
         applyStrikethrough(to: textStorage)
         applyLinks(to: textStorage)
         applyBlockquotes(to: textStorage)
         applyListMarkers(to: textStorage)
         applyHorizontalRules(to: textStorage)
 
-        // End editing
         textStorage.endEditing()
-    }
-
-    // MARK: - Font Helpers
-
-    private static func boldFont(from baseFont: NSFont) -> NSFont {
-        NSFontManager.shared.convert(baseFont, toHaveTrait: .boldFontMask)
-    }
-
-    private static func italicFont(from baseFont: NSFont) -> NSFont {
-        NSFontManager.shared.convert(baseFont, toHaveTrait: .italicFontMask)
-    }
-
-    private static func boldItalicFont(from baseFont: NSFont) -> NSFont {
-        let bold = NSFontManager.shared.convert(baseFont, toHaveTrait: .boldFontMask)
-        return NSFontManager.shared.convert(bold, toHaveTrait: .italicFontMask)
     }
 
     // MARK: - Pattern Matchers
 
-    private static func applyHeaders(to storage: NSTextStorage, baseFont: NSFont) {
-        let baseSize = baseFont.pointSize
-        let patterns: [(String, NSFont)] = [
-            ("^#{6}\\s+.*$", NSFont.monospacedSystemFont(ofSize: baseSize, weight: .semibold)),
-            ("^#{5}\\s+.*$", NSFont.monospacedSystemFont(ofSize: baseSize, weight: .semibold)),
-            ("^#{4}\\s+.*$", NSFont.monospacedSystemFont(ofSize: baseSize, weight: .semibold)),
-            ("^#{3}\\s+.*$", NSFont.monospacedSystemFont(ofSize: baseSize + 1, weight: .semibold)),
-            ("^#{2}\\s+.*$", NSFont.monospacedSystemFont(ofSize: baseSize + 2, weight: .bold)),
-            ("^#{1}\\s+.*$", NSFont.monospacedSystemFont(ofSize: baseSize + 3, weight: .bold)),
-        ]
-
-        for (pattern, font) in patterns {
-            applyPattern(pattern, to: storage, options: .anchorsMatchLines) { range in
-                storage.addAttributes([
-                    .foregroundColor: Colors.header,
-                    .font: font
-                ], range: range)
-            }
+    private static func applyHeaders(to storage: NSTextStorage) {
+        // Color-only highlighting for headers (no font changes to prevent flicker)
+        applyPattern("^#{1,6}\\s+.*$", to: storage, options: .anchorsMatchLines) { range in
+            storage.addAttribute(.foregroundColor, value: Colors.header, range: range)
         }
     }
 
-    private static func applyBoldItalic(to storage: NSTextStorage, baseFont: NSFont) {
-        // ***bold italic*** or ___bold italic___
-        let patterns = ["\\*\\*\\*[^*]+\\*\\*\\*", "___[^_]+___"]
-        let font = boldItalicFont(from: baseFont)
-        for pattern in patterns {
-            applyPattern(pattern, to: storage) { range in
-                storage.addAttributes([
-                    .font: font
-                ], range: range)
-            }
-        }
-    }
-
-    private static func applyBold(to storage: NSTextStorage, baseFont: NSFont) {
-        // **bold** or __bold__
-        let patterns = ["\\*\\*[^*]+\\*\\*", "__[^_]+__"]
-        let font = boldFont(from: baseFont)
-        for pattern in patterns {
-            applyPattern(pattern, to: storage) { range in
-                storage.addAttributes([
-                    .font: font
-                ], range: range)
-            }
-        }
-    }
-
-    private static func applyItalic(to storage: NSTextStorage, baseFont: NSFont) {
-        // *italic* or _italic_ (but not inside words for underscore)
-        let font = italicFont(from: baseFont)
-        applyPattern("(?<![\\w\\*])\\*[^*]+\\*(?![\\w\\*])", to: storage) { range in
-            storage.addAttributes([
-                .font: font,
-                .foregroundColor: Colors.italic
-            ], range: range)
-        }
-        applyPattern("(?<![\\w])_[^_]+_(?![\\w])", to: storage) { range in
-            storage.addAttributes([
-                .font: font,
-                .foregroundColor: Colors.italic
-            ], range: range)
-        }
-    }
-
-    private static func applyInlineCode(to storage: NSTextStorage, baseFont: NSFont) {
+    private static func applyInlineCode(to storage: NSTextStorage) {
         // `code`
         applyPattern("`[^`]+`", to: storage) { range in
             storage.addAttributes([
@@ -155,7 +82,7 @@ struct SyntaxHighlighter {
         }
     }
 
-    private static func applyCodeBlocks(to storage: NSTextStorage, baseFont: NSFont) {
+    private static func applyCodeBlocks(to storage: NSTextStorage) {
         // ```code blocks```
         applyPattern("```[\\s\\S]*?```", to: storage) { range in
             storage.addAttributes([

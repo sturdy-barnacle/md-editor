@@ -1,0 +1,455 @@
+//
+//  FrontmatterInspectorView.swift
+//  tibok
+//
+//  Inspector panel for editing Jekyll/Hugo frontmatter metadata.
+//
+
+import SwiftUI
+import AppKit
+
+struct FrontmatterInspectorView: View {
+    @EnvironmentObject var appState: AppState
+    @State private var frontmatter: Frontmatter?
+    @State private var hasFrontmatter = false
+    @State private var selectedFormat: FrontmatterFormat = .yaml
+    @State private var selectedSSG: SSGType = .jekyll
+
+    enum SSGType: String, CaseIterable {
+        case jekyll = "Jekyll"
+        case hugo = "Hugo"
+    }
+
+    // Jekyll defaults from settings
+    @AppStorage(SettingsKeys.jekyllDefaultAuthor) private var jekyllAuthor: String = ""
+    @AppStorage(SettingsKeys.jekyllDefaultLayout) private var jekyllLayout: String = "post"
+    @AppStorage(SettingsKeys.jekyllDefaultDraft) private var jekyllDraft: Bool = true
+    @AppStorage(SettingsKeys.jekyllDefaultTags) private var jekyllTags: String = ""
+    @AppStorage(SettingsKeys.jekyllDefaultCategories) private var jekyllCategories: String = ""
+
+    // Hugo defaults from settings
+    @AppStorage(SettingsKeys.hugoDefaultAuthor) private var hugoAuthor: String = ""
+    @AppStorage(SettingsKeys.hugoDefaultLayout) private var hugoLayout: String = ""
+    @AppStorage(SettingsKeys.hugoDefaultDraft) private var hugoDraft: Bool = true
+    @AppStorage(SettingsKeys.hugoDefaultTags) private var hugoTags: String = ""
+    @AppStorage(SettingsKeys.hugoDefaultCategories) private var hugoCategories: String = ""
+    @AppStorage(SettingsKeys.hugoDefaultFormat) private var hugoDefaultFormat: String = "yaml"
+
+    // Timezone setting
+    @AppStorage(SettingsKeys.frontmatterTimezone) private var timezoneIdentifier: String = ""
+
+    // Local state for form fields
+    @State private var title: String = ""
+    @State private var author: String = ""
+    @State private var layout: String = ""
+    @State private var description: String = ""
+    @State private var draft: Bool = false
+    @State private var date: Date = Date()
+    @State private var hasDate: Bool = false
+    @State private var includeTime: Bool = false
+    @State private var tags: String = ""
+    @State private var categories: String = ""
+    @State private var customFields: [CustomField] = []
+    @State private var isUpdating: Bool = false  // Prevent reload loop
+
+    struct CustomField: Identifiable {
+        let id = UUID()
+        var key: String
+        var value: String
+    }
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                // Header
+                HStack {
+                    Text("Frontmatter")
+                        .font(.headline)
+                    Spacer()
+                    if hasFrontmatter {
+                        Text(frontmatter?.format.rawValue.uppercased() ?? "")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color.secondary.opacity(0.2))
+                            .cornerRadius(4)
+                    }
+                }
+                .padding(.bottom, 4)
+
+                if !hasFrontmatter {
+                    Spacer()
+
+                    // No frontmatter - offer to create (centered)
+                    VStack(spacing: 12) {
+                        Text("No frontmatter detected")
+                            .foregroundColor(.secondary)
+
+                        Picker("Generator", selection: $selectedSSG) {
+                            ForEach(SSGType.allCases, id: \.self) { ssg in
+                                Text(ssg.rawValue).tag(ssg)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        .labelsHidden()
+                        .onChange(of: selectedSSG) { _, newValue in
+                            // Update format based on SSG and settings
+                            if newValue == .hugo && hugoDefaultFormat == "toml" {
+                                selectedFormat = .toml
+                            } else {
+                                selectedFormat = .yaml
+                            }
+                        }
+
+                        Text(selectedSSG == .jekyll ? "YAML frontmatter (---)" : (hugoDefaultFormat == "toml" ? "TOML frontmatter (+++)" : "YAML frontmatter (---)"))
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+
+                        Button("Add Frontmatter") {
+                            createFrontmatter()
+                        }
+                        .buttonStyle(.borderedProminent)
+                    }
+                    .padding()
+                    .background(Color(NSColor.windowBackgroundColor).opacity(0.5))
+                    .cornerRadius(8)
+                    .frame(maxWidth: .infinity)
+
+                    Spacer()
+                } else {
+                    // Frontmatter editor
+                    VStack(alignment: .leading, spacing: 16) {
+                        // Status section - Draft first
+                        GroupBox("Status") {
+                            VStack(alignment: .leading, spacing: 12) {
+                                Toggle(isOn: $draft) {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text("Draft")
+                                        Text("Mark as unpublished")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+                                }
+                                .toggleStyle(.switch)
+                                .onChange(of: draft) { _, _ in updateDocument() }
+                            }
+                            .padding(.vertical, 4)
+                        }
+
+                        // Document section
+                        GroupBox("Document") {
+                            VStack(alignment: .leading, spacing: 8) {
+                                LabeledField("Title") {
+                                    TextField("Document title", text: $title)
+                                        .textFieldStyle(.roundedBorder)
+                                        .onChange(of: title) { _, _ in updateDocument() }
+                                }
+
+                                LabeledField("Description") {
+                                    TextField("Brief description", text: $description)
+                                        .textFieldStyle(.roundedBorder)
+                                        .onChange(of: description) { _, _ in updateDocument() }
+                                }
+
+                                LabeledField("Date") {
+                                    DatePicker("", selection: $date, displayedComponents: .date)
+                                        .labelsHidden()
+                                        .onChange(of: date) { _, _ in
+                                            hasDate = true
+                                            updateDocument()
+                                        }
+                                }
+
+                                if includeTime {
+                                    LabeledField("Time") {
+                                        HStack {
+                                            DatePicker("", selection: $date, displayedComponents: .hourAndMinute)
+                                                .labelsHidden()
+                                                .onChange(of: date) { _, _ in updateDocument() }
+                                            Text(timezoneShortName)
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                        }
+                                    }
+                                }
+
+                                Picker("", selection: $includeTime) {
+                                    Text("Date only").tag(false)
+                                    Text("Date & Time").tag(true)
+                                }
+                                .pickerStyle(.segmented)
+                                .labelsHidden()
+                                .onChange(of: includeTime) { _, _ in updateDocument() }
+                            }
+                            .padding(.vertical, 4)
+                        }
+
+                        // Author & Layout section
+                        GroupBox("Metadata") {
+                            VStack(alignment: .leading, spacing: 8) {
+                                LabeledField("Author") {
+                                    TextField("Author name", text: $author)
+                                        .textFieldStyle(.roundedBorder)
+                                        .onChange(of: author) { _, _ in updateDocument() }
+                                }
+
+                                LabeledField("Layout") {
+                                    TextField("Layout template", text: $layout)
+                                        .textFieldStyle(.roundedBorder)
+                                        .onChange(of: layout) { _, _ in updateDocument() }
+                                }
+                            }
+                            .padding(.vertical, 4)
+                        }
+
+                        // Taxonomy section
+                        GroupBox("Taxonomy") {
+                            VStack(alignment: .leading, spacing: 8) {
+                                LabeledField("Tags") {
+                                    TextField("tag1, tag2, tag3", text: $tags)
+                                        .textFieldStyle(.roundedBorder)
+                                        .onChange(of: tags) { _, _ in updateDocument() }
+                                }
+
+                                LabeledField("Categories") {
+                                    TextField("cat1, cat2", text: $categories)
+                                        .textFieldStyle(.roundedBorder)
+                                        .onChange(of: categories) { _, _ in updateDocument() }
+                                }
+
+                                Text("Separate multiple values with commas")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            .padding(.vertical, 4)
+                        }
+
+                        // Custom fields section
+                        GroupBox("Custom Fields") {
+                            VStack(alignment: .leading, spacing: 8) {
+                                ForEach($customFields) { $field in
+                                    HStack {
+                                        TextField("Key", text: $field.key)
+                                            .textFieldStyle(.roundedBorder)
+                                            .frame(width: 80)
+                                        TextField("Value", text: $field.value)
+                                            .textFieldStyle(.roundedBorder)
+                                        Button {
+                                            customFields.removeAll { $0.id == field.id }
+                                            updateDocument()
+                                        } label: {
+                                            Image(systemName: "minus.circle.fill")
+                                                .foregroundColor(.red)
+                                        }
+                                        .buttonStyle(.plain)
+                                    }
+                                    .onChange(of: field.key) { _, _ in updateDocument() }
+                                    .onChange(of: field.value) { _, _ in updateDocument() }
+                                }
+
+                                Button {
+                                    customFields.append(CustomField(key: "", value: ""))
+                                } label: {
+                                    Label("Add Field", systemImage: "plus.circle")
+                                }
+                                .buttonStyle(.plain)
+                            }
+                            .padding(.vertical, 4)
+                        }
+
+                        // Actions
+                        HStack {
+                            Button("Remove Frontmatter") {
+                                removeFrontmatter()
+                            }
+                            .foregroundColor(.red)
+
+                            Spacer()
+                        }
+                    }
+                }
+
+                Spacer()
+            }
+            .padding()
+        }
+        .frame(width: 280)
+        .background(VisualEffectBackground(material: .sidebar))
+        .onAppear { loadFrontmatter() }
+        .onChange(of: appState.currentDocument.content) { _, _ in
+            // Don't reload if we're the ones updating the content
+            if !isUpdating {
+                loadFrontmatter()
+            }
+        }
+    }
+
+    // MARK: - Computed Properties
+
+    private var timezoneDisplayName: String {
+        if timezoneIdentifier.isEmpty {
+            return "System Default"
+        }
+        guard let tz = TimeZone(identifier: timezoneIdentifier) else {
+            return timezoneIdentifier
+        }
+        let seconds = tz.secondsFromGMT()
+        let hours = abs(seconds) / 3600
+        let minutes = (abs(seconds) % 3600) / 60
+        let sign = seconds >= 0 ? "+" : "-"
+        let offset = String(format: "%@%02d:%02d", sign, hours, minutes)
+        // Get a friendly name if available
+        let name = tz.localizedName(for: .shortGeneric, locale: .current) ?? timezoneIdentifier
+        return "\(name) (\(offset))"
+    }
+
+    private var timezoneShortName: String {
+        let tz: TimeZone
+        if !timezoneIdentifier.isEmpty, let customTZ = TimeZone(identifier: timezoneIdentifier) {
+            tz = customTZ
+        } else {
+            tz = TimeZone.current
+        }
+        // Return abbreviation like "PST", "EST", "UTC"
+        return tz.abbreviation() ?? tz.identifier
+    }
+
+    // MARK: - Helper Views
+
+    struct LabeledField<Content: View>: View {
+        let label: String
+        let content: Content
+
+        init(_ label: String, @ViewBuilder content: () -> Content) {
+            self.label = label
+            self.content = content()
+        }
+
+        var body: some View {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(label)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                content
+            }
+        }
+    }
+
+    // MARK: - Actions
+
+    private func loadFrontmatter() {
+        let (parsed, _) = Frontmatter.parse(from: appState.currentDocument.content)
+        frontmatter = parsed
+        hasFrontmatter = parsed != nil
+
+        if let fm = parsed {
+            title = fm.title ?? ""
+            author = fm.author ?? ""
+            layout = fm.layout ?? ""
+            description = fm.description ?? ""
+            draft = fm.draft
+            hasDate = fm.date != nil
+            date = fm.date ?? Date()
+            includeTime = fm.includeDateWithTime
+            tags = fm.tags.joined(separator: ", ")
+            categories = fm.categories.joined(separator: ", ")
+
+            // Load custom fields (non-standard fields)
+            let standardKeys = Set(["title", "author", "layout", "description", "draft", "date", "tags", "categories"])
+            customFields = fm.fields.compactMap { key, value in
+                guard !standardKeys.contains(key) else { return nil }
+                return CustomField(key: key, value: value.stringValue ?? "")
+            }
+        } else {
+            // Reset to defaults
+            title = ""
+            author = ""
+            layout = ""
+            description = ""
+            draft = false
+            hasDate = false
+            date = Date()
+            includeTime = false
+            tags = ""
+            categories = ""
+            customFields = []
+        }
+    }
+
+    private func createFrontmatter() {
+        var fm = Frontmatter(format: selectedFormat)
+        fm.title = appState.currentDocument.title.replacingOccurrences(of: ".md", with: "")
+        fm.date = Date()
+        fm.timezoneIdentifier = timezoneIdentifier
+
+        // Apply defaults based on SSG type
+        if selectedSSG == .jekyll {
+            // Jekyll defaults
+            fm.draft = jekyllDraft
+            if !jekyllAuthor.isEmpty { fm.author = jekyllAuthor }
+            if !jekyllLayout.isEmpty { fm.layout = jekyllLayout }
+            if !jekyllTags.isEmpty {
+                fm.tags = jekyllTags.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+            }
+            if !jekyllCategories.isEmpty {
+                fm.categories = jekyllCategories.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+            }
+        } else {
+            // Hugo defaults
+            fm.draft = hugoDraft
+            if !hugoAuthor.isEmpty { fm.author = hugoAuthor }
+            if !hugoLayout.isEmpty { fm.layout = hugoLayout }
+            if !hugoTags.isEmpty {
+                fm.tags = hugoTags.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+            }
+            if !hugoCategories.isEmpty {
+                fm.categories = hugoCategories.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+            }
+        }
+
+        let newContent = fm.apply(to: appState.currentDocument.content)
+        appState.updateActiveDocumentContent(newContent)
+    }
+
+    private func updateDocument() {
+        guard hasFrontmatter, var fm = frontmatter else { return }
+
+        // Update frontmatter from form fields
+        fm.title = title.isEmpty ? nil : title
+        fm.author = author.isEmpty ? nil : author
+        fm.layout = layout.isEmpty ? nil : layout
+        fm.description = description.isEmpty ? nil : description
+        fm.draft = draft
+        fm.date = hasDate ? date : nil
+        fm.includeDateWithTime = includeTime
+        fm.timezoneIdentifier = timezoneIdentifier
+
+        // Parse tags and categories
+        fm.tags = tags.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+        fm.categories = categories.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+
+        // Add custom fields
+        for field in customFields where !field.key.isEmpty {
+            fm.fields[field.key] = .string(field.value)
+        }
+
+        // Apply to document
+        let newContent = fm.apply(to: appState.currentDocument.content)
+        if newContent != appState.currentDocument.content {
+            isUpdating = true
+            appState.updateActiveDocumentContent(newContent)
+            // Reset flag after a brief delay to allow change to propagate
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                isUpdating = false
+            }
+        }
+
+        frontmatter = fm
+    }
+
+    private func removeFrontmatter() {
+        let (_, body) = Frontmatter.parse(from: appState.currentDocument.content)
+        appState.updateActiveDocumentContent(body)
+    }
+}

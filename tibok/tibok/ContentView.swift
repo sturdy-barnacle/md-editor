@@ -18,6 +18,7 @@ struct ContentView: View {
     @State private var showDocumentPopover = false
     @State private var showGitCommitSheet = false
     @State private var gitCommitMessage = ""
+    @State private var showInspector = false
 
     // Store state before focus mode to restore later
     @State private var preFocusSidebarVisible = true
@@ -36,6 +37,7 @@ struct ContentView: View {
                 TitleBarView(
                     sidebarVisible: $sidebarVisible,
                     previewVisible: $previewVisible,
+                    showInspector: $showInspector,
                     showDocumentPopover: $showDocumentPopover,
                     appearanceMode: $appearanceMode,
                     applyAppearance: applyAppearance
@@ -65,6 +67,12 @@ struct ContentView: View {
                 if previewVisible && !focusMode {
                     PreviewView()
                         .frame(minWidth: 300)
+                }
+
+                // Inspector panel (toggleable, hidden in focus mode)
+                if showInspector && !focusMode {
+                    FrontmatterInspectorView()
+                        .environmentObject(appState)
                 }
             }
 
@@ -122,6 +130,11 @@ struct ContentView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .toggleEditorFocusMode)) { _ in
             editorFocusMode.toggle()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .toggleInspector)) { _ in
+            withAnimation {
+                showInspector.toggle()
+            }
         }
         .sheet(isPresented: $showGitCommitSheet) {
             GitCommitSheet(
@@ -227,6 +240,17 @@ struct ContentView: View {
                 category: .view
             ) {
                 NotificationCenter.default.post(name: .toggleFocusMode, object: nil)
+            },
+
+            Command(
+                id: "view.toggleInspector",
+                title: "Toggle Inspector",
+                subtitle: showInspector ? "Hide frontmatter inspector" : "Show frontmatter inspector",
+                icon: "pencil",
+                shortcut: KeyboardShortcut("i", modifiers: .command),
+                category: .view
+            ) {
+                NotificationCenter.default.post(name: .toggleInspector, object: nil)
             },
 
             // Export commands
@@ -626,6 +650,7 @@ extension Notification.Name {
     static let toggleFocusMode = Notification.Name("toggleFocusMode")
     static let toggleEditorFocusMode = Notification.Name("toggleEditorFocusMode")
     static let showGitCommit = Notification.Name("showGitCommit")
+    static let toggleInspector = Notification.Name("toggleInspector")
 }
 
 // MARK: - Command Palette Sheet
@@ -851,6 +876,7 @@ struct TitleBarView: View {
     @EnvironmentObject var appState: AppState
     @Binding var sidebarVisible: Bool
     @Binding var previewVisible: Bool
+    @Binding var showInspector: Bool
     @Binding var showDocumentPopover: Bool
     @Binding var appearanceMode: String
     let applyAppearance: (AppearanceMode) -> Void
@@ -909,6 +935,10 @@ struct TitleBarView: View {
             HStack(spacing: 12) {
                 TitleBarButton(icon: previewVisible ? "eye" : "eye.slash", help: "Toggle Preview (⌘\\)") {
                     withAnimation { previewVisible.toggle() }
+                }
+
+                TitleBarButton(icon: "pencil", help: "Toggle Inspector (⌘I)") {
+                    withAnimation { showInspector.toggle() }
                 }
 
                 TitleBarMenuButton(

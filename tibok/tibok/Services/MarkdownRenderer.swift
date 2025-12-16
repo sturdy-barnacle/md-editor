@@ -11,7 +11,9 @@ struct MarkdownRenderer {
 
     /// Renders markdown text to HTML
     static func render(_ markdown: String) -> String {
-        var html = markdown
+        // Strip frontmatter before processing (Jekyll/Hugo YAML/TOML)
+        let (_, body) = Frontmatter.parse(from: markdown)
+        var html = body
 
         // Process TOC placeholder - collect headers first
         let tocPlaceholder = "<!--TOC_PLACEHOLDER-->"
