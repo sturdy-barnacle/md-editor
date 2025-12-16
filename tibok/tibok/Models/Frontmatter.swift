@@ -206,7 +206,7 @@ struct Frontmatter {
             }
 
             // Array item (starts with -)
-            if trimmed.hasPrefix("- ") && inArray, let key = currentKey {
+            if trimmed.hasPrefix("- ") && inArray && currentKey != nil {
                 let value = String(trimmed.dropFirst(2)).trimmingCharacters(in: .whitespaces)
                 arrayValues.append(value)
                 continue
