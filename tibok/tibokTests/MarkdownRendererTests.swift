@@ -127,4 +127,96 @@ struct MarkdownRendererTests {
         // Should return empty or minimal HTML
         #expect(html != nil)
     }
+
+    @Test func renderNestedUnorderedList() {
+        let markdown = """
+        - Parent 1
+          - Child 1a
+          - Child 1b
+        - Parent 2
+        """
+        let html = MarkdownRenderer.render(markdown)
+        #expect(html.contains("<ul>"))
+        #expect(html.contains("<li>Parent 1"))
+        #expect(html.contains("<ul>"))
+        #expect(html.contains("<li>Child 1a"))
+        #expect(html.contains("<li>Child 1b"))
+        #expect(html.contains("<li>Parent 2"))
+        #expect(html.contains("</ul>"))
+    }
+
+    @Test func renderMixedNestedLists() {
+        let markdown = """
+        1. Ordered parent
+           - Unordered child
+        2. Second ordered
+        """
+        let html = MarkdownRenderer.render(markdown)
+        #expect(html.contains("<ol>"))
+        #expect(html.contains("<li>Ordered parent"))
+        #expect(html.contains("<ul>"))
+        #expect(html.contains("<li>Unordered child"))
+        #expect(html.contains("<li>Second ordered"))
+    }
+
+    @Test func renderThreeLevelNestedList() {
+        let markdown = """
+        - Level 1
+          - Level 2
+            - Level 3
+        """
+        let html = MarkdownRenderer.render(markdown)
+        #expect(html.contains("<li>Level 1"))
+        #expect(html.contains("<li>Level 2"))
+        #expect(html.contains("<li>Level 3"))
+        // Should have 3 opening <ul> tags
+        let ulCount = html.components(separatedBy: "<ul>").count - 1
+        #expect(ulCount == 3)
+    }
+
+    @Test func renderNestedTaskList() {
+        let markdown = """
+        - [ ] Parent task
+          - [x] Completed child
+          - [ ] Pending child
+        """
+        let html = MarkdownRenderer.render(markdown)
+        #expect(html.contains("checkbox"))
+        #expect(html.contains("checked"))
+        #expect(html.contains("<li>"))
+        #expect(html.contains("Parent task"))
+        #expect(html.contains("Completed child"))
+        #expect(html.contains("Pending child"))
+    }
+
+    @Test func switchListTypesAtSameLevel() {
+        let markdown = """
+        - Unordered item
+        1. Ordered item
+        """
+        let html = MarkdownRenderer.render(markdown)
+        #expect(html.contains("<ul>"))
+        #expect(html.contains("<ol>"))
+        #expect(html.contains("</ul>"))
+        #expect(html.contains("</ol>"))
+    }
+
+    @Test func complexNestedStructure() {
+        let markdown = """
+        - First item
+          1. Nested ordered
+          2. Another ordered
+        - Second item
+          - Nested unordered
+            - Deep nested
+        """
+        let html = MarkdownRenderer.render(markdown)
+        #expect(html.contains("<ul>"))
+        #expect(html.contains("<ol>"))
+        #expect(html.contains("<li>First item"))
+        #expect(html.contains("<li>Nested ordered"))
+        #expect(html.contains("<li>Second item"))
+        #expect(html.contains("<li>Nested unordered"))
+        #expect(html.contains("<li>Deep nested"))
+    }
 }

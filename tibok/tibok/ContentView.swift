@@ -283,6 +283,13 @@ struct ContentView: View {
             ) { appState.exportAsPlainText() },
 
             Command(
+                id: "export.wordpress",
+                title: "Export to WordPress",
+                icon: "envelope.fill",
+                category: .export
+            ) { appState.exportToWordPress() },
+
+            Command(
                 id: "export.copyMarkdown",
                 title: "Copy as Markdown",
                 icon: "doc.on.clipboard",
@@ -649,6 +656,7 @@ extension Notification.Name {
     static let toggleSidebar = Notification.Name("toggleSidebar")
     static let toggleFocusMode = Notification.Name("toggleFocusMode")
     static let toggleEditorFocusMode = Notification.Name("toggleEditorFocusMode")
+    static let performFormatting = Notification.Name("performFormatting")
     static let showGitCommit = Notification.Name("showGitCommit")
     static let toggleInspector = Notification.Name("toggleInspector")
 }
@@ -963,7 +971,8 @@ struct TitleBarView: View {
                         ("Export as PDF", { appState.exportAsPDF() }),
                         ("Export as HTML", { appState.exportAsHTML() }),
                         ("Export as RTF", { appState.exportAsRTF() }),
-                        ("Export as Plain Text", { appState.exportAsPlainText() })
+                        ("Export as Plain Text", { appState.exportAsPlainText() }),
+                        ("Export to WordPress", { appState.exportToWordPress() })
                     ]
                 )
             }

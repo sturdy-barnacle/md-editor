@@ -36,7 +36,10 @@ struct EditorView: View {
                     text: contentBinding,
                     slashState: $slashCommandState,
                     emojiState: $emojiState,
-                    documentURL: { appState.activeDocument?.fileURL }
+                    documentURL: { appState.activeDocument?.fileURL },
+                    showToast: { message, icon, duration in
+                        appState.showToast(message, icon: icon, duration: duration)
+                    }
                 )
                 .id(doc.id) // Force recreate when document changes
                 .onChange(of: doc.content) { _, _ in
@@ -309,6 +312,7 @@ struct FindableTextEditor: NSViewRepresentable {
     @Binding var slashState: SlashCommandState
     @Binding var emojiState: EmojiState
     let documentURL: () -> URL?
+    let showToast: (String, String?, TimeInterval) -> Void
 
     // Editor settings from AppStorage
     @AppStorage(SettingsKeys.editorFontSize) private var fontSize: Double = 14
@@ -396,6 +400,7 @@ struct FindableTextEditor: NSViewRepresentable {
 
         // Wire up document URL closure for image handling
         textView.getDocumentURL = documentURL
+        textView.showToast = showToast
 
         textView.string = text
 
@@ -478,7 +483,14 @@ struct FindableTextEditor: NSViewRepresentable {
         if textView.string != text && !context.coordinator.isEditing {
             let selectedRanges = textView.selectedRanges
             textView.string = text
-            textView.selectedRanges = selectedRanges
+
+            // Apply pending selection if one was set during formatting
+            if let pendingSelection = context.coordinator.pendingSelection {
+                textView.selectedRanges = [NSValue(range: pendingSelection)]
+                context.coordinator.pendingSelection = nil
+            } else {
+                textView.selectedRanges = selectedRanges
+            }
 
             // Apply highlighting to new content
             if syntaxHighlighting, let textStorage = textView.textStorage {
@@ -497,12 +509,25 @@ struct FindableTextEditor: NSViewRepresentable {
         var focusWorkItem: DispatchWorkItem?
         var slashMenuWindow: NSWindow?
         var slashMenuController: SlashMenuController?
+        var pendingSelection: NSRange? = nil
         var emojiMenuWindow: NSWindow?
         var emojiMenuController: EmojiMenuController?
 
         init(_ parent: FindableTextEditor) {
             self.parent = parent
             super.init()
+
+            // Listen for formatting commands
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(handleFormattingCommand(_:)),
+                name: .performFormatting,
+                object: nil
+            )
+        }
+
+        deinit {
+            NotificationCenter.default.removeObserver(self)
         }
 
         func textDidBeginEditing(_ notification: Notification) {
@@ -554,7 +579,7 @@ struct FindableTextEditor: NSViewRepresentable {
             let selectedRanges = textView.selectedRanges
 
             // Debounce highlighting - wait until user stops typing (300ms)
-            let workItem = DispatchWorkItem { [weak textStorage, weak textView] in
+            let workItem = DispatchWorkItem { [weak self, weak textStorage, weak textView] in
                 guard let storage = textStorage, let tv = textView else { return }
 
                 // Temporarily disable undo grouping during highlighting
@@ -566,6 +591,19 @@ struct FindableTextEditor: NSViewRepresentable {
                 tv.selectedRanges = selectedRanges
 
                 tv.undoManager?.enableUndoRegistration()
+
+                // Re-apply focus mode if enabled (syntax highlighting resets colors)
+                if let coordinator = self, coordinator.focusModeEnabled {
+                    coordinator.applyFocusMode(to: tv)
+                }
+
+                // Force display invalidation to fix rendering bug with last paragraph
+                // Invalidate layout for the entire text range
+                if let layoutManager = tv.layoutManager {
+                    let fullRange = NSRange(location: 0, length: storage.length)
+                    layoutManager.invalidateDisplay(forCharacterRange: fullRange)
+                }
+                tv.setNeedsDisplay(tv.bounds)
             }
             highlightWorkItem = workItem
 
@@ -833,7 +871,7 @@ struct FindableTextEditor: NSViewRepresentable {
                 if let offset = cursorOffset {
                     newLocation = range.location + offset
                 } else {
-                    newLocation = range.location + insertText.count
+                    newLocation = range.location + (insertText as NSString).length
                 }
                 textView.setSelectedRange(NSRange(location: newLocation, length: 0))
             }
@@ -912,7 +950,8 @@ struct FindableTextEditor: NSViewRepresentable {
             if textView.shouldChangeText(in: range, replacementString: dateString) {
                 textView.replaceCharacters(in: range, with: dateString)
                 textView.didChangeText()
-                textView.setSelectedRange(NSRange(location: range.location + dateString.count, length: 0))
+                let utf16Length = (dateString as NSString).length
+                textView.setSelectedRange(NSRange(location: range.location + utf16Length, length: 0))
             }
 
             pendingDateRange = nil
@@ -1088,7 +1127,10 @@ struct FindableTextEditor: NSViewRepresentable {
             // Search backwards from cursor for opening colon
             for i in stride(from: cursorLocation - 1, through: max(0, cursorLocation - 30), by: -1) {
                 let char = nsString.character(at: i)
-                let charStr = String(UnicodeScalar(char)!)
+
+                // Skip invalid UTF-16 code units (e.g., lone surrogates from multi-byte emojis)
+                guard let scalar = UnicodeScalar(char) else { continue }
+                let charStr = String(scalar)
 
                 if charStr == ":" {
                     // Found colon - check it's not preceded by another colon (closing a previous emoji)
@@ -1151,13 +1193,16 @@ struct FindableTextEditor: NSViewRepresentable {
 
             parent.emojiState.colonRange = colonRange
 
-            if emojiMenuWindow == nil {
-                let controller = EmojiMenuController(emojis: emojis) { [weak self] emoji in
-                    guard let currentRange = self?.parent.emojiState.colonRange else { return }
-                    self?.insertEmoji(emoji, range: currentRange)
-                }
-                self.emojiMenuController = controller
+            // Capture range by value to prevent stale closure reads
+            let capturedRange = colonRange
 
+            // ALWAYS recreate controller with fresh closures
+            let controller = EmojiMenuController(emojis: emojis) { [weak self] emoji in
+                self?.insertEmoji(emoji, range: capturedRange)
+            }
+            self.emojiMenuController = controller
+
+            if emojiMenuWindow == nil {
                 let window = NSPanel(
                     contentRect: NSRect(x: 0, y: 0, width: 280, height: min(CGFloat(emojis.count * 36) + 8, 250)),
                     styleMask: [.nonactivatingPanel],
@@ -1172,15 +1217,22 @@ struct FindableTextEditor: NSViewRepresentable {
 
                 let hostingView = NSHostingView(rootView:
                     EmojiMenuView(controller: controller, onSelect: { [weak self] emoji in
-                        guard let currentRange = self?.parent.emojiState.colonRange else { return }
-                        self?.insertEmoji(emoji, range: currentRange)
+                        self?.insertEmoji(emoji, range: capturedRange)
                     })
                 )
                 window.contentView = hostingView
 
                 self.emojiMenuWindow = window
             } else {
-                emojiMenuController?.updateEmojis(emojis)
+                // Update existing window's content view with new closures
+                if let window = emojiMenuWindow {
+                    let hostingView = NSHostingView(rootView:
+                        EmojiMenuView(controller: controller, onSelect: { [weak self] emoji in
+                            self?.insertEmoji(emoji, range: capturedRange)
+                        })
+                    )
+                    window.contentView = hostingView
+                }
             }
 
             // Update position
@@ -1212,11 +1264,31 @@ struct FindableTextEditor: NSViewRepresentable {
         func insertEmoji(_ emoji: EmojiItem, range: NSRange) {
             guard let textView = textView else { return }
 
+            // Validate range is still valid
+            let textLength = (textView.string as NSString).length
+            guard range.location >= 0,
+                  range.location + range.length <= textLength else {
+                dismissEmojiMenu()
+                return
+            }
+
+            // Validate the range actually contains an emoji shortcode pattern
+            let nsString = textView.string as NSString
+            let rangeText = nsString.substring(with: range)
+            guard rangeText.hasPrefix(":"),
+                  rangeText.range(of: "\\s", options: .regularExpression) == nil else {
+                // Range doesn't contain valid :shortcode pattern
+                dismissEmojiMenu()
+                return
+            }
+
             // Replace :shortcode with the actual emoji
             if textView.shouldChangeText(in: range, replacementString: emoji.emoji) {
                 textView.replaceCharacters(in: range, with: emoji.emoji)
                 textView.didChangeText()
-                textView.setSelectedRange(NSRange(location: range.location + emoji.emoji.count, length: 0))
+                // Use UTF-16 length for NSRange (emojis can be multi-codepoint)
+                let utf16Length = (emoji.emoji as NSString).length
+                textView.setSelectedRange(NSRange(location: range.location + utf16Length, length: 0))
             }
 
             dismissEmojiMenu()
@@ -1245,6 +1317,88 @@ struct FindableTextEditor: NSViewRepresentable {
             }
             return false
         }
+
+        // MARK: - Formatting Commands
+
+        @objc func handleFormattingCommand(_ notification: Notification) {
+            guard let textView = textView,
+                  let userInfo = notification.userInfo,
+                  let type = userInfo["type"] as? FormattingType else {
+                return
+            }
+
+            wrapSelection(textView: textView, type: type)
+        }
+
+        private func wrapSelection(textView: NSTextView, type: FormattingType) {
+            let selectedRange = textView.selectedRange()
+            let nsString = textView.string as NSString
+
+            // Validate range
+            guard selectedRange.location != NSNotFound,
+                  selectedRange.location + selectedRange.length <= nsString.length else {
+                return
+            }
+
+            let selectedText = nsString.substring(with: selectedRange)
+
+            // Determine wrapping characters based on type
+            let (prefix, suffix, placeholder): (String, String, String)
+            switch type {
+            case .bold:
+                (prefix, suffix, placeholder) = ("**", "**", "bold text")
+            case .italic:
+                (prefix, suffix, placeholder) = ("*", "*", "italic text")
+            case .strikethrough:
+                (prefix, suffix, placeholder) = ("~~", "~~", "strikethrough text")
+            case .code:
+                (prefix, suffix, placeholder) = ("`", "`", "code")
+            case .link:
+                (prefix, suffix, placeholder) = ("[", "](url)", "link text")
+            }
+
+            // If no selection, insert placeholder
+            let textToWrap = selectedText.isEmpty ? placeholder : selectedText
+            let wrappedText = prefix + textToWrap + suffix
+
+            // Replace text
+            if textView.shouldChangeText(in: selectedRange, replacementString: wrappedText) {
+                isEditing = true
+                textView.replaceCharacters(in: selectedRange, with: wrappedText)
+
+                // Set cursor position IMMEDIATELY after text insertion
+                if type == .link {
+                    let prefixLength = (prefix as NSString).length
+                    if selectedText.isEmpty {
+                        // No selection - select "link text" placeholder
+                        let placeholderLength = (placeholder as NSString).length
+                        textView.setSelectedRange(NSRange(
+                            location: selectedRange.location + prefixLength,
+                            length: placeholderLength
+                        ))
+                    } else {
+                        // Has selection - select URL placeholder: [text](|url|)
+                        let beforeUrl = (prefix + selectedText + "](" as NSString).length
+                        let urlLength = (suffix.dropFirst().dropLast() as NSString).length  // "url" from "(url)"
+                        textView.setSelectedRange(NSRange(
+                            location: selectedRange.location + beforeUrl,
+                            length: urlLength
+                        ))
+                    }
+                } else {
+                    // Unified behavior for other formatting: always select the content/placeholder
+                    let prefixLength = (prefix as NSString).length
+                    let contentLength = (textToWrap as NSString).length
+                    textView.setSelectedRange(NSRange(
+                        location: selectedRange.location + prefixLength,
+                        length: contentLength
+                    ))
+                }
+
+                textView.didChangeText()
+                isEditing = false
+            }
+        }
     }
 }
 
@@ -1253,6 +1407,7 @@ struct FindableTextEditor: NSViewRepresentable {
 class SlashTextView: NSTextView {
     weak var coordinator: FindableTextEditor.Coordinator?
     var getDocumentURL: (() -> URL?)? = nil
+    var showToast: ((String, String?, TimeInterval) -> Void)? = nil
     var autoPairsEnabled: Bool = true
     var smartListsEnabled: Bool = true
 
@@ -1523,13 +1678,7 @@ class SlashTextView: NSTextView {
     override func paste(_ sender: Any?) {
         let pasteboard = NSPasteboard.general
 
-        // Check for image data first
-        if let imageData = pasteboard.data(forType: .png) ?? pasteboard.data(forType: .tiff) {
-            insertImageData(imageData, extension: "png")
-            return
-        }
-
-        // Check for image files
+        // Check for image FILES first (preserves original format)
         if let urls = pasteboard.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL] {
             let imageExtensions = ["png", "jpg", "jpeg", "gif", "webp", "svg", "bmp", "tiff"]
             let imageURLs = urls.filter { imageExtensions.contains($0.pathExtension.lowercased()) }
@@ -1542,6 +1691,22 @@ class SlashTextView: NSTextView {
             }
         }
 
+        // Fall back to image DATA (for screenshots, browser images, etc.)
+        if let imageData = pasteboard.data(forType: .png) {
+            insertImageData(imageData, extension: "png")
+            return
+        }
+
+        if let imageData = pasteboard.data(forType: NSPasteboard.PasteboardType("public.jpeg")) {
+            insertImageData(imageData, extension: "jpg")
+            return
+        }
+
+        if let imageData = pasteboard.data(forType: .tiff) {
+            insertImageData(imageData, extension: "png")  // Convert TIFF to PNG for better web compatibility
+            return
+        }
+
         // Default paste behavior for text
         super.paste(sender)
     }
@@ -1551,14 +1716,19 @@ class SlashTextView: NSTextView {
     private func insertImage(from sourceURL: URL) {
         guard let docURL = documentURL() else {
             // No document saved yet - insert with absolute path
+            showToast?("Save document for relative paths", "exclamationmark.triangle.fill", 3.0)
             let markdown = "![](file://\(sourceURL.path))"
-            insertMarkdownAtCursor(markdown)
+            insertMarkdownAtCursor(markdown, cursorInAltText: true)
             return
         }
 
         // Create assets folder if needed
         let assetsFolder = docURL.deletingLastPathComponent().appendingPathComponent("assets")
-        createAssetsFolderIfNeeded(at: assetsFolder)
+        let folderCreated = createAssetsFolderIfNeeded(at: assetsFolder)
+
+        if folderCreated {
+            showToast?("Created assets folder", "folder.badge.plus", 1.5)
+        }
 
         // Generate unique filename
         let filename = generateUniqueFilename(for: sourceURL.lastPathComponent, in: assetsFolder)
@@ -1568,25 +1738,31 @@ class SlashTextView: NSTextView {
         do {
             try FileManager.default.copyItem(at: sourceURL, to: destinationURL)
             let markdown = "![](./assets/\(filename))"
-            insertMarkdownAtCursor(markdown)
+            insertMarkdownAtCursor(markdown, cursorInAltText: true)
+            showToast?("Image added to assets/\(filename)", "photo.badge.checkmark", 2.0)
         } catch {
             // Fallback to absolute path
             let markdown = "![](file://\(sourceURL.path))"
-            insertMarkdownAtCursor(markdown)
+            insertMarkdownAtCursor(markdown, cursorInAltText: true)
+            showToast?("Using absolute path (copy failed)", "exclamationmark.triangle", 2.5)
         }
     }
 
     private func insertImageData(_ data: Data, extension ext: String) {
         guard let docURL = documentURL() else {
             // Can't save image data without a document location
-            // Show alert or just insert placeholder
+            showToast?("Save document to paste images", "exclamationmark.triangle.fill", 3.0)
             insertMarkdownAtCursor("![](paste image - save document first)")
             return
         }
 
         // Create assets folder if needed
         let assetsFolder = docURL.deletingLastPathComponent().appendingPathComponent("assets")
-        createAssetsFolderIfNeeded(at: assetsFolder)
+        let folderCreated = createAssetsFolderIfNeeded(at: assetsFolder)
+
+        if folderCreated {
+            showToast?("Created assets folder", "folder.badge.plus", 1.5)
+        }
 
         // Generate unique filename with timestamp
         let timestamp = Int(Date().timeIntervalSince1970)
@@ -1597,9 +1773,13 @@ class SlashTextView: NSTextView {
         do {
             try data.write(to: destinationURL)
             let markdown = "![](./assets/\(filename))"
-            insertMarkdownAtCursor(markdown)
+            insertMarkdownAtCursor(markdown, cursorInAltText: true)
+            showToast?("Image saved to assets/\(filename)", "photo.badge.checkmark", 2.0)
         } catch {
-            // Error saving pasted image - silently fail
+            // If write fails, insert placeholder and show error
+            insertMarkdownAtCursor("![](failed to save image)")
+            showToast?("Failed to save image: \(error.localizedDescription)",
+                       "exclamationmark.triangle.fill", 3.0)
         }
     }
 
@@ -1607,10 +1787,12 @@ class SlashTextView: NSTextView {
         return getDocumentURL?()
     }
 
-    private func createAssetsFolderIfNeeded(at url: URL) {
+    private func createAssetsFolderIfNeeded(at url: URL) -> Bool {
         if !FileManager.default.fileExists(atPath: url.path) {
             try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+            return true  // Folder was created
         }
+        return false  // Folder already existed
     }
 
     private func generateUniqueFilename(for original: String, in folder: URL) -> String {
@@ -1628,12 +1810,25 @@ class SlashTextView: NSTextView {
         return filename
     }
 
-    private func insertMarkdownAtCursor(_ markdown: String) {
+    private func insertMarkdownAtCursor(_ markdown: String, cursorInAltText: Bool = false) {
         let range = selectedRange()
         if shouldChangeText(in: range, replacementString: markdown) {
+            coordinator?.isEditing = true
             replaceCharacters(in: range, with: markdown)
+
+            let newRange: NSRange
+            if cursorInAltText {
+                // Place cursor in alt text: ![|](path)
+                newRange = NSRange(location: range.location + 2, length: 0)
+            } else {
+                // Default: cursor at end
+                let utf16Length = (markdown as NSString).length
+                newRange = NSRange(location: range.location + utf16Length, length: 0)
+            }
+            setSelectedRange(newRange)
+
             didChangeText()
-            setSelectedRange(NSRange(location: range.location + markdown.count, length: 0))
+            coordinator?.isEditing = false
         }
     }
 }

@@ -60,6 +60,31 @@ Press Ctrl+Cmd+. again or Escape to exit focus mode. Your sidebar and preview st
 | Paste | Cmd+V |
 | Select All | Cmd+A |
 
+## Formatting
+
+| Action | Shortcut |
+|--------|----------|
+| Bold | Cmd+B |
+| Italic | Cmd+Shift+I |
+| Strikethrough | Cmd+Shift+X |
+| Inline Code | Cmd+E |
+| Link | Cmd+L |
+
+### Cursor Positioning
+
+Formatting shortcuts use intelligent cursor positioning to streamline your workflow:
+
+**With selected text:**
+- **Bold, Italic, Strikethrough, Code**: Wrapped text stays selected, enabling chaining
+  - Example: Select "text" → Cmd+B → `**text**` selected → Cmd+Shift+I → `***text***` selected
+- **Link**: URL placeholder is selected, ready to type/paste
+  - Example: Select "README" → Cmd+L → `[README](url)` with "url" selected
+
+**Without selection:**
+- All shortcuts insert placeholder text and select it for immediate replacement
+  - Cmd+B → `**bold text**` with "bold text" selected
+  - Cmd+L → `[link text](url)` with "link text" selected
+
 ## Slash Commands
 
 | Action | Key |

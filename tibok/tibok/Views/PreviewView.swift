@@ -22,8 +22,77 @@ struct PreviewView: View {
     }
 
     private var renderedHTML: String {
-        let html = MarkdownRenderer.render(appState.currentDocument.content)
+        var html = MarkdownRenderer.render(appState.currentDocument.content)
+
+        // Convert local images to base64 data URLs if document is saved
+        if let fileURL = appState.currentDocument.fileURL {
+            html = convertLocalImagesToBase64(html, documentURL: fileURL)
+        }
+
         return wrapInHTMLTemplate(html)
+    }
+
+    /// Converts local image paths to base64 data URLs
+    private func convertLocalImagesToBase64(_ html: String, documentURL: URL) -> String {
+        var result = html
+        let documentDir = documentURL.deletingLastPathComponent()
+
+        // Match img tags: <img src="..." alt="..." title="...">
+        let pattern = #"<img\s+src="([^"]+)"#
+
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else {
+            return html
+        }
+
+        let matches = regex.matches(in: html, range: NSRange(html.startIndex..., in: html))
+
+        // Process in reverse to maintain string indices
+        for match in matches.reversed() {
+            guard match.numberOfRanges >= 2,
+                  let srcRange = Range(match.range(at: 1), in: html) else {
+                continue
+            }
+
+            let srcPath = String(html[srcRange])
+
+            // Skip if already a data URL or remote URL
+            if srcPath.hasPrefix("data:") || srcPath.hasPrefix("http://") || srcPath.hasPrefix("https://") {
+                continue
+            }
+
+            // Resolve local path
+            var imageURL: URL
+            if srcPath.hasPrefix("./") {
+                imageURL = documentDir.appendingPathComponent(String(srcPath.dropFirst(2)))
+            } else if srcPath.hasPrefix("/") {
+                imageURL = URL(fileURLWithPath: srcPath)
+            } else {
+                imageURL = documentDir.appendingPathComponent(srcPath)
+            }
+
+            // Read image and convert to base64
+            if let imageData = try? Data(contentsOf: imageURL) {
+                // Determine MIME type from file extension
+                let ext = imageURL.pathExtension.lowercased()
+                let mimeType: String
+                switch ext {
+                case "png": mimeType = "image/png"
+                case "jpg", "jpeg": mimeType = "image/jpeg"
+                case "gif": mimeType = "image/gif"
+                case "webp": mimeType = "image/webp"
+                case "svg": mimeType = "image/svg+xml"
+                default: mimeType = "image/\(ext)"
+                }
+
+                let base64 = imageData.base64EncodedString()
+                let dataURL = "data:\(mimeType);base64,\(base64)"
+
+                // Replace the src path with data URL
+                result = result.replacingOccurrences(of: "src=\"\(srcPath)\"", with: "src=\"\(dataURL)\"")
+            }
+        }
+
+        return result
     }
 
     var body: some View {
@@ -147,6 +216,10 @@ struct PreviewView: View {
                 a:hover { text-decoration: underline; }
                 ul, ol { margin: 0 0 16px 0; padding-left: 24px; }
                 li { margin-bottom: 4px; }
+                /* Nested list spacing */
+                ul ul, ul ol, ol ul, ol ol {
+                    margin: 4px 0 0 0;
+                }
                 hr { border: none; border-top: 1px solid #e5e5e5; margin: 24px 0; }
                 table { border-collapse: collapse; margin: 0 0 16px 0; width: 100%; }
                 th, td { border: 1px solid #e5e5e5; padding: 8px 12px; text-align: left; }

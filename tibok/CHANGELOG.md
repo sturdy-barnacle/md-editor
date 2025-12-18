@@ -57,10 +57,43 @@
 - 30-second timeout for requests
 - Settings > Webhooks for management
 
+### Markdown Formatting Shortcuts
+- **Cmd+B**: Bold text (`**text**`)
+- **Cmd+Shift+I**: Italic text (`*text*`)
+- **Cmd+E**: Inline code (`` `code` ``)
+- **Cmd+Shift+X**: Strikethrough (`~~text~~`)
+- **Cmd+L**: Link (`[text](url)`)
+- Auto-wraps selected text or inserts placeholder when no selection
+- **Intelligent cursor positioning**:
+  - With selection: Wrapped text stays selected for chaining (e.g., bold → italic)
+  - Link shortcut: Selects URL placeholder for immediate editing
+  - No selection: Placeholder text selected for quick replacement
+- Accessible via Format menu
+
+### Image Handling Improvements
+- **Multi-format paste support**: Preserves GIF, PNG, JPEG when copying files from Finder
+- **Smart format detection**: Automatically detects and preserves original image format
+- **TIFF conversion**: Converts TIFF to PNG for better web compatibility
+- **Cursor positioning**: Automatically places cursor in alt text field `![|](path)` for accessibility
+- **Visual feedback**: Toast notifications for all image operations
+  - Success: "Image saved to assets/filename"
+  - Warnings: "Save document to paste images", "Using absolute path"
+  - Errors: "Failed to save image" with specific error details
+- **Export notifications**: Contextual warnings for PDF/HTML exports with images
+- **Assets folder notification**: Alerts when assets folder is created
+
+### Nested Lists
+- Support for up to 3 levels of nesting (parent → child → grandchild)
+- 2-space indentation per level
+- Mix ordered and unordered lists at any level
+- Task lists can be nested
+- Proper HTML rendering with correct tag nesting
+- CSS styling for nested list spacing
+
 ### Other Improvements
 - Print support (⌘P) with styled output
 - Offline math/LaTeX rendering with bundled KaTeX
-- Emoji picker with `:shortcode:` syntax
+- Emoji picker with `:shortcode:` syntax (fixed crash with UTF-16 surrogate pairs)
 - **Package.swift cleanup** - Fixed KaTeX resource warnings (23 files)
 - Syntax highlighting performance fix (color-only attributes)
 

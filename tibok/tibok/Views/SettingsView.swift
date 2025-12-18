@@ -116,6 +116,8 @@ enum SettingsKeys {
     static let hugoDefaultFormat = "frontmatter.hugo.format" // yaml or toml
     // Timezone setting
     static let frontmatterTimezone = "frontmatter.timezone"
+    // WordPress Post by Email
+    static let wordpressEmailAddress = "wordpress.emailAddress"
 }
 
 enum AppearanceMode: String, CaseIterable {
@@ -188,6 +190,7 @@ struct SettingsView: View {
 struct GeneralSettingsView: View {
     @Binding var autoSaveEnabled: Bool
     @Binding var appearanceMode: String
+    @AppStorage(SettingsKeys.wordpressEmailAddress) private var wordpressEmailAddress: String = ""
 
     var body: some View {
         Form {
@@ -208,6 +211,15 @@ struct GeneralSettingsView: View {
             Section(L10n.General.savingSection) {
                 Toggle(L10n.General.autoSaveToggle, isOn: $autoSaveEnabled)
                     .help(L10n.General.autoSaveHelp)
+            }
+
+            Section("WordPress Export") {
+                TextField("Post by Email Address", text: $wordpressEmailAddress)
+                    .help("Your WordPress Post by Email address. Get this from WordPress Settings > Writing > Post via Email.")
+                Text("Configure your WordPress Post by Email address to publish posts directly from tibok. Subject becomes the post title, and content is formatted as HTML.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .padding(.top, 4)
             }
 
             Section(L10n.General.helpSection) {

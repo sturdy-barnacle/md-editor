@@ -242,6 +242,36 @@ struct tibokApp: App {
                 }
             }
 
+            // Format menu with markdown shortcuts
+            CommandMenu("Format") {
+                Button("Bold") {
+                    performFormatting(.bold)
+                }
+                .keyboardShortcut("b", modifiers: .command)
+
+                Button("Italic") {
+                    performFormatting(.italic)
+                }
+                .keyboardShortcut("i", modifiers: [.command, .shift])
+
+                Button("Strikethrough") {
+                    performFormatting(.strikethrough)
+                }
+                .keyboardShortcut("x", modifiers: [.command, .shift])
+
+                Divider()
+
+                Button("Inline Code") {
+                    performFormatting(.code)
+                }
+                .keyboardShortcut("e", modifiers: .command)
+
+                Button("Link") {
+                    performFormatting(.link)
+                }
+                .keyboardShortcut("l", modifiers: .command)
+            }
+
             // Add Find menu
             CommandMenu("Find") {
                 Button("Find…") {
@@ -301,6 +331,24 @@ struct tibokApp: App {
             appState: appState
         )
     }
+
+    private func performFormatting(_ type: FormattingType) {
+        NotificationCenter.default.post(
+            name: .performFormatting,
+            object: nil,
+            userInfo: ["type": type]
+        )
+    }
+}
+
+// MARK: - Formatting Types
+
+enum FormattingType: String {
+    case bold
+    case italic
+    case strikethrough
+    case code
+    case link
 }
 
 // MARK: - Git Error Helper

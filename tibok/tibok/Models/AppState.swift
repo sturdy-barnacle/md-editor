@@ -678,6 +678,18 @@ class AppState: ObservableObject {
                 documents[index].fileURL = newURL
                 documents[index].title = newURL.deletingPathExtension().lastPathComponent
             }
+
+            // Update recent files list
+            if let recentIndex = recentFiles.firstIndex(of: url) {
+                recentFiles[recentIndex] = newURL
+                saveRecentFiles()
+            }
+
+            // Update favorites list
+            if let favoriteIndex = favoriteFiles.firstIndex(of: url) {
+                favoriteFiles[favoriteIndex] = newURL
+                saveFavorites()
+            }
         } catch {
             showToast("Failed to rename file", icon: "exclamationmark.triangle.fill")
         }
@@ -820,6 +832,16 @@ class AppState: ObservableObject {
 
         guard panel.runModal() == .OK, let url = panel.url else { return }
 
+        // Check for relative images and warn
+        let hasRelativeImages = currentDocument.content.contains("](./assets/") ||
+                               currentDocument.content.contains("](assets/")
+        if hasRelativeImages {
+            showToast("Note: Relative image paths may not work in PDF",
+                     icon: "photo.badge.exclamationmark", duration: 3.0)
+        }
+
+        showToast("Generating PDF...", icon: "doc.text", duration: 1.0)
+
         // Render markdown to HTML with print styles
         let html = wrapHTMLForPrint(MarkdownRenderer.render(currentDocument.content))
 
@@ -858,6 +880,8 @@ class AppState: ObservableObject {
         printOp.showsProgressPanel = false
 
         printOp.runModal(for: NSApp.mainWindow ?? NSWindow(), delegate: nil, didRun: nil, contextInfo: nil)
+
+        showToast("PDF exported successfully", icon: "checkmark.circle.fill", duration: 2.0)
 
         // Trigger document.export webhooks
         let (frontmatter, _) = Frontmatter.parse(from: currentDocument.content)
@@ -1117,6 +1141,17 @@ class AppState: ObservableObject {
         do {
             try html.write(to: url, atomically: true, encoding: .utf8)
 
+            // Context-aware success notification
+            let hasRelativeImages = currentDocument.content.contains("](./assets/") ||
+                                   currentDocument.content.contains("](assets/")
+            if hasRelativeImages {
+                showToast("Images use relative paths - keep assets folder",
+                         icon: "photo", duration: 3.0)
+            } else {
+                showToast("HTML exported successfully",
+                         icon: "checkmark.circle.fill", duration: 2.0)
+            }
+
             // Trigger document.export webhooks
             let (frontmatter, _) = Frontmatter.parse(from: currentDocument.content)
             Task {
@@ -1192,7 +1227,16 @@ class AppState: ObservableObject {
     func copyAsMarkdown() {
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(currentDocument.content, forType: .string)
-        showToast("Copied to clipboard", icon: "doc.on.clipboard.fill")
+
+        // Context-aware notification
+        let hasRelativeImages = currentDocument.content.contains("](./assets/") ||
+                               currentDocument.content.contains("](assets/")
+
+        if hasRelativeImages {
+            showToast("Copied (images not included)", icon: "doc.on.clipboard", duration: 2.5)
+        } else {
+            showToast("Copied to clipboard", icon: "doc.on.clipboard.fill", duration: 1.5)
+        }
     }
 
     // MARK: - Toast Notifications
@@ -1285,6 +1329,66 @@ class AppState: ObservableObject {
             }
         } catch {
             showToast("Failed to export text", icon: "exclamationmark.triangle.fill")
+        }
+    }
+
+    func exportToWordPress() {
+        // Get WordPress email address from settings
+        let wordpressEmail = UserDefaults.standard.string(forKey: SettingsKeys.wordpressEmailAddress) ?? ""
+
+        guard !wordpressEmail.isEmpty else {
+            showToast("Configure WordPress email in Settings", icon: "envelope.badge.fill")
+            return
+        }
+
+        // Parse frontmatter for title, categories, and tags
+        let (frontmatter, body) = Frontmatter.parse(from: currentDocument.content)
+        let title = frontmatter?.title ?? currentDocument.title
+
+        // Convert markdown to HTML (WordPress supports HTML in email)
+        let htmlContent = MarkdownRenderer.render(body)
+
+        // Build email body with WordPress formatting
+        var emailBody = htmlContent
+
+        // Add categories if present (WordPress syntax: [category CategoryName])
+        if let categories = frontmatter?.categories, !categories.isEmpty {
+            let categorySyntax = categories.map { "[category \($0)]" }.joined(separator: " ")
+            emailBody = "\(categorySyntax)\n\n\(emailBody)"
+        }
+
+        // Add tags if present (WordPress syntax: tags: tag1, tag2, tag3)
+        if let tags = frontmatter?.tags, !tags.isEmpty {
+            let tagSyntax = "tags: \(tags.joined(separator: ", "))"
+            emailBody = "\(tagSyntax)\n\n\(emailBody)"
+        }
+
+        // URL encode the subject and body
+        guard let encodedSubject = title.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+              let encodedBody = emailBody.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
+            showToast("Failed to encode email", icon: "exclamationmark.triangle.fill")
+            return
+        }
+
+        // Create mailto URL
+        let mailtoURL = "mailto:\(wordpressEmail)?subject=\(encodedSubject)&body=\(encodedBody)"
+
+        // Open default email client
+        if let url = URL(string: mailtoURL) {
+            NSWorkspace.shared.open(url)
+            showToast("Opening email client...", icon: "envelope.fill")
+
+            // Trigger document.export webhooks
+            Task {
+                await WebhookService.shared.triggerDocumentExport(
+                    filename: currentDocument.fileURL?.lastPathComponent ?? "\(title).md",
+                    title: frontmatter?.title,
+                    path: currentDocument.fileURL?.path ?? "",
+                    exportFormat: "wordpress"
+                )
+            }
+        } else {
+            showToast("Failed to open email client", icon: "exclamationmark.triangle.fill")
         }
     }
 
