@@ -1,6 +1,57 @@
 # Changelog
 
-## Beta v0.6 (In Progress)
+## Beta v0.7 (In Progress)
+
+### Smart Filtering Performance
+- **Lazy folder evaluation** - Folders scanned only when expanded by user
+- **Persistent caching** - Scan results cached for 1 hour across app launches
+- **Background scanning** - Folder filtering happens off main thread
+- **No UI freezing** - Workspaces open instantly, even with 5000+ files
+- **Smart skip list** - Automatically ignores node_modules, .git, .build, etc.
+- **Configurable** - Toggle smart filtering in Settings > General
+
+### Plugin System Phase 2
+- **Folder-based plugin discovery** - Plugins discovered from file system folders
+- **Plugin manifest format** - JSON manifests describe plugins (identifier, name, version, capabilities)
+- **Two plugin sources**:
+  - Built-in: Core plugins included with Tibok
+  - Community: User-installed plugins from `~/Library/Application Support/tibok/Plugins/ThirdParty/`
+- **Plugin registry** - `PLUGIN_REGISTRY.md` lists available community plugins
+- **Developer guides**:
+  - Complete plugin development guide
+  - Plugin template/starter code
+  - Security best practices guide
+- **Simple installation** - Download ZIP, extract to folder, restart Tibok
+
+### Service Layer Refactoring (Phase 2)
+- **AppState simplification** - Reduced from ~1606 lines to ~1230 lines (23% reduction)
+- **Service extraction** - Created 9 focused service classes:
+  - `DocumentManager` (265 lines) - Document/tab lifecycle management
+  - `WorkspaceService` (120 lines) - Workspace, recents, favorites
+  - `CommandService` (175 lines) - Command palette & slash commands
+  - `UIStateService` (32 lines) - Toast notifications and UI state
+  - `ExportService` (700+ lines) - PDF/HTML/RTF/print exports
+  - `FileOperationsService` (110 lines) - File I/O operations
+  - `FolderScanCache` (183 lines) - Performance caching for file tree
+  - `FrontmatterCacheService` - Frontmatter metadata caching
+  - `LogService` - Centralized logging
+- **Combine integration** - Service objectWillChange forwarding for SwiftUI reactivity
+- **ObservableObject pattern** - Services publish state changes to AppState
+- **Result** - More maintainable architecture, clearer separation of concerns
+
+### Git UX Improvements
+- **Prefilled commit messages** - Auto-generates based on staged files (e.g., "Add file1.md; Update file2.md")
+- **Manual refresh button** - Refresh icon in Git section heading for manual status updates
+- **Commit modal stability** - Fixed flicker/flash during commit process
+- **Smart section management** - Recent/Favorites auto-collapse when workspace opens, Git auto-expands
+
+### Session State Persistence
+- **Panel visibility persistence** - Preview, sidebar, inspector state saved between sessions
+- **Workspace folder persistence** - Last opened workspace restored on launch
+- **Folder expansion state** - Remembers which folders were expanded in file tree
+- **Tab restoration** - Open documents restored with correct order and active tab
+
+## Beta v0.6 (Completed)
 
 ### Multiple Open Files (Tabs)
 - Tab bar always visible when documents are open
@@ -16,6 +67,26 @@
 - Push and pull from remote
 - Git menu in menu bar
 - Branch indicator in status bar
+- **Auto-refresh git status** when documents are saved (manual/auto-save)
+- **Prefilled commit messages** - Auto-generates based on staged files (e.g., "Add file1.md; Update file2.md; Delete file3.md")
+- **Git refresh button** in section heading for manual status updates
+- **Smooth commit modal** - No flickering during commit process
+- **Branch Management** - Full branch operations in Git panel:
+  - View all local branches in collapsible list
+  - Current branch indicator with checkmark
+  - Create new branches with validation
+  - Switch between branches with uncommitted changes check
+  - Delete branches with safety confirmations
+  - Protected branches (main/master) require extra confirmation
+- **Stash Management** - Temporary storage for uncommitted changes:
+  - View all stashes in collapsible list
+  - Create stash with optional message
+  - Apply stash (keep in list) or Pop stash (apply and remove)
+  - Drop/delete stashes
+  - **Smart branch switching** with uncommitted changes:
+    - "Stash & Switch" - Stash changes before switching branches
+    - "Bring With Me" - Try to switch with uncommitted changes
+    - Cancel option to abort switch
 
 ### Plugin System Phase 1
 - Plugin protocol with lifecycle management
@@ -57,6 +128,25 @@
 - 30-second timeout for requests
 - Settings > Webhooks for management
 
+### WordPress Publishing
+- **Direct publishing** to WordPress sites via REST API v2
+- **Built-in plugin** (Settings > Plugins) with command palette integration (⌘⇧P)
+- **Application Password authentication** - Secure, revocable credentials (WordPress 5.6+)
+- **Keychain storage** - Sensitive credentials encrypted in macOS Keychain
+- **Frontmatter integration** - Override defaults with document frontmatter:
+  - `title` → Post title
+  - `categories` → WordPress categories (auto-created if missing)
+  - `draft: true` → Post status (draft/publish/pending/private)
+  - `description` → Post excerpt
+- **Smart defaults** configurable in Settings > WordPress:
+  - Default post status, categories, and author
+  - Site URL and username
+- **Test connection** button for credential validation before publishing
+- **Browser integration** - Opens published post in browser after success
+- **Webhook trigger** - Fires `document.export` webhook with format "wordpress"
+- **Markdown conversion** - Automatic HTML conversion using MarkdownRenderer
+- Command available in Command Palette: "Publish to WordPress"
+
 ### Markdown Formatting Shortcuts
 - **Cmd+B**: Bold text (`**text**`)
 - **Cmd+Shift+I**: Italic text (`*text*`)
@@ -90,12 +180,33 @@
 - Proper HTML rendering with correct tag nesting
 - CSS styling for nested list spacing
 
+### Workspace Improvements
+- **Nested folder expansion** - Fixed bug preventing folders from expanding beyond first level
+- **Auto-collapse sections** - When workspace opens, Recent Files and Favorites auto-collapse while Git section expands for focused workflow
+- **Smart workspace filtering** - Only shows folders containing markdown files (recursive check), hiding empty folders and non-markdown directories
+  - Automatically filters out node_modules, .git, .build, images, and other non-markdown folders
+  - Recursion depth limit (10 levels) for safety
+  - Skips symlinks to avoid cycles
+  - Improves focus in large projects with mixed file types
+- Lazy loading of folder contents for better performance
+
+### Architecture Improvements (Phase 2 Refactoring)
+- **Service extraction** - Reduced AppState from ~1606 lines to ~600 lines (63% reduction)
+- **DocumentManager** - Centralized document/tab management (265 lines)
+- **WorkspaceService** - Workspace, recents, and favorites management (120 lines)
+- **CommandService** - Command palette and slash command system (175 lines)
+- **UIStateService** - Toast notifications and UI state (32 lines)
+- **Combine integration** - Fixed SwiftUI observation chain for service delegation
+- Improved maintainability and testability
+
 ### Other Improvements
+- **Sidebar toolbar** - Quick-access icon buttons for common actions (Open Workspace, Open Document, New Document) with keyboard shortcut tooltips
 - Print support (⌘P) with styled output
 - Offline math/LaTeX rendering with bundled KaTeX
 - Emoji picker with `:shortcode:` syntax (fixed crash with UTF-16 surrogate pairs)
 - **Package.swift cleanup** - Fixed KaTeX resource warnings (23 files)
 - Syntax highlighting performance fix (color-only attributes)
+- Favorites indicator changed from star to heart (💖)
 
 ---
 

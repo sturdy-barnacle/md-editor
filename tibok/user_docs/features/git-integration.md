@@ -30,7 +30,82 @@ Files in the sidebar show colored dots indicating their Git status:
 
 ## Git Panel
 
-The Git panel appears in the sidebar when a Git repository is open (collapsed by default for a distraction-free experience). Click the "Git" section header to expand it. It shows:
+The Git panel appears in the sidebar when a Git repository is open (collapsed by default for a distraction-free experience). Click the "Git" section header to expand it. It includes sections for:
+- **Branches** - View and manage local branches
+- **Stashes** - Temporary storage for uncommitted changes
+- **Changes** - Staged and unstaged file modifications
+- **Quick actions** - Commit, push, pull operations
+
+### Branch Management
+
+The Git panel includes a collapsible Branches section where you can:
+
+**View Branches**
+- See all local branches in a list
+- Current branch marked with checkmark ✓
+- Branch names displayed clearly
+
+**Create New Branch**
+1. Click "New Branch" button in Branches section
+2. Enter branch name (alphanumeric, hyphens, underscores, forward slashes allowed)
+3. Real-time validation ensures name is valid and unique
+4. New branch is created from current HEAD
+
+**Switch Branches**
+1. Click on any branch name to switch
+2. If you have uncommitted changes, you'll see options:
+   - **Stash & Switch** - Saves changes to stash before switching branches
+   - **Bring With Me** - Attempts to switch while keeping uncommitted changes
+   - **Cancel** - Abort the switch
+3. Git status refreshes automatically after successful switch
+
+**Delete Branches**
+1. Click trash icon next to the branch you want to delete
+2. Confirmation dialog appears with the branch name
+3. **Protected branches** (main, master) require extra confirmation
+4. Cannot delete the currently active branch
+
+**Safety Features**
+- Real-time validation of branch names
+- Protected branch warnings for main/master
+- Uncommitted changes detection before switching
+- Toast notifications for all operations success/failure
+
+### Stash Management
+
+The Git panel includes a collapsible Stashes section for temporary storage of uncommitted changes:
+
+**View Stashes**
+- See all stashes with timestamps
+- Stash message shown if one was provided
+- List shows most recent stashes first
+
+**Create Stash**
+1. Click "New Stash" button in Stashes section
+2. Optionally enter a descriptive message
+3. All uncommitted changes are saved to stash
+4. Working directory becomes clean (all changes saved)
+
+**Apply Stash**
+- Click "Apply" button to restore stashed changes
+- Stash remains in the list for reuse or reference
+- Changes are applied to your current branch
+
+**Pop Stash**
+- Click "Pop" button to apply and remove stash in one action
+- Changes are restored and stash is permanently deleted
+- Useful for one-time application of changes
+
+**Drop Stash**
+- Click trash icon to delete a stash without applying it
+- Confirmation required before permanent deletion
+- Useful for removing unwanted stashes
+
+**Common Use Cases**
+- Temporarily save work before switching branches
+- Experiment with changes without committing them
+- Transfer uncommitted changes between branches
+- Clean working directory for Git operations (merge, rebase, etc.)
 
 ### Staged Changes
 Files that are staged and ready to commit. Click the minus (-) button to unstage.

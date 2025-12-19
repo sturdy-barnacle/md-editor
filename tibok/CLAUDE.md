@@ -19,11 +19,25 @@ swift test                # Run tests
 
 Running `swift build` alone will NOT include the app icon.
 
+### Model Recommendations
+
+For cost optimization with Claude Code:
+
+- **Haiku (Default)**: Routine edits, building, testing, file operations, code search
+- **Sonnet**: Architecture decisions, large refactors, performance optimization, debugging
+- **Opus**: Only for very complex problems blocking development
+
+**Cost tip**: Using Haiku for routine work and Sonnet for complex tasks saves ~60-70% vs. Sonnet-only.
+
 ### Key Directories
 - `tibok/` - Main app source code
+  - `Services/` - Service layer (DocumentManager, WorkspaceService, etc.)
+  - `Views/` - SwiftUI views
+  - `Models/` - Data models and AppState
+  - `Plugins/` - Plugin system
 - `tibokTests/` - Unit tests
 - `user_docs/` - User-facing documentation
-- `planning/` - Development planning documents
+- `FUTURE_FEATURES.md` - Planned features and design docs
 
 ## Architecture
 
@@ -34,10 +48,20 @@ Running `swift build` alone will NOT include the app icon.
 - Swift Package Manager for dependencies
 
 ### Core Components
-- `AppState` - Centralized app state (@EnvironmentObject)
+- `AppState` - Main orchestrator (~1230 lines after Phase 2 refactoring, down from ~1606)
+- **Service Layer** (Phase 2 refactoring):
+  - `DocumentManager` - Document/tab management (265 lines, ObservableObject)
+  - `WorkspaceService` - Workspace, recents, favorites (120 lines, ObservableObject)
+  - `CommandService` - Command palette & slash commands (175 lines, ObservableObject)
+  - `UIStateService` - Toast notifications (32 lines, ObservableObject)
+  - `ExportService` - PDF/HTML/RTF/print exports (700+ lines, static)
+  - `FileOperationsService` - File I/O operations (110 lines, static)
+  - `GitService` - Git command execution (static)
+  - `WordPressExporter` - WordPress REST API publishing (250 lines, singleton @MainActor)
 - `MarkdownDocument` - Document model with content, metadata
 - `SlashTextView` - Custom NSTextView with slash commands, drag/drop
 - `PreviewView` - WebKit-based markdown rendering
+- **Combine integration** - Service objectWillChange forwarding for SwiftUI reactivity
 
 ### File Locations
 | File | Purpose |
@@ -47,7 +71,43 @@ Running `swift build` alone will NOT include the app icon.
 | `Views/EditorView.swift` | Editor with slash commands |
 | `Views/PreviewView.swift` | Markdown preview |
 | `Views/SidebarView.swift` | File browser |
-| `Models/AppState.swift` | Shared state |
+| `Views/GitPanelView.swift` | Git status & operations |
+| `Models/AppState.swift` | Main orchestrator, delegates to services |
+| `Services/` | **Service layer** - DocumentManager, WorkspaceService, CommandService, UIStateService, ExportService, FileOperationsService, GitService, WordPressExporter |
+| `Plugins/` | Plugin system and built-in plugins: PluginManager, TibokPlugin protocol, PluginManifest, PluginDiscovery, PluginContext, built-in plugins |
+| `Plugins/Builtin/WordPressExportPlugin.swift` | WordPress publishing plugin |
+| `Helpers/KeychainHelper.swift` | Secure credential storage |
+| `Models/WordPressModels.swift` | WordPress API data structures |
+| `Views/WordPressSettingsView.swift` | WordPress settings UI |
+
+### Plugin Architecture
+
+**Core Components:**
+- `TibokPlugin` - Protocol that all plugins implement
+- `PluginManager` - Singleton managing plugin lifecycle
+- `PluginManifest` - Codable structure describing plugins via JSON
+- `PluginDiscovery` - Scans folders and discovers plugin manifests
+- `PluginContext` - API provided to plugins (access to editor, commands, state)
+- `PluginStateManager` - Persists plugin enable/disable state
+
+**Plugin Locations:**
+- `~/Library/Application Support/tibok/Plugins/BuiltIn/` - Built-in plugins (compiled into app)
+- `~/Library/Application Support/tibok/Plugins/ThirdParty/` - Community plugins (user-installed)
+
+**Plugin Discovery:**
+1. App initialization creates folders if needed
+2. `PluginManager.initialize()` calls `PluginDiscovery.discoverAllManifests()`
+3. Discovered plugins appear in Settings → Plugins
+4. Users enable/disable plugins; state is persisted
+
+**Plugin Lifecycle:**
+1. Discovery - Manifests found in plugin folders
+2. Registration - Plugin implements TibokPlugin protocol
+3. Initialization - Plugin's `init()` called
+4. Registration - Plugin's `register(with:)` called to register commands
+5. Active - Plugin registered, commands available
+6. Deactivation - Plugin's `deactivate()` called when disabled
+7. Unload - Plugin removed from memory
 
 ## Development Guidelines
 
@@ -82,9 +142,15 @@ user_docs/
     ├── keyboard-shortcuts.md    # Shortcut reference
     ├── git-integration.md       # Git version control
     ├── frontmatter.md           # Jekyll/Hugo metadata editor
-    ├── plugins.md               # Plugin management
+    ├── plugins.md               # Plugin management for users
+    ├── plugin-development.md    # Plugin development guide
+    ├── plugin-template.md       # Plugin starter template
+    ├── plugin-security.md       # Plugin security & best practices
     └── webhooks.md              # HTTP webhook notifications
 ```
+
+**Plugin-related root files:**
+- `PLUGIN_REGISTRY.md` - Central registry of community-created plugins
 
 ### When to Update Docs
 
@@ -128,8 +194,10 @@ Before completing any feature work, verify:
 ### Document Management
 - Multiple open files with tab support (Cmd+1-9 to switch)
 - Tab management (Cmd+W close, Cmd+Shift+T reopen, Cmd+Shift+] / [ navigate)
-- File/folder workspace with sidebar
-- Favorites system for quick access
+- File/folder workspace with sidebar and **nested folder expansion** (unlimited depth)
+- **Smart workspace filtering** - Only shows folders containing markdown files, automatically hides node_modules, .git, images, etc.
+- **Smart section management**: Recent/Favorites auto-collapse when workspace opens, Git auto-expands
+- Favorites system for quick access (heart icon 💖)
 - Recent files list
 - Auto-save with manual save override
 - Print support (⌘P)
@@ -150,10 +218,14 @@ Before completing any feature work, verify:
 
 ### Git Integration
 - Stage/unstage files
-- Commit with message editor (Cmd+Shift+K)
+- Commit with message editor (Cmd+Shift+K) with **auto-prefilled messages** based on staged files
 - Push/pull
-- Branch display
-- Status tracking in sidebar
+- **Branch management**: Create, switch, and delete branches from Git panel
+- **Stash management**: Create, apply, pop, and delete stashes
+- **Smart branch switching**: Options to stash or bring uncommitted changes when switching
+- Status tracking in sidebar with **auto-refresh** on document save
+- **Manual refresh button** in Git section heading
+- Smooth commit modal (no flicker)
 
 ### Customization & Settings
 - Dark/light mode with system preference support
@@ -165,9 +237,25 @@ Before completing any feature work, verify:
 - Timezone settings for frontmatter dates
 - Plugin system with enable/disable support
 - Webhook system for HTTP notifications on events
-- WordPress export settings
+
+### WordPress Publishing
+- **REST API v2 integration** - Direct publishing to WordPress sites (5.6+)
+- **Application Password authentication** - Secure, revocable credentials stored in macOS Keychain
+- **Command palette integration** (⌘⇧P) - "Publish to WordPress" command
+- **Built-in plugin** - Enable/disable from Settings > Plugins
+- **Frontmatter support** - Override defaults with document metadata:
+  - title, categories, draft status, description (excerpt)
+- **Settings > WordPress tab**:
+  - Site URL and credentials (password in Keychain)
+  - Default post status (draft/publish/pending/private)
+  - Default categories and author
+  - Test connection button
+- **Browser integration** - Opens published post automatically
+- **Webhook trigger** - Fires document.export event with format "wordpress"
+- **Markdown to HTML** - Automatic conversion via MarkdownRenderer
 
 ### Interface
+- **Sidebar toolbar** with icon-only buttons (Open Workspace, Open Document, New Document) with keyboard shortcut tooltips
 - Command palette (⌘K) with grouped commands
 - Find and replace (Cmd+F, Cmd+Option+F)
 - Focus mode (Ctrl+⌘+.) - hides all UI for distraction-free writing
@@ -177,7 +265,9 @@ Before completing any feature work, verify:
 - Translucent macOS sidebar styling
 - Status bar with document stats, Git branch, shortcuts
 
-### Planned (see planning/ folder)
+### Planned (see FUTURE_FEATURES.md)
+- Git branch management (create, delete, switch branches)
+- Git UI relocation (considering bottom panel)
 - Cloud sync
 
 ## Notes for Claude

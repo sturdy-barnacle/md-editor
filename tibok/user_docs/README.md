@@ -36,9 +36,15 @@ Tibok features a clean, distraction-free interface:
 - [Git Integration](features/git-integration.md) - Version control with Git
 - [Preview](features/preview.md) - Live markdown preview
 - [Find and Replace](features/find-replace.md) - Search and replace text
+- [WordPress Publishing](features/wordpress-publishing.md) - Publish to WordPress via API or email
 - [Plugins](features/plugins.md) - Enable/disable editor extensions
 - [Webhooks](features/webhooks.md) - HTTP notifications on events
 - [Keyboard Shortcuts](features/keyboard-shortcuts.md) - Complete shortcut reference
+
+### For Plugin Developers
+- [Plugin Development Guide](features/plugin-development.md) - Complete guide to creating plugins
+- [Plugin Template](features/plugin-template.md) - Starter template for plugin development
+- [Plugin Security](features/plugin-security.md) - Security best practices for plugins
 
 ## Favorites
 
@@ -56,4 +62,4 @@ If you can't find an answer in these docs:
 
 ## Version
 
-This documentation covers Tibok Beta v0.6.
+This documentation covers Tibok Beta v0.6-0.7 (features in active development).
