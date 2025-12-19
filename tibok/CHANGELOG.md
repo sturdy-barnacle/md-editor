@@ -2,6 +2,14 @@
 
 ## Beta v0.7 (In Progress)
 
+### Tab UI/UX Polish
+- **Fixed tab width** - Tab width no longer shifts when documents become modified
+- **Reserved space** - Save status indicator always reserves space (6pt) even when unmodified
+- **Reserved close button** - Close button always reserves space (14pt) on right side
+- **Smooth transitions** - 150ms fade animations for save dot and close button visibility changes
+- **Prevents accidental clicks** - Invisible close button disabled with `.allowsHitTesting(false)`
+- **Result** - Professional UX with no jarring layout shifts, consistent with macOS design patterns
+
 ### Smart Filtering Performance
 - **Lazy folder evaluation** - Folders scanned only when expanded by user
 - **Persistent caching** - Scan results cached for 1 hour across app launches
@@ -35,9 +43,40 @@
   - `FolderScanCache` (183 lines) - Performance caching for file tree
   - `FrontmatterCacheService` - Frontmatter metadata caching
   - `LogService` - Centralized logging
+  - `ImageUploadService` (330 lines) - Image uploads to WordPress Media Library
 - **Combine integration** - Service objectWillChange forwarding for SwiftUI reactivity
 - **ObservableObject pattern** - Services publish state changes to AppState
 - **Result** - More maintainable architecture, clearer separation of concerns
+
+### FolderScanCache Service
+- **Performance caching** - Caches folder scan results for instant lookups (eliminates re-scanning)
+- **1-hour expiration** - Automatic cache invalidation with TTL (configurable per future versions)
+- **Thread-safe** - NSLock-based concurrency protection for multi-threaded access
+- **Persistent storage** - Cache survives app restarts via UserDefaults
+- **Smart invalidation** - Invalidates cache on file/folder changes detected via Git operations
+- **Background scanning** - Async folder scanning doesn't block UI thread
+- **Result** - Workspaces with 5000+ files open instantly after first scan
+
+### Test Coverage Expansion
+- **115 automated tests** - Up from 21 tests (447% increase)
+- **New test suites**:
+  - `GitServiceTests.swift` (34 tests) - Branch, stash, commit, push/pull operations
+  - `ServiceLayerTests.swift` (40 tests) - DocumentManager, WorkspaceService, CommandService, UIStateService, FileOperationsService
+  - `WordPressTests.swift` (20 tests) - REST API, authentication, content conversion, Keychain integration
+  - `FolderScanCacheTests.swift` (15 tests) - Cache operations, expiration, thread safety, persistence
+  - `KeyboardShortcutsTests.swift` (20+ tests) - Clipboard operations, responder chain
+  - `DocumentTests.swift` (6 tests) - Document model validation
+- **Swift Testing framework** - Modern #expect() assertions for new tests (cleaner, more readable)
+- **Test infrastructure** - Package.swift testTarget configuration for proper test discovery
+- **Result** - 447% test growth ensures reliability and prevents regressions
+
+### CI/CD Infrastructure
+- **GitHub Actions workflow** - Automated testing on every push and pull request
+- **macOS runner** - Xcode 15.4 build environment for native compilation
+- **Test automation** - Runs `swift build` and `swift test` on main/develop branches
+- **Artifact archiving** - Test results saved for review and debugging
+- **Regression detection** - Catches breaking changes before merge to prevent main branch failures
+- **Result** - Continuous integration ensures code quality throughout development lifecycle
 
 ### Git UX Improvements
 - **Prefilled commit messages** - Auto-generates based on staged files (e.g., "Add file1.md; Update file2.md")
@@ -145,6 +184,13 @@
 - **Browser integration** - Opens published post in browser after success
 - **Webhook trigger** - Fires `document.export` webhook with format "wordpress"
 - **Markdown conversion** - Automatic HTML conversion using MarkdownRenderer
+- **Image uploads to Media Library** - Local images automatically uploaded to WordPress Media Library:
+  - Supports PNG, JPG, GIF, WebP, SVG formats
+  - File size limit: 10 MB with validation
+  - Security sandbox: Only allows uploads from Downloads, Pictures, Documents, Desktop folders
+  - Image path rewriting: Local paths replaced with Media Library URLs
+  - Error handling: Detailed error messages for failed uploads
+  - Static site support: Path rewriting for static site exports with custom base URLs
 - Command available in Command Palette: "Publish to WordPress"
 
 ### Markdown Formatting Shortcuts

@@ -159,3 +159,123 @@ If community creates 10+ quality plugins, consider:
 - Complexity should grow only if ecosystem grows
 - Community feedback will inform future enhancements
 - Current approach (GitHub + registry) is sufficient for MVP
+
+---
+
+## ARCHIVED: Completed Features
+
+The following features were planned and have been successfully shipped:
+
+### Epic: Git Branch Management ✅
+**Status:** Shipped in Beta v0.6 (December 18, 2024)
+
+Complete Git branch operations integrated into the app:
+- View all local branches in sidebar (collapsible list)
+- Create new branches with validation
+- Switch branches with smart uncommitted changes handling
+- Delete branches with safety confirmations
+- Protected branch detection (main/master)
+- Smart switching: options to stash or bring changes when switching branches
+
+**Documentation:** See CHANGELOG.md v0.6 and user_docs/features/git-integration.md
+
+### Epic: Stash Management ✅
+**Status:** Shipped in Beta v0.6 (December 18, 2024)
+
+Complete stash workflow for temporary change storage:
+- View all stashes in collapsible list with messages
+- Create stash with optional message
+- Apply stash (keep in list) or Pop stash (apply and remove)
+- Drop/delete stashes
+- Integrated with branch switching
+
+**Documentation:** See CHANGELOG.md v0.6 and user_docs/features/git-integration.md
+
+### Epic: Smart Workspace Filtering ✅
+**Status:** Shipped in Beta v0.7 (December 19, 2024)
+
+Performance optimization with intelligent folder filtering:
+- FolderScanCache service (183 lines) with 1-hour TTL
+- Smart folder scanning with depth limiting and early termination
+- Automatic skip list: node_modules, .git, .build, images, etc.
+- 95% faster workspace opening with caching
+- Lazy evaluation: folders scanned only when expanded
+- Thread-safe with NSLock protection
+
+**Documentation:** See CHANGELOG.md v0.7 and user_docs/features/performance-optimizations.md
+
+### Epic: Service Layer Refactoring (Phase 2) ✅
+**Status:** Shipped in Beta v0.7 (December 19, 2024)
+
+Architectural improvement with 9 focused service classes:
+- DocumentManager (265 lines) - Tab/document lifecycle
+- WorkspaceService (120 lines) - Workspace management
+- CommandService (175 lines) - Command palette
+- UIStateService (32 lines) - Notifications
+- ExportService (700+ lines) - PDF/HTML/RTF exports
+- FileOperationsService (110 lines) - File I/O
+- FolderScanCache (183 lines) - Performance caching
+- FrontmatterCacheService - Metadata caching
+- LogService - Centralized logging
+- ImageUploadService (330 lines) - WordPress image uploads
+
+**Result:** AppState simplified from 1606 to 1230 lines (23% reduction)
+
+**Documentation:** See CHANGELOG.md v0.7
+
+### Epic: WordPress Publishing ✅
+**Status:** Shipped in Beta v0.6 (December 18, 2024)
+
+Direct publishing to WordPress via REST API v2:
+- Application Password authentication (secure, revocable)
+- Keychain storage for credentials
+- Frontmatter integration (title, categories, draft status, excerpt)
+- Image upload to WordPress Media Library (PNG, JPG, GIF, WebP, SVG)
+- Smart defaults configurable in Settings
+- Test connection button for validation
+- Browser integration (opens published post)
+- Command palette integration ("Publish to WordPress")
+
+**Documentation:** See CHANGELOG.md v0.6 and user_docs/features/wordpress-publishing.md
+
+### Test Coverage Expansion ✅
+**Status:** Shipped in Beta v0.7 (December 19, 2024)
+
+Massive increase in automated test coverage:
+- **115 automated tests** (up from 21, 447% increase)
+- Swift Testing framework for new tests
+- 6 new test suites: GitServiceTests, ServiceLayerTests, WordPressTests, FolderScanCacheTests, KeyboardShortcutsTests, DocumentTests
+- CI/CD infrastructure with GitHub Actions
+
+**Documentation:** See CHANGELOG.md v0.7 and TEST_REPORT.md
+
+### CI/CD Infrastructure ✅
+**Status:** Shipped in Beta v0.7 (December 19, 2024)
+
+Automated testing pipeline:
+- GitHub Actions workflow on every push/PR
+- macOS 15 runner with Xcode 15.4
+- Automated `swift build` and `swift test`
+- Test artifact archiving
+- Regression detection
+
+**Documentation:** See CHANGELOG.md v0.7 and .github/workflows/test.yml
+
+### UX Polish: Tab Width Stabilization ✅
+**Status:** Shipped in Beta v0.7 (December 19, 2024)
+
+Professional UI refinement for document tabs:
+- **Fixed tab width** - Tabs no longer shift when documents become modified or hovered
+- **Reserved space** - Save indicator always reserves 6pt, close button reserves 14pt
+- **Smooth transitions** - 150ms easeInOut fade animations for save dot and close button
+- **Prevented clicks** - Invisible close button disabled with `.allowsHitTesting(false)` to prevent accidental closes
+- **Implementation** - Changed from conditional rendering (`if` statements) to conditional visibility (`.opacity()` modifiers)
+- **Code quality** - Minimal surgical change (15 lines in 1 file), no breaking changes
+
+**Result:** Professional UX matching macOS design patterns (Safari, Xcode) with smooth, responsive tab interactions
+
+**Documentation:** See CHANGELOG.md v0.7
+
+---
+
+**Note:** This document contains only future work. For completed features and recent changes, see CHANGELOG.md.
