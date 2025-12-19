@@ -12,20 +12,20 @@ import Foundation
 @MainActor
 final class PluginContext {
     /// Registry for slash commands (editor inline commands)
-    let slashCommandRegistry: SlashCommandRegistry
+    let slashCommandService: SlashCommandService
 
     /// Registry for command palette commands
-    let commandRegistry: CommandRegistry
+    let commandRegistry: CommandService
 
     /// App state for accessing document/workspace info (read-only for Phase 1)
     weak var appState: AppState?
 
     init(
-        slashCommandRegistry: SlashCommandRegistry,
-        commandRegistry: CommandRegistry,
+        slashCommandService: SlashCommandService,
+        commandRegistry: CommandService,
         appState: AppState?
     ) {
-        self.slashCommandRegistry = slashCommandRegistry
+        self.slashCommandService = slashCommandService
         self.commandRegistry = commandRegistry
         self.appState = appState
     }
