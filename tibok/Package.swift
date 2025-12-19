@@ -33,7 +33,14 @@ let package = Package(
                 .copy("Resources/katex")
             ]
         ),
-        // Note: Tests require Xcode. Run with: xcodebuild test -scheme tibok -destination 'platform=macOS'
-        // Or open the package in Xcode and run tests from there.
+        .testTarget(
+            name: "tibokTests",
+            dependencies: [
+                .target(name: "tibok"),
+                .product(name: "Markdown", package: "swift-markdown"),
+                .product(name: "Highlightr", package: "Highlightr"),
+            ],
+            path: "tibokTests"
+        ),
     ]
 )
