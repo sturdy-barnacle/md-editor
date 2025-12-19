@@ -18,6 +18,17 @@ struct FrontmatterInspectorView: View {
     enum SSGType: String, CaseIterable {
         case jekyll = "Jekyll"
         case hugo = "Hugo"
+        case wordpress = "WordPress"
+    }
+
+    // Computed property for available SSG types (checks plugin status)
+    private var availableSSGTypes: [SSGType] {
+        var types: [SSGType] = [.jekyll, .hugo]
+        // Only show WordPress if plugin is enabled
+        if PluginManager.shared.isLoaded("com.tibok.wordpress-export") {
+            types.append(.wordpress)
+        }
+        return types
     }
 
     // Jekyll defaults from settings
@@ -34,6 +45,12 @@ struct FrontmatterInspectorView: View {
     @AppStorage(SettingsKeys.hugoDefaultTags) private var hugoTags: String = ""
     @AppStorage(SettingsKeys.hugoDefaultCategories) private var hugoCategories: String = ""
     @AppStorage(SettingsKeys.hugoDefaultFormat) private var hugoDefaultFormat: String = "yaml"
+
+    // WordPress defaults from settings
+    @AppStorage("plugin.wordpress.defaultStatus") private var wordpressStatus: String = "draft"
+    @AppStorage("plugin.wordpress.defaultCategories") private var wordpressCategories: String = ""
+    @AppStorage("plugin.wordpress.defaultAuthor") private var wordpressAuthor: String = ""
+    @AppStorage("plugin.wordpress.defaultDescription") private var wordpressDescription: String = ""
 
     // Timezone setting
     @AppStorage(SettingsKeys.frontmatterTimezone) private var timezoneIdentifier: String = ""
@@ -87,7 +104,7 @@ struct FrontmatterInspectorView: View {
                             .foregroundColor(.secondary)
 
                         Picker("Generator", selection: $selectedSSG) {
-                            ForEach(SSGType.allCases, id: \.self) { ssg in
+                            ForEach(availableSSGTypes, id: \.self) { ssg in
                                 Text(ssg.rawValue).tag(ssg)
                             }
                         }
@@ -102,7 +119,16 @@ struct FrontmatterInspectorView: View {
                             }
                         }
 
-                        Text(selectedSSG == .jekyll ? "YAML frontmatter (---)" : (hugoDefaultFormat == "toml" ? "TOML frontmatter (+++)" : "YAML frontmatter (---)"))
+                        Text({
+                            switch selectedSSG {
+                            case .jekyll:
+                                return "YAML frontmatter (---)"
+                            case .hugo:
+                                return hugoDefaultFormat == "toml" ? "TOML frontmatter (+++)" : "YAML frontmatter (---)"
+                            case .wordpress:
+                                return "YAML frontmatter (---) for WordPress"
+                            }
+                        }())
                             .font(.caption)
                             .foregroundColor(.secondary)
 
@@ -153,12 +179,22 @@ struct FrontmatterInspectorView: View {
                                 }
 
                                 LabeledField("Date") {
-                                    DatePicker("", selection: $date, displayedComponents: .date)
-                                        .labelsHidden()
-                                        .onChange(of: date) { _, _ in
+                                    HStack {
+                                        DatePicker("", selection: $date, displayedComponents: .date)
+                                            .labelsHidden()
+                                            .onChange(of: date) { _, _ in
+                                                hasDate = true
+                                                updateDocument()
+                                            }
+
+                                        Button("Now") {
+                                            date = Date()
                                             hasDate = true
                                             updateDocument()
                                         }
+                                        .buttonStyle(.borderless)
+                                        .font(.caption)
+                                    }
                                 }
 
                                 if includeTime {
@@ -194,10 +230,13 @@ struct FrontmatterInspectorView: View {
                                         .onChange(of: author) { _, _ in updateDocument() }
                                 }
 
-                                LabeledField("Layout") {
-                                    TextField("Layout template", text: $layout)
-                                        .textFieldStyle(.roundedBorder)
-                                        .onChange(of: layout) { _, _ in updateDocument() }
+                                // Layout field only for Jekyll/Hugo (not WordPress)
+                                if selectedSSG != .wordpress {
+                                    LabeledField("Layout") {
+                                        TextField("Layout template", text: $layout)
+                                            .textFieldStyle(.roundedBorder)
+                                            .onChange(of: layout) { _, _ in updateDocument() }
+                                    }
                                 }
                             }
                             .padding(.vertical, 4)
@@ -225,6 +264,90 @@ struct FrontmatterInspectorView: View {
                             .padding(.vertical, 4)
                         }
 
+                        // WordPress Publishing section (only shows if plugin is enabled)
+                        if PluginManager.shared.isLoaded("com.tibok.wordpress-export") {
+                            GroupBox {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    HStack {
+                                        Image(systemName: "w.square")
+                                            .foregroundColor(.accentColor)
+                                        Text("WordPress Publishing")
+                                            .font(.subheadline)
+                                            .fontWeight(.medium)
+                                    }
+
+                                    Text("These frontmatter fields will be used when publishing to WordPress:")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        HStack {
+                                            Text("•")
+                                            Text("**Title** → Post title")
+                                        }
+                                        HStack {
+                                            Text("•")
+                                            Text("**Description** → Post excerpt")
+                                        }
+                                        HStack {
+                                            Text("•")
+                                            Text("**Categories** → WordPress categories")
+                                        }
+                                        HStack {
+                                            Text("•")
+                                            Text("**Draft** → Post status (draft/publish)")
+                                        }
+                                    }
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .padding(.leading, 8)
+
+                                    Divider()
+                                        .padding(.vertical, 4)
+
+                                    // Post status indicator
+                                    if let docPath = appState.activeDocument?.fileURL?.path ?? appState.activeDocument?.title,
+                                       let publishInfo = WordPressExporter.getPublishInfo(for: docPath) {
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            HStack(alignment: .top, spacing: 6) {
+                                                Image(systemName: "checkmark.circle.fill")
+                                                    .foregroundColor(.green)
+                                                    .font(.caption)
+                                                VStack(alignment: .leading, spacing: 2) {
+                                                    Text("Published to WordPress")
+                                                        .font(.caption)
+                                                        .fontWeight(.medium)
+                                                        .foregroundColor(.green)
+                                                    Text(publishInfo.date, style: .relative)
+                                                        .font(.caption2)
+                                                        .foregroundColor(.secondary)
+                                                }
+                                            }
+                                            Button("View on WordPress") {
+                                                if let url = URL(string: publishInfo.url) {
+                                                    NSWorkspace.shared.open(url)
+                                                }
+                                            }
+                                            .font(.caption)
+                                        }
+                                        .padding(.vertical, 4)
+
+                                        Divider()
+                                            .padding(.vertical, 4)
+                                    }
+
+                                    HStack {
+                                        Image(systemName: "info.circle")
+                                            .foregroundColor(.blue)
+                                        Text("Use **⌘⇧P** or Command Palette to publish")
+                                            .font(.caption)
+                                    }
+                                    .foregroundColor(.secondary)
+                                }
+                                .padding(.vertical, 4)
+                            }
+                        }
+
                         // Custom fields section
                         GroupBox("Custom Fields") {
                             VStack(alignment: .leading, spacing: 8) {
@@ -242,7 +365,7 @@ struct FrontmatterInspectorView: View {
                                             Image(systemName: "minus.circle.fill")
                                                 .foregroundColor(.red)
                                         }
-                                        .buttonStyle(.plain)
+                                        .buttonStyle(.animatedIcon)
                                     }
                                     .onChange(of: field.key) { _, _ in updateDocument() }
                                     .onChange(of: field.value) { _, _ in updateDocument() }
@@ -253,7 +376,7 @@ struct FrontmatterInspectorView: View {
                                 } label: {
                                     Label("Add Field", systemImage: "plus.circle")
                                 }
-                                .buttonStyle(.plain)
+                                .buttonStyle(.animatedIcon)
                             }
                             .padding(.vertical, 4)
                         }
@@ -384,7 +507,8 @@ struct FrontmatterInspectorView: View {
         fm.timezoneIdentifier = timezoneIdentifier
 
         // Apply defaults based on SSG type
-        if selectedSSG == .jekyll {
+        switch selectedSSG {
+        case .jekyll:
             // Jekyll defaults
             fm.draft = jekyllDraft
             if !jekyllAuthor.isEmpty { fm.author = jekyllAuthor }
@@ -395,7 +519,7 @@ struct FrontmatterInspectorView: View {
             if !jekyllCategories.isEmpty {
                 fm.categories = jekyllCategories.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
             }
-        } else {
+        case .hugo:
             // Hugo defaults
             fm.draft = hugoDraft
             if !hugoAuthor.isEmpty { fm.author = hugoAuthor }
@@ -405,6 +529,14 @@ struct FrontmatterInspectorView: View {
             }
             if !hugoCategories.isEmpty {
                 fm.categories = hugoCategories.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+            }
+        case .wordpress:
+            // WordPress defaults
+            fm.draft = wordpressStatus == "draft"
+            if !wordpressAuthor.isEmpty { fm.author = wordpressAuthor }
+            if !wordpressDescription.isEmpty { fm.description = wordpressDescription }
+            if !wordpressCategories.isEmpty {
+                fm.categories = wordpressCategories.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
             }
         }
 
@@ -439,6 +571,12 @@ struct FrontmatterInspectorView: View {
         if newContent != appState.currentDocument.content {
             isUpdating = true
             appState.updateActiveDocumentContent(newContent)
+
+            // Invalidate frontmatter cache for this file
+            if let fileURL = appState.currentDocument.fileURL {
+                FrontmatterCacheService.shared.invalidate(url: fileURL)
+            }
+
             // Reset flag after a brief delay to allow change to propagate
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 isUpdating = false

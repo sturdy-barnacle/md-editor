@@ -64,6 +64,45 @@ struct SidebarView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            // Minimal toolbar with icon-only buttons
+            HStack(spacing: 12) {
+                Button {
+                    appState.openWorkspace()
+                } label: {
+                    Image(systemName: "folder")
+                        .font(.system(size: 14))
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(.animatedIcon)
+                .help("Open Workspace (⌘⇧O)")
+
+                Button {
+                    appState.openDocument()
+                } label: {
+                    Image(systemName: "doc")
+                        .font(.system(size: 14))
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(.animatedIcon)
+                .help("Open Document (⌘O)")
+
+                Button {
+                    appState.createNewDocument()
+                } label: {
+                    Image(systemName: "doc.badge.plus")
+                        .font(.system(size: 14))
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(.animatedIcon)
+                .help("New Document (⌘N)")
+
+                Spacer()
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 6)
+
+            Divider()
+
             // Search field with inline results
             VStack(spacing: 0) {
                 HStack {
@@ -86,7 +125,7 @@ struct SidebarView: View {
                             Image(systemName: "xmark.circle.fill")
                                 .foregroundColor(.secondary)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.animatedIcon)
                     }
                 }
                 .padding(8)
@@ -142,7 +181,7 @@ struct SidebarView: View {
                                         .padding(.horizontal, 8)
                                         .padding(.vertical, 4)
                                     }
-                                    .buttonStyle(.plain)
+                                    .buttonStyle(.animatedIcon)
                                 }
                             }
                         }
@@ -207,7 +246,7 @@ struct SidebarView: View {
                                         .font(.system(size: 11, weight: .medium))
                                         .foregroundColor(.secondary)
                                 }
-                                .buttonStyle(.plain)
+                                .buttonStyle(.animatedIcon)
                                 .help("New file in workspace")
                             }
                         )
@@ -441,7 +480,7 @@ struct CollapsibleSectionHeader<Trailing: View>: View {
                     }
                 }
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.animatedIcon)
 
             Spacer()
 
@@ -493,7 +532,7 @@ struct OpenDocumentRow: View {
                 }
             }
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.animatedIcon)
         .contextMenu {
             if isActive {
                 Button("Save") {
@@ -538,6 +577,7 @@ struct OpenDocumentRow: View {
 struct RecentFileRow: View {
     @EnvironmentObject var appState: AppState
     let url: URL
+    @State private var hasFrontmatter: Bool = false
 
     var body: some View {
         Button {
@@ -546,14 +586,22 @@ struct RecentFileRow: View {
             HStack {
                 Label(url.lastPathComponent, systemImage: "doc.text")
                 Spacer()
+                if hasFrontmatter {
+                    Image(systemName: "doc.badge.gearshape")
+                        .font(.system(size: 9))
+                        .foregroundColor(.purple.opacity(0.6))
+                }
                 if appState.isFavorite(url) {
-                    Image(systemName: "star.fill")
+                    Image(systemName: "heart.fill")
                         .font(.system(size: 10))
-                        .foregroundColor(.yellow)
+                        .foregroundColor(.pink)
                 }
             }
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.animatedIcon)
+        .onAppear {
+            hasFrontmatter = FrontmatterCacheService.shared.hasFrontmatter(url: url)
+        }
         .contextMenu {
             Button("Open") {
                 appState.loadDocument(from: url)
@@ -588,20 +636,29 @@ struct RecentFileRow: View {
 struct FavoriteFileRow: View {
     @EnvironmentObject var appState: AppState
     let url: URL
+    @State private var hasFrontmatter: Bool = false
 
     var body: some View {
         Button {
             appState.loadDocument(from: url)
         } label: {
             HStack {
-                Image(systemName: "star.fill")
+                Image(systemName: "heart.fill")
                     .font(.system(size: 10))
-                    .foregroundColor(.yellow)
+                    .foregroundColor(.pink)
                 Text(url.lastPathComponent)
                 Spacer()
+                if hasFrontmatter {
+                    Image(systemName: "doc.badge.gearshape")
+                        .font(.system(size: 9))
+                        .foregroundColor(.purple.opacity(0.6))
+                }
             }
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.animatedIcon)
+        .onAppear {
+            hasFrontmatter = FrontmatterCacheService.shared.hasFrontmatter(url: url)
+        }
         .contextMenu {
             Button("Open") {
                 appState.loadDocument(from: url)
@@ -627,11 +684,32 @@ struct FileTreeRow: View {
     @EnvironmentObject var appState: AppState
     let item: FileItem
     @State private var isExpanded = false
+    @State private var loadedChildren: [FileItem]?
+    @State private var hasFrontmatter: Bool = false
+    @State private var isScanning: Bool = false
+
+    init(item: FileItem) {
+        self.item = item
+        // Initialize with existing children if already loaded
+        _loadedChildren = State(initialValue: item.children)
+    }
 
     var body: some View {
         if item.isDirectory {
             DisclosureGroup(isExpanded: $isExpanded) {
-                ForEach(item.children ?? []) { child in
+                // Show loading indicator while scanning
+                if isScanning {
+                    HStack {
+                        ProgressView()
+                            .scaleEffect(0.6)
+                        Text("Scanning...")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.leading, 20)
+                }
+
+                ForEach(loadedChildren ?? []) { child in
                     FileTreeRow(item: child)
                 }
             } label: {
@@ -639,6 +717,13 @@ struct FileTreeRow: View {
                     Image(systemName: isExpanded ? "folder.fill" : "folder")
                         .foregroundColor(.blue)
                     Text(item.name)
+
+                    // Show small spinner if scanning
+                    if isScanning && !isExpanded {
+                        ProgressView()
+                            .scaleEffect(0.5)
+                            .padding(.leading, 4)
+                    }
                 }
             }
             .contextMenu {
@@ -649,6 +734,51 @@ struct FileTreeRow: View {
                     appState.copyPathToClipboard(item.url)
                 }
             }
+            .onChange(of: isExpanded) { _, expanded in
+                // Save expansion state to AppState
+                appState.toggleFolderExpansion(item.url.path)
+
+                if expanded && loadedChildren == nil {
+                    // Lazy load children on first expand
+                    var mutableItem = item
+                    mutableItem.loadChildren()
+
+                    if appState.smartFilteringEnabled {
+                        // Show loading indicator and filter in background
+                        isScanning = true
+                        let childrenToFilter = mutableItem.children ?? []
+
+                        Task {
+                            var filteredChildren: [FileItem] = []
+
+                            for var child in childrenToFilter {
+                                if child.isDirectory {
+                                    let containsMarkdown = await FolderScanCache.shared.scanFolder(at: child.url)
+                                    if containsMarkdown {
+                                        filteredChildren.append(child)
+                                    } else {
+                                        child.isFiltered = true
+                                    }
+                                } else {
+                                    filteredChildren.append(child)
+                                }
+                            }
+
+                            await MainActor.run {
+                                loadedChildren = filteredChildren
+                                isScanning = false
+                            }
+                        }
+                    } else {
+                        // No filtering - show all children
+                        loadedChildren = mutableItem.children
+                    }
+                }
+            }
+            .onAppear {
+                // Initialize expansion state from AppState
+                isExpanded = appState.isFolderExpanded(item.url.path)
+            }
         } else {
             Button {
                 appState.loadDocument(from: item.url)
@@ -658,11 +788,17 @@ struct FileTreeRow: View {
                         .foregroundColor(fileColor(for: item))
                     Text(item.name)
                     Spacer()
-                    // Show star if favorited
-                    if appState.isFavorite(item.url) {
-                        Image(systemName: "star.fill")
+                    // Show frontmatter indicator
+                    if hasFrontmatter {
+                        Image(systemName: "doc.badge.gearshape")
                             .font(.system(size: 9))
-                            .foregroundColor(.yellow)
+                            .foregroundColor(.purple.opacity(0.6))
+                    }
+                    // Show heart if favorited
+                    if appState.isFavorite(item.url) {
+                        Image(systemName: "heart.fill")
+                            .font(.system(size: 9))
+                            .foregroundColor(.pink)
                     }
                     // Show indicator if modified in open tabs
                     if appState.documents.first(where: { $0.fileURL == item.url })?.isModified == true {
@@ -672,7 +808,12 @@ struct FileTreeRow: View {
                     }
                 }
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.animatedIcon)
+            .onAppear {
+                if !item.isDirectory {
+                    hasFrontmatter = FrontmatterCacheService.shared.hasFrontmatter(url: item.url)
+                }
+            }
             .contextMenu {
                 Button("Open") {
                     appState.loadDocument(from: item.url)
@@ -750,7 +891,7 @@ struct HoverableCloseRow<Content: View>: View {
                         .font(.system(size: 10, weight: .medium))
                         .foregroundColor(.secondary)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.animatedIcon)
             }
         }
         .contentShape(Rectangle())

@@ -122,6 +122,43 @@ struct tibokApp: App {
                 .keyboardShortcut("p", modifiers: .command)
             }
 
+            // Edit menu
+            CommandMenu("Edit") {
+                Button("Undo") {
+                    NSApp.sendAction(Selector("undo:"), to: nil, from: nil)
+                }
+                .keyboardShortcut("z", modifiers: .command)
+
+                Button("Redo") {
+                    NSApp.sendAction(Selector("redo:"), to: nil, from: nil)
+                }
+                .keyboardShortcut("z", modifiers: [.command, .shift])
+
+                Divider()
+
+                Button("Cut") {
+                    NSApp.sendAction(#selector(NSTextView.cut(_:)), to: nil, from: nil)
+                }
+                .keyboardShortcut("x", modifiers: .command)
+
+                Button("Copy") {
+                    NSApp.sendAction(#selector(NSTextView.copy(_:)), to: nil, from: nil)
+                }
+                .keyboardShortcut("c", modifiers: .command)
+
+                Button("Paste") {
+                    NSApp.sendAction(#selector(NSTextView.paste(_:)), to: nil, from: nil)
+                }
+                .keyboardShortcut("v", modifiers: .command)
+
+                Divider()
+
+                Button("Select All") {
+                    NSApp.sendAction(#selector(NSTextView.selectAll(_:)), to: nil, from: nil)
+                }
+                .keyboardShortcut("a", modifiers: .command)
+            }
+
             // View menu - add to existing View menu
             CommandGroup(after: .toolbar) {
                 Divider()
@@ -204,7 +241,13 @@ struct tibokApp: App {
 
                 Button("Push") {
                     let result = appState.pushChanges()
-                    if !result.success {
+                    if result.success {
+                        if result.alreadyUpToDate {
+                            UIStateService.shared.showToast("Already up to date", icon: "checkmark.circle.fill", duration: 2.0)
+                        } else {
+                            UIStateService.shared.showToast("Push successful", icon: "checkmark.circle.fill", duration: 2.0)
+                        }
+                    } else {
                         showGitError("Push Failed", result.error)
                     }
                 }
@@ -212,7 +255,9 @@ struct tibokApp: App {
 
                 Button("Pull") {
                     let result = appState.pullChanges()
-                    if !result.success {
+                    if result.success {
+                        UIStateService.shared.showToast("Pull successful", icon: "checkmark.circle.fill", duration: 2.0)
+                    } else {
                         showGitError("Pull Failed", result.error)
                     }
                 }
@@ -229,9 +274,33 @@ struct tibokApp: App {
             // Help menu
             CommandGroup(replacing: .help) {
                 Button("tibok Help") {
-                    openHelp()
+                    if let url = URL(string: "https://www.tibok.app/support") {
+                        NSWorkspace.shared.open(url)
+                    }
                 }
                 .keyboardShortcut("?", modifiers: .command)
+
+                Divider()
+
+                Button("View Log File...") {
+                    LogService.shared.revealLogFile()
+                }
+
+                Button("Copy Log Path") {
+                    LogService.shared.copyLogPathToClipboard()
+                    UIStateService.shared.showToast(
+                        "Log path copied to clipboard",
+                        icon: "doc.on.clipboard"
+                    )
+                }
+
+                Button("Clear Log") {
+                    LogService.shared.clearLog()
+                    UIStateService.shared.showToast(
+                        "Log file cleared",
+                        icon: "trash"
+                    )
+                }
 
                 Divider()
 
@@ -325,9 +394,20 @@ struct tibokApp: App {
     }
 
     private func initializePlugins() {
+        // Create plugin directories on first launch
+        let fileManager = FileManager.default
+        let appSupport = fileManager.homeDirectoryForCurrentUser
+            .appendingPathComponent("Library/Application Support/tibok")
+
+        let pluginsDir = appSupport.appendingPathComponent("Plugins")
+
+        // Create directories if they don't exist
+        try? fileManager.createDirectory(at: appSupport, withIntermediateDirectories: true)
+        try? fileManager.createDirectory(at: pluginsDir, withIntermediateDirectories: true)
+
         PluginManager.shared.initialize(
-            slashCommandRegistry: SlashCommandRegistry.shared,
-            commandRegistry: CommandRegistry.shared,
+            slashCommandService: SlashCommandService.shared,
+            commandRegistry: CommandService.shared,
             appState: appState
         )
     }

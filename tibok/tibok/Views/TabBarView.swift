@@ -108,7 +108,7 @@ struct TabItemView: View {
                             .font(.system(size: 9, weight: .medium))
                             .foregroundColor(.secondary)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.animatedIcon)
                     .frame(width: 14, height: 14)
                     .contentShape(Rectangle())
                 }

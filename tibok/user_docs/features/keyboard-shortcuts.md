@@ -51,14 +51,21 @@ Press Ctrl+Cmd+. again or Escape to exit focus mode. Your sidebar and preview st
 
 ## Edit
 
-| Action | Shortcut |
-|--------|----------|
-| Undo | Cmd+Z |
-| Redo | Cmd+Shift+Z |
-| Cut | Cmd+X |
-| Copy | Cmd+C |
-| Paste | Cmd+V |
-| Select All | Cmd+A |
+| Action | Shortcut | Status |
+|--------|----------|--------|
+| Undo | Cmd+Z | ✅ Implemented |
+| Redo | Cmd+Shift+Z | ✅ Implemented |
+| Cut | Cmd+X | ✅ Implemented |
+| Copy | Cmd+C | ✅ Implemented |
+| Paste | Cmd+V | ✅ Implemented (with image support) |
+| Select All | Cmd+A | ✅ Implemented |
+
+### Edit Shortcuts Notes
+
+- **Requires Focus**: All Edit shortcuts require the text editor to be in focus
+- **Undo/Redo**: Automatically tracked - no configuration needed
+- **Paste Images**: Paste automatically detects images and inserts them as markdown image references
+- **Menu Integration**: All Edit operations are available in the Edit menu (Mac standard)
 
 ## Formatting
 
@@ -117,12 +124,45 @@ Formatting shortcuts use intelligent cursor positioning to streamline your workf
 
 ## Help
 
-| Action | Shortcut |
-|--------|----------|
-| Open Help | Cmd+? |
+| Action | Shortcut | Notes |
+|--------|----------|-------|
+| Open Help (Website) | Cmd+? | Opens https://www.tibok.app/support |
+
+## Troubleshooting
+
+### Shortcuts Not Working
+
+**Problem**: A keyboard shortcut (like Cmd+X for Cut) isn't working.
+
+**Solution**: Make sure the text editor is in focus. Click on the editor pane and try again.
+
+**Why**: Shortcuts are context-aware:
+- Edit shortcuts (Cut, Copy, Paste, Select All) work only when the text editor is focused
+- View shortcuts (Toggle Sidebar, etc.) work throughout the app
+- Some system shortcuts (Cmd+,) are handled by macOS
+
+### Paste Not Working as Expected
+
+**Problem**: Pasting seems to have unexpected behavior.
+
+**Solution**:
+- If pasting an image, make sure the image is in a supported format (PNG, JPG, GIF, etc.)
+- For text paste, ensure the text editor is focused
+- Clear the clipboard and try copying/pasting again
+
+### Menu Items Grayed Out
+
+**Problem**: Menu items in Edit menu are grayed out.
+
+**Solution**:
+- This is normal behavior - menu items are disabled when not applicable
+- Edit operations become available when the text editor is focused
+- Cut and Copy become available when text is selected
 
 ## Tips
 
 - Most shortcuts follow standard macOS conventions
 - Menu items show their shortcuts on the right side
 - Slash commands don't use modifier keys - just type `/`
+- All Edit menu items are accessible via the menu bar even if shortcuts don't work
+- Undo/redo history persists while the document is open

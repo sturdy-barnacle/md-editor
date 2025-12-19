@@ -9,16 +9,17 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject var appState: AppState
+    @ObservedObject private var uiState = UIStateService.shared
     @AppStorage("appearanceMode") private var appearanceMode: String = AppearanceMode.system.rawValue
     @AppStorage(SettingsKeys.editorFocusMode) private var editorFocusMode: Bool = false
-    @State private var previewVisible = true
-    @State private var sidebarVisible = true
+    @AppStorage("ui.previewVisible") private var previewVisible = true
+    @AppStorage("ui.sidebarVisible") private var sidebarVisible = true
     @State private var focusMode = false
     @State private var showCommandPalette = false
     @State private var showDocumentPopover = false
     @State private var showGitCommitSheet = false
     @State private var gitCommitMessage = ""
-    @State private var showInspector = false
+    @AppStorage("ui.showInspector") private var showInspector = false
 
     // Store state before focus mode to restore later
     @State private var preFocusSidebarVisible = true
@@ -83,14 +84,13 @@ struct ContentView: View {
         }
         .frame(minWidth: 800, minHeight: 600)
         .overlay(alignment: .top) {
-            // Toast notification
-            if let message = appState.toastMessage {
-                ToastView(message: message, icon: appState.toastIcon)
+            // Toast notification - transition handles animation without affecting other views
+            if let message = uiState.toastMessage {
+                ToastView(message: message, icon: uiState.toastIcon)
                     .transition(.move(edge: .top).combined(with: .opacity))
                     .padding(.top, 60)
             }
         }
-        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: appState.toastMessage != nil)
         .onAppear {
             registerCommands()
         }
@@ -168,7 +168,7 @@ struct ContentView: View {
     }
 
     private func registerCommands() {
-        let registry = CommandRegistry.shared
+        let registry = CommandService.shared
 
         registry.register([
             // File commands
@@ -394,7 +394,13 @@ struct ContentView: View {
                 category: .git
             ) {
                 let result = appState.pushChanges()
-                if !result.success {
+                if result.success {
+                    if result.alreadyUpToDate {
+                        UIStateService.shared.showToast("Already up to date", icon: "checkmark.circle.fill", duration: 2.0)
+                    } else {
+                        UIStateService.shared.showToast("Push successful", icon: "checkmark.circle.fill", duration: 2.0)
+                    }
+                } else {
                     showGitError("Push Failed", result.error)
                 }
             },
@@ -406,7 +412,9 @@ struct ContentView: View {
                 category: .git
             ) {
                 let result = appState.pullChanges()
-                if !result.success {
+                if result.success {
+                    UIStateService.shared.showToast("Pull successful", icon: "checkmark.circle.fill", duration: 2.0)
+                } else {
                     showGitError("Pull Failed", result.error)
                 }
             },
@@ -665,7 +673,7 @@ extension Notification.Name {
 
 struct CommandPaletteSheet: View {
     @Binding var isPresented: Bool
-    @ObservedObject var registry: CommandRegistry = .shared
+    @ObservedObject var registry: CommandService = .shared
     @State private var searchText = ""
     @State private var selectedIndex = 0
 
@@ -953,10 +961,13 @@ struct TitleBarView: View {
                     icon: appearanceIcon,
                     help: "Appearance",
                     menuItems: AppearanceMode.allCases.map { mode in
-                        (mode.displayName, {
-                            appearanceMode = mode.rawValue
-                            applyAppearance(mode)
-                        })
+                        MenuItemConfig(
+                            title: mode.displayName,
+                            action: {
+                                appearanceMode = mode.rawValue
+                                applyAppearance(mode)
+                            }
+                        )
                     }
                 )
 
@@ -967,13 +978,7 @@ struct TitleBarView: View {
                 TitleBarMenuButton(
                     icon: "square.and.arrow.up",
                     help: "Export",
-                    menuItems: [
-                        ("Export as PDF", { appState.exportAsPDF() }),
-                        ("Export as HTML", { appState.exportAsHTML() }),
-                        ("Export as RTF", { appState.exportAsRTF() }),
-                        ("Export as Plain Text", { appState.exportAsPlainText() }),
-                        ("Export to WordPress", { appState.exportToWordPress() })
-                    ]
+                    menuItems: createExportMenuItems(appState: appState)
                 )
             }
             .padding(.trailing, 12)
@@ -1006,6 +1011,8 @@ struct TitleBarButton: View {
             .font(.system(size: 13, weight: .medium))
             .foregroundColor(isHovered ? .primary : .secondary)
             .frame(width: 24, height: 24)
+            .scaleEffect(isHovered ? 1.1 : 1.0)
+            .animation(.spring(response: 0.2, dampingFraction: 0.7), value: isHovered)
             .contentShape(Rectangle())
             .onTapGesture { action() }
             .onHover { isHovered = $0 }
@@ -1013,10 +1020,26 @@ struct TitleBarButton: View {
     }
 }
 
+// MARK: - Menu Item Structure
+
+struct MenuItemConfig {
+    let title: String
+    let action: () -> Void
+    let isEnabled: Bool
+    let disabledReason: String?
+
+    init(title: String, action: @escaping () -> Void, isEnabled: Bool = true, disabledReason: String? = nil) {
+        self.title = title
+        self.action = action
+        self.isEnabled = isEnabled
+        self.disabledReason = disabledReason
+    }
+}
+
 struct TitleBarMenuButton: View {
     let icon: String
     let help: String
-    let menuItems: [(String, () -> Void)]
+    let menuItems: [MenuItemConfig]
 
     @State private var isHovered = false
     @State private var isShowingMenu = false
@@ -1038,7 +1061,7 @@ struct TitleBarMenuButton: View {
 
 struct MenuTrigger: NSViewRepresentable {
     @Binding var isPresented: Bool
-    let menuItems: [(String, () -> Void)]
+    let menuItems: [MenuItemConfig]
 
     func makeNSView(context: Context) -> NSView {
         let view = NSView(frame: NSRect(x: 0, y: 0, width: 24, height: 24))
@@ -1050,9 +1073,16 @@ struct MenuTrigger: NSViewRepresentable {
             DispatchQueue.main.async {
                 let menu = NSMenu()
                 for (index, item) in menuItems.enumerated() {
-                    let menuItem = NSMenuItem(title: item.0, action: #selector(context.coordinator.menuItemClicked(_:)), keyEquivalent: "")
+                    let menuItem = NSMenuItem(title: item.title, action: #selector(context.coordinator.menuItemClicked(_:)), keyEquivalent: "")
                     menuItem.target = context.coordinator
                     menuItem.tag = index
+                    menuItem.isEnabled = item.isEnabled
+
+                    // Add tooltip for disabled items
+                    if !item.isEnabled, let reason = item.disabledReason {
+                        menuItem.toolTip = reason
+                    }
+
                     menu.addItem(menuItem)
                 }
                 let point = NSPoint(x: 0, y: nsView.bounds.height)
@@ -1067,14 +1097,14 @@ struct MenuTrigger: NSViewRepresentable {
     }
 
     class Coordinator: NSObject {
-        let menuItems: [(String, () -> Void)]
+        let menuItems: [MenuItemConfig]
 
-        init(menuItems: [(String, () -> Void)]) {
+        init(menuItems: [MenuItemConfig]) {
             self.menuItems = menuItems
         }
 
         @objc func menuItemClicked(_ sender: NSMenuItem) {
-            menuItems[sender.tag].1()
+            menuItems[sender.tag].action()
         }
     }
 }
@@ -1241,6 +1271,71 @@ struct ToolbarMenuButton: NSViewRepresentable {
             menuItems[sender.tag].1()
         }
     }
+}
+
+// MARK: - Menu Helpers
+
+@MainActor
+func createExportMenuItems(appState: AppState) -> [MenuItemConfig] {
+    // Check plugin status
+    let pluginEnabled = PluginManager.shared.isLoaded("com.tibok.wordpress-export")
+
+    // Check configuration status
+    let emailAddress = UserDefaults.standard.string(forKey: "plugin.wordpress.emailAddress") ?? ""
+    let hasEmailConfig = !emailAddress.isEmpty
+
+    let siteURL = UserDefaults.standard.string(forKey: "plugin.wordpress.siteURL") ?? ""
+    let username = UserDefaults.standard.string(forKey: "plugin.wordpress.username") ?? ""
+    // Just check if URL and username exist - don't access keychain here to avoid prompts
+    // The password will be validated when actually publishing
+    let hasAPIConfig = !siteURL.isEmpty && !username.isEmpty
+
+    return [
+        MenuItemConfig(
+            title: "Export as PDF",
+            action: { appState.exportAsPDF() }
+        ),
+        MenuItemConfig(
+            title: "Export as HTML",
+            action: { appState.exportAsHTML() }
+        ),
+        MenuItemConfig(
+            title: "Export as RTF",
+            action: { appState.exportAsRTF() }
+        ),
+        MenuItemConfig(
+            title: "Export as Plain Text",
+            action: { appState.exportAsPlainText() }
+        ),
+        MenuItemConfig(
+            title: "Email to WordPress",
+            action: { appState.exportToWordPress() },
+            isEnabled: pluginEnabled && hasEmailConfig,
+            disabledReason: !pluginEnabled
+                ? "Enable WordPress plugin in Settings > Plugins"
+                : !hasEmailConfig
+                    ? "Posting to WordPress by email is not configured. Go to Settings > WordPress"
+                    : nil
+        ),
+        MenuItemConfig(
+            title: "Publish to WordPress (API)",
+            action: {
+                guard let document = appState.activeDocument else { return }
+                Task {
+                    await WordPressExporter.shared.publish(
+                        document: document,
+                        appState: appState
+                    )
+                }
+            },
+            isEnabled: pluginEnabled && hasAPIConfig,
+            disabledReason: !pluginEnabled
+                ? "Enable WordPress plugin in Settings > Plugins"
+                : !hasAPIConfig
+                    ? "Configure site URL and credentials in Settings > WordPress"
+                    : nil
+        )
+    ]
 }
 
 extension NSImage {

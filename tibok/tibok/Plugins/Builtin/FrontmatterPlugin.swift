@@ -20,7 +20,7 @@ final class FrontmatterPlugin: TibokPlugin {
     init() {}
 
     func register(with context: PluginContext) {
-        context.slashCommandRegistry.register(Self.frontmatterCommands)
+        context.slashCommandService.register(Self.frontmatterCommands)
     }
 
     func deactivate() {

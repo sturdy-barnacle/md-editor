@@ -21,7 +21,7 @@ final class CoreSlashCommandsPlugin: TibokPlugin {
     init() {}
 
     func register(with context: PluginContext) {
-        context.slashCommandRegistry.register(Self.coreCommands)
+        context.slashCommandService.register(Self.coreCommands)
     }
 
     func deactivate() {

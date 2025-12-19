@@ -18,9 +18,7 @@ struct EditorView: View {
         Binding(
             get: { appState.activeDocument?.content ?? "" },
             set: { newValue in
-                if let index = appState.activeDocumentIndex {
-                    appState.documents[index].content = newValue
-                }
+                appState.updateActiveDocumentContent(newValue)
             }
         )
     }
@@ -128,7 +126,7 @@ class EmojiState: ObservableObject {
 }
 
 // MARK: - Slash Commands
-// SlashCommand struct and registry now in Plugins/SlashCommandRegistry.swift
+// SlashCommand struct and registry now in Plugins/SlashCommandService.swift
 
 // MARK: - Emoji Items
 
@@ -711,7 +709,7 @@ struct FindableTextEditor: NSViewRepresentable {
                 return
             }
 
-            let commands = SlashCommandRegistry.syncShared.filtered(by: query)
+            let commands = SlashCommandService.syncShared.filtered(by: query)
             guard !commands.isEmpty else {
                 dismissSlashMenu()
                 return
@@ -817,7 +815,7 @@ struct FindableTextEditor: NSViewRepresentable {
                     textView.didChangeText()
                 }
                 handleFrontmatterCommand(insertText)
-                SlashCommandRegistry.syncShared.recordUsage(command.id)
+                SlashCommandService.syncShared.recordUsage(command.id)
                 return
             }
 
@@ -877,7 +875,7 @@ struct FindableTextEditor: NSViewRepresentable {
             }
 
             // Track usage for recent commands
-            SlashCommandRegistry.syncShared.recordUsage(command.id)
+            SlashCommandService.syncShared.recordUsage(command.id)
 
             dismissSlashMenu()
         }
@@ -1468,7 +1466,9 @@ class SlashTextView: NSTextView {
                 let wrappedText = str + selectedText + closingChar
                 super.insertText(wrappedText, replacementRange: selection)
                 // Position cursor after the opening char, selecting the wrapped text
-                setSelectedRange(NSRange(location: selection.location + 1, length: selectedText.count))
+                // Use UTF-16 length for NSRange (handles emojis correctly)
+                let selectedTextLength = (selectedText as NSString).length
+                setSelectedRange(NSRange(location: selection.location + 1, length: selectedTextLength))
                 return
             }
 
@@ -1709,6 +1709,18 @@ class SlashTextView: NSTextView {
 
         // Default paste behavior for text
         super.paste(sender)
+    }
+
+    override func cut(_ sender: Any?) {
+        super.cut(sender)
+    }
+
+    override func copy(_ sender: Any?) {
+        super.copy(sender)
+    }
+
+    override func selectAll(_ sender: Any?) {
+        super.selectAll(sender)
     }
 
     // MARK: - Image Insertion

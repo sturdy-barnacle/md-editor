@@ -31,6 +31,29 @@ The sidebar provides quick access to your files when working with a workspace.
 - Files are organized by folder structure
 - Only `.md` and `.txt` files are shown
 
+### Smart Folder Filtering
+
+Tibok automatically hides empty folders to keep your workspace clean and navigable.
+
+#### How it Works
+- Folders without markdown files are automatically hidden
+- The app scans folders as you expand them (lazy evaluation)
+- Results are cached for 1 hour to keep performance fast
+- Common non-documentation folders are skipped (node_modules, .git, .build, etc.)
+
+#### Performance
+- **Workspace opens instantly** - No scanning on startup
+- **Folders scan on demand** - Only when you expand them
+- **Caching** - Same folders scan 10-100x faster on subsequent opens
+- **Ideal for large workspaces** - Works smoothly with 1000+ files
+
+#### Disabling Smart Filtering
+If you prefer to see all folders:
+1. Open Settings (⌘,)
+2. Go to General tab
+3. Toggle off "Smart folder filtering"
+4. Workspace will reload showing all folders
+
 ## Creating Documents
 
 ### New Document

@@ -15,6 +15,7 @@ enum L10n {
         static let frontmatter = "Frontmatter"
         static let plugins = "Plugins"
         static let webhooks = "Webhooks"
+        static let wordpress = "WordPress"
         static let about = "About"
     }
     enum General {
@@ -116,8 +117,6 @@ enum SettingsKeys {
     static let hugoDefaultFormat = "frontmatter.hugo.format" // yaml or toml
     // Timezone setting
     static let frontmatterTimezone = "frontmatter.timezone"
-    // WordPress Post by Email
-    static let wordpressEmailAddress = "wordpress.emailAddress"
 }
 
 enum AppearanceMode: String, CaseIterable {
@@ -145,6 +144,7 @@ enum AppearanceMode: String, CaseIterable {
 struct SettingsView: View {
     @AppStorage(SettingsKeys.autoSaveEnabled) private var autoSaveEnabled = true
     @AppStorage(SettingsKeys.appearanceMode) private var appearanceMode: String = AppearanceMode.system.rawValue
+    @ObservedObject private var pluginManager = PluginManager.shared
 
     var body: some View {
         TabView {
@@ -178,19 +178,26 @@ struct SettingsView: View {
                     Label(L10n.Tabs.webhooks, systemImage: "arrow.up.right.square")
                 }
 
+            // WordPress tab - only show if plugin is enabled
+            if pluginManager.isLoaded("com.tibok.wordpress-export") {
+                WordPressSettingsView()
+                    .tabItem {
+                        Label(L10n.Tabs.wordpress, systemImage: "w.square")
+                    }
+            }
+
             AboutSettingsView()
                 .tabItem {
                     Label(L10n.Tabs.about, systemImage: "info.circle")
                 }
         }
-        .frame(width: 480, height: 400)
+        .frame(width: 700, height: 600)
     }
 }
 
 struct GeneralSettingsView: View {
     @Binding var autoSaveEnabled: Bool
     @Binding var appearanceMode: String
-    @AppStorage(SettingsKeys.wordpressEmailAddress) private var wordpressEmailAddress: String = ""
 
     var body: some View {
         Form {
@@ -211,15 +218,6 @@ struct GeneralSettingsView: View {
             Section(L10n.General.savingSection) {
                 Toggle(L10n.General.autoSaveToggle, isOn: $autoSaveEnabled)
                     .help(L10n.General.autoSaveHelp)
-            }
-
-            Section("WordPress Export") {
-                TextField("Post by Email Address", text: $wordpressEmailAddress)
-                    .help("Your WordPress Post by Email address. Get this from WordPress Settings > Writing > Post via Email.")
-                Text("Configure your WordPress Post by Email address to publish posts directly from tibok. Subject becomes the post title, and content is formatted as HTML.")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .padding(.top, 4)
             }
 
             Section(L10n.General.helpSection) {
@@ -340,8 +338,10 @@ struct EditorSettingsView: View {
     @AppStorage(SettingsKeys.editorSmartLists) private var smartLists: Bool = true
 
     var body: some View {
-        Form {
-            Section(L10n.Editor.fontSection) {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                Form {
+                    Section(L10n.Editor.fontSection) {
                 Picker(L10n.Editor.fontFamily, selection: $fontFamily) {
                     ForEach(EditorFont.availableFonts, id: \.rawValue) { font in
                         Text(font.displayName).tag(font.rawValue)
@@ -415,8 +415,10 @@ struct EditorSettingsView: View {
                         .cornerRadius(4)
                 }
             }
+                }
+                .formStyle(.grouped)
+            }
         }
-        .formStyle(.grouped)
         .padding()
     }
 }
@@ -563,8 +565,10 @@ struct FrontmatterSettingsView: View {
     ]
 
     var body: some View {
-        Form {
-            Section("Date & Time") {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                Form {
+                    Section("Date & Time") {
                 Picker("Timezone", selection: $timezone) {
                     ForEach(commonTimezones, id: \.id) { tz in
                         Text(tz.label).tag(tz.id)
@@ -624,8 +628,10 @@ struct FrontmatterSettingsView: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
+                }
+                .formStyle(.grouped)
+            }
         }
-        .formStyle(.grouped)
         .padding()
     }
 
