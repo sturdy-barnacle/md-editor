@@ -1,7 +1,8 @@
 # tibok markdown editor
 
-A native macOS markdown editor built with SwiftUI for Apple Silicon.
+<img style="float:right;" width="256" height="256" alt="tibok markdown editor app icon" src="https://github.com/user-attachments/assets/e3896bd3-594f-4dfd-bfdb-cbc07e505241" />
 
+A native macOS markdown editor built with SwiftUI for Apple Silicon. Fast, local-first, and extensible. 
 **Website:** [tibok.app](https://www.tibok.app)
 
 ## Features
