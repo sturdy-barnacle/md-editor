@@ -8,34 +8,9 @@
 import SwiftUI
 import AppKit
 import WebKit
-#if !DEBUG
-import Sparkle
-#endif
-
-// MARK: - App Delegate for Sparkle
-
-class AppDelegate: NSObject, NSApplicationDelegate {
-    #if DEBUG
-    // Sparkle disabled for debug builds
-    #else
-    let updaterController: SPUStandardUpdaterController
-    #endif
-
-    override init() {
-        #if !DEBUG
-        self.updaterController = SPUStandardUpdaterController(
-            startingUpdater: true,
-            updaterDelegate: nil,
-            userDriverDelegate: nil
-        )
-        #endif
-        super.init()
-    }
-}
 
 @main
 struct tibokApp: App {
-    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var appState = AppState()
     @AppStorage("appearanceMode") private var appearanceMode: String = AppearanceMode.system.rawValue
 
@@ -295,16 +270,8 @@ struct tibokApp: App {
                 .disabled(!appState.isGitRepository)
             }
 
-            // Help menu with Sparkle update check
+            // Help menu
             CommandGroup(replacing: .help) {
-                #if !DEBUG
-                Button("Check for Updates...") {
-                    appDelegate.updaterController.updater.checkForUpdates()
-                }
-
-                Divider()
-                #endif
-
                 Button("tibok Help") {
                     if let url = URL(string: "https://www.tibok.app/support") {
                         NSWorkspace.shared.open(url)
