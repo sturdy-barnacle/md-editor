@@ -14,6 +14,7 @@ echo "Creating app bundle..."
 rm -rf "$APP_DIR"
 mkdir -p "$APP_DIR/Contents/MacOS"
 mkdir -p "$APP_DIR/Contents/Resources"
+mkdir -p "$APP_DIR/Contents/Frameworks"
 
 # Copy executable
 cp .build/debug/tibok "$APP_DIR/Contents/MacOS/"
@@ -37,6 +38,17 @@ elif [ -f "tibok/Resources/AppIcon.icns" ]; then
     cp tibok/Resources/AppIcon.icns "$APP_DIR/Contents/Resources/icon.icns"
 fi
 
+# Sparkle framework disabled for debug builds due to code signing complexity
+# Debug builds don't include Sparkle; release build handles Sparkle properly
+# To enable: Uncomment the if/elif blocks below and rebuild
+# if [ -d ".build/arm64-apple-macosx/debug/Sparkle.framework" ]; then
+#     echo "Copying Sparkle framework..."
+#     cp -r .build/arm64-apple-macosx/debug/Sparkle.framework "$APP_DIR/Contents/Frameworks/"
+# elif [ -d ".build/debug/Sparkle.framework" ]; then
+#     echo "Copying Sparkle framework..."
+#     cp -r .build/debug/Sparkle.framework "$APP_DIR/Contents/Frameworks/"
+# fi
+
 # Copy resource bundles
 cp -r .build/debug/tibok_tibok.bundle "$APP_DIR/Contents/Resources/" 2>/dev/null || true
 cp -r .build/debug/Highlightr_Highlightr.bundle "$APP_DIR/Contents/Resources/" 2>/dev/null || true
@@ -53,6 +65,29 @@ fi
 
 # Create PkgInfo
 echo "APPL????" > "$APP_DIR/Contents/PkgInfo"
+
+# Fix Sparkle framework rpath if it exists (for release builds)
+if [ -d "$APP_DIR/Contents/Frameworks/Sparkle.framework" ]; then
+    echo "Fixing Sparkle framework install name and rpath..."
+
+    # CRITICAL: Fix the framework's install name FIRST
+    # This tells dyld where to find the framework itself
+    install_name_tool -id "@executable_path/../Frameworks/Sparkle.framework/Versions/B/Sparkle" \
+        "$APP_DIR/Contents/Frameworks/Sparkle.framework/Versions/B/Sparkle"
+
+    # Update the main executable's reference
+    install_name_tool -change "@rpath/Sparkle.framework/Versions/B/Sparkle" \
+        "@executable_path/../Frameworks/Sparkle.framework/Versions/B/Sparkle" \
+        "$APP_DIR/Contents/MacOS/tibok" 2>/dev/null || true
+
+    # Add rpath as fallback for future frameworks
+    install_name_tool -add_rpath "@executable_path/../Frameworks" \
+        "$APP_DIR/Contents/MacOS/tibok" 2>/dev/null || true
+fi
+
+# Sign app bundle (required for macOS security)
+echo "Signing app bundle..."
+codesign -f -s - --deep "$APP_DIR" 2>/dev/null || true
 
 echo "Done! App bundle created at: $APP_DIR"
 echo "Run with: open $APP_DIR"

@@ -305,22 +305,38 @@ class GitService: ObservableObject {
     // MARK: - Remote Operations
 
     /// Push to remote
-    func push(in repoURL: URL) -> (success: Bool, error: String?) {
+    func push(in repoURL: URL) -> (success: Bool, error: String?, alreadyUpToDate: Bool) {
         let result = runGitCommand(["push"], in: repoURL)
+
+        // Check for "already up to date" in stderr (git sends info messages to stderr)
+        let stderr = result.error?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let isUpToDate = stderr.lowercased().contains("everything up-to-date")
+
         if result.exitCode == 0 {
-            return (true, nil)
+            return (true, nil, isUpToDate)
         } else {
-            return (false, result.error ?? "Push failed")
+            // Include both stdout and stderr in error message for debugging
+            let errorMsg = [result.error, result.output]
+                .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty }
+                .joined(separator: " ")
+            return (false, errorMsg.isEmpty ? "Push failed (exit code \(result.exitCode))" : errorMsg, false)
         }
     }
 
     /// Pull from remote
     func pull(in repoURL: URL) -> (success: Bool, error: String?) {
         let result = runGitCommand(["pull"], in: repoURL)
+
         if result.exitCode == 0 {
             return (true, nil)
         } else {
-            return (false, result.error ?? "Pull failed")
+            // Include both stdout and stderr in error message for debugging
+            let errorMsg = [result.error, result.output]
+                .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty }
+                .joined(separator: " ")
+            return (false, errorMsg.isEmpty ? "Pull failed (exit code \(result.exitCode))" : errorMsg)
         }
     }
 

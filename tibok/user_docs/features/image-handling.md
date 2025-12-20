@@ -1,6 +1,6 @@
 # Image Handling
 
-Tibok makes it easy to add images to your markdown documents with drag & drop, paste, and slash commands.
+tibok makes it easy to add images to your markdown documents with drag & drop, paste, and slash commands.
 
 ## Adding Images
 
@@ -17,7 +17,12 @@ Tibok makes it easy to add images to your markdown documents with drag & drop, p
 1. Copy an image (from any app or screenshot)
 2. Press Cmd+V in the editor
 3. The image is saved to the `assets` folder with a timestamp filename
-4. Markdown syntax is inserted at the cursor position
+4. Markdown syntax is inserted with cursor in the alt text field
+
+**Format Detection:**
+- Copying image **files** (Cmd+C in Finder): Preserves original format (GIF, PNG, JPEG, etc.)
+- Copying from **apps/screenshots**: Uses PNG for screenshots, preserves format when possible
+- TIFF images are automatically converted to PNG for better web compatibility
 
 ### Slash Command
 
@@ -25,9 +30,40 @@ Tibok makes it easy to add images to your markdown documents with drag & drop, p
 2. Press Enter to insert: `![](image-url)`
 3. Replace `image-url` with your image path or URL
 
+## Cursor Positioning
+
+After inserting an image (drag or paste), the cursor is automatically placed in the **alt text field** for accessibility:
+
+```
+![|](./assets/image.png)
+```
+
+This encourages adding descriptive alt text for screen readers and SEO. Type your description, then press Tab or click to move to the next position.
+
+## Visual Feedback
+
+tibok provides toast notifications for all image operations:
+
+| Action | Notification | Icon | Duration |
+|--------|-------------|------|----------|
+| Image pasted (unsaved doc) | "Save document to paste images" | ⚠️ | 3s |
+| Assets folder created | "Created assets folder" | 📁 | 1.5s |
+| Image saved successfully | "Image saved to assets/filename" | ✅ | 2s |
+| Image save failed | "Failed to save image: error" | ❌ | 3s |
+| Drag without save | "Save document for relative paths" | ⚠️ | 3s |
+| Copy failed (fallback) | "Using absolute path (copy failed)" | ⚠️ | 2.5s |
+
+### Export & Copy Notifications
+
+When exporting or copying documents with images:
+
+- **PDF Export**: "Note: Relative image paths may not work in PDF" (if images present)
+- **HTML Export**: "Images use relative paths - keep assets folder" (if images present)
+- **Copy Markdown**: "Copied (images not included)" (reminds you images aren't on clipboard)
+
 ## Assets Folder
 
-When you drag or paste images, Tibok automatically:
+When you drag or paste images, tibok automatically:
 
 1. Creates an `assets` folder next to your document (if it doesn't exist)
 2. Copies the image to this folder
@@ -85,8 +121,8 @@ Images in the preview pane are rendered when:
 
 ### "Save document first" message
 - Save your document with Cmd+S before pasting images
-- This allows Tibok to create the assets folder in the right location
+- This allows tibok to create the assets folder in the right location
 
 ### Duplicate filenames
-- Tibok automatically appends numbers to avoid conflicts
+- tibok automatically appends numbers to avoid conflicts
 - `photo.png` becomes `photo-1.png`, `photo-2.png`, etc.

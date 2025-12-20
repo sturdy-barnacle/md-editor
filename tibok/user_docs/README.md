@@ -1,6 +1,6 @@
-# Tibok User Documentation
+# tibok User Documentation
 
-Welcome to the Tibok documentation. Tibok is a native macOS markdown editor built for writers who love simplicity.
+Welcome to the tibok documentation. tibok is a native macOS markdown editor built for writers who love simplicity.
 
 ## Quick Start
 
@@ -14,7 +14,7 @@ Welcome to the Tibok documentation. Tibok is a native macOS markdown editor buil
 
 ## Interface
 
-Tibok features a clean, distraction-free interface:
+tibok features a clean, distraction-free interface:
 
 - **Tab bar**: Always visible when documents are open
 - **Sidebar**: Workspace, Favorites, Recent files, plus collapsible Git panel
@@ -27,18 +27,30 @@ Tibok features a clean, distraction-free interface:
 
 ### General
 - [FAQ](FAQ.md) - Frequently asked questions
+- [Brand Guidelines](brand-guidelines.md) - Visual identity and voice guidelines
 
-### Features
+### Features - Core
 - [Slash Commands](features/slash-commands.md) - Quick formatting with `/` commands
+- [Tab Management](features/tab-management.md) - Working with multiple open documents
 - [Frontmatter Editor](features/frontmatter.md) - Jekyll/Hugo metadata editing
 - [Image Handling](features/image-handling.md) - Drag, drop, and paste images
 - [Workspace & Files](features/workspace.md) - File and folder management
 - [Git Integration](features/git-integration.md) - Version control with Git
 - [Preview](features/preview.md) - Live markdown preview
 - [Find and Replace](features/find-replace.md) - Search and replace text
+- [WordPress Publishing](features/wordpress-publishing.md) - Publish to WordPress via API or email
 - [Plugins](features/plugins.md) - Enable/disable editor extensions
 - [Webhooks](features/webhooks.md) - HTTP notifications on events
 - [Keyboard Shortcuts](features/keyboard-shortcuts.md) - Complete shortcut reference
+
+### Features - Advanced Topics
+- [Session Persistence](features/session-persistence.md) - Automatic state restoration
+- [Performance Optimizations](features/performance-optimizations.md) - Smart filtering and caching
+
+### For Plugin Developers
+- [Plugin Development Guide](features/plugin-development.md) - Complete guide to creating plugins
+- [Plugin Template](features/plugin-template.md) - Starter template for plugin development
+- [Plugin Security](features/plugin-security.md) - Security best practices for plugins
 
 ## Favorites
 
@@ -56,4 +68,4 @@ If you can't find an answer in these docs:
 
 ## Version
 
-This documentation covers Tibok Beta v0.6.
+This documentation covers tibok Beta v0.6-0.7 (features in active development).

@@ -9,174 +9,6 @@ import SwiftUI
 import UniformTypeIdentifiers
 import WebKit
 
-// MARK: - Command
-
-struct Command: Identifiable, Hashable {
-    let id: String
-    let title: String
-    let subtitle: String?
-    let icon: String?
-    let shortcut: KeyboardShortcut?
-    let category: CommandCategory
-    let source: String
-    let action: () -> Void
-
-    init(
-        id: String,
-        title: String,
-        subtitle: String? = nil,
-        icon: String? = nil,
-        shortcut: KeyboardShortcut? = nil,
-        category: CommandCategory = .general,
-        source: String = "builtin",
-        action: @escaping () -> Void
-    ) {
-        self.id = id
-        self.title = title
-        self.subtitle = subtitle
-        self.icon = icon
-        self.shortcut = shortcut
-        self.category = category
-        self.source = source
-        self.action = action
-    }
-
-    static func == (lhs: Command, rhs: Command) -> Bool {
-        lhs.id == rhs.id
-    }
-
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
-    }
-}
-
-// MARK: - Command Category
-
-enum CommandCategory: String, CaseIterable {
-    case file = "File"
-    case edit = "Edit"
-    case view = "View"
-    case insert = "Insert"
-    case export = "Export"
-    case git = "Git"
-    case general = "General"
-
-    var icon: String {
-        switch self {
-        case .file: return "doc"
-        case .edit: return "pencil"
-        case .view: return "eye"
-        case .insert: return "plus.square"
-        case .export: return "square.and.arrow.up"
-        case .git: return "arrow.triangle.branch"
-        case .general: return "command"
-        }
-    }
-}
-
-// MARK: - Command Registry
-
-@MainActor
-class CommandRegistry: ObservableObject {
-    static let shared = CommandRegistry()
-
-    @Published private(set) var commands: [Command] = []
-    @Published var recentCommandIds: [String] = []
-
-    private let maxRecent = 5
-
-    private init() {
-        loadRecentCommands()
-    }
-
-    func register(_ command: Command) {
-        if !commands.contains(where: { $0.id == command.id }) {
-            commands.append(command)
-        }
-    }
-
-    func register(_ commands: [Command]) {
-        for command in commands {
-            register(command)
-        }
-    }
-
-    /// Unregister all commands from a specific source (plugin)
-    func unregister(source: String) {
-        commands.removeAll { $0.source == source }
-    }
-
-    func execute(_ command: Command) {
-        command.action()
-        addToRecent(command.id)
-    }
-
-    func search(_ query: String) -> [Command] {
-        if query.isEmpty {
-            let recentCommands = recentCommandIds.compactMap { id in
-                commands.first { $0.id == id }
-            }
-            let otherCommands = commands.filter { !recentCommandIds.contains($0.id) }
-            return recentCommands + otherCommands
-        }
-
-        let lowercaseQuery = query.lowercased()
-
-        return commands
-            .map { command -> (Command, Int) in
-                let score = fuzzyScore(query: lowercaseQuery, target: command.title.lowercased())
-                return (command, score)
-            }
-            .filter { $0.1 > 0 }
-            .sorted { $0.1 > $1.1 }
-            .map { $0.0 }
-    }
-
-    private func fuzzyScore(query: String, target: String) -> Int {
-        var score = 0
-        var queryIndex = query.startIndex
-        var targetIndex = target.startIndex
-        var consecutiveBonus = 0
-
-        while queryIndex < query.endIndex && targetIndex < target.endIndex {
-            if query[queryIndex] == target[targetIndex] {
-                score += 1 + consecutiveBonus
-                consecutiveBonus += 1
-                queryIndex = query.index(after: queryIndex)
-
-                if targetIndex == target.startIndex ||
-                   target[target.index(before: targetIndex)] == " " {
-                    score += 5
-                }
-            } else {
-                consecutiveBonus = 0
-            }
-            targetIndex = target.index(after: targetIndex)
-        }
-
-        return queryIndex == query.endIndex ? score : 0
-    }
-
-    private func addToRecent(_ commandId: String) {
-        recentCommandIds.removeAll { $0 == commandId }
-        recentCommandIds.insert(commandId, at: 0)
-        if recentCommandIds.count > maxRecent {
-            recentCommandIds = Array(recentCommandIds.prefix(maxRecent))
-        }
-        saveRecentCommands()
-    }
-
-    private func loadRecentCommands() {
-        if let ids = UserDefaults.standard.stringArray(forKey: "recentCommands") {
-            recentCommandIds = ids
-        }
-    }
-
-    private func saveRecentCommands() {
-        UserDefaults.standard.set(recentCommandIds, forKey: "recentCommands")
-    }
-}
-
 // MARK: - Keyboard Shortcut Display
 
 extension KeyboardShortcut {
@@ -202,6 +34,8 @@ struct FileItem: Identifiable, Hashable {
     let name: String
     let isDirectory: Bool
     var children: [FileItem]?
+    var isScanning: Bool = false  // For loading indicator
+    var isFiltered: Bool = false  // True if folder was filtered out for not having markdown
 
     init(url: URL) {
         self.id = url
@@ -214,7 +48,7 @@ struct FileItem: Identifiable, Hashable {
         self.children = nil
     }
 
-    /// Load children for a directory
+    /// Load children for a directory (without smart filtering)
     mutating func loadChildren() {
         guard isDirectory else { return }
 
@@ -262,6 +96,8 @@ class AppState: ObservableObject {
     @Published var favoriteFiles: [URL] = []
     @Published var workspaceURL: URL?
     @Published var workspaceFiles: [FileItem] = []
+    @Published var expandedFolders: Set<String> = []  // Stores relative paths of expanded folders
+    @AppStorage("workspace.smartFiltering") var smartFilteringEnabled = true
 
     // Git state
     @Published var isGitRepository: Bool = false
@@ -278,9 +114,6 @@ class AppState: ObservableObject {
     private var autoSaveTimer: Timer?
     private var gitRefreshTask: Task<Void, Never>?
     private let autoSaveDelay: TimeInterval = 0.5  // 500ms debounce
-    private var exportWebView: WKWebView?  // Retain WebView during export
-    private var exportDelegate: WebViewExportDelegate?  // Retain delegate
-    private var pendingPDFURL: URL?
 
     private let maxClosedTabs = 10
 
@@ -288,6 +121,7 @@ class AppState: ObservableObject {
         loadRecentFiles()
         loadFavorites()
         loadOpenTabs()
+        loadWorkspaceState()
     }
 
     // MARK: - Active Document Access
@@ -486,13 +320,60 @@ class AppState: ObservableObject {
 
     func setWorkspace(_ url: URL) {
         workspaceURL = url
+        saveWorkspaceState()
         refreshWorkspaceFiles()
     }
 
     func closeWorkspace() {
+        saveWorkspaceState()  // Save before closing
         workspaceURL = nil
         workspaceFiles = []
         clearGitState()
+    }
+
+    private func saveWorkspaceState() {
+        if let url = workspaceURL {
+            UserDefaults.standard.set(url, forKey: "lastWorkspaceURL")
+        }
+    }
+
+    private func loadWorkspaceState() {
+        if let url = UserDefaults.standard.url(forKey: "lastWorkspaceURL"),
+           FileManager.default.fileExists(atPath: url.path) {
+            setWorkspace(url)
+        }
+        loadExpandedFolders()
+    }
+
+    func toggleFolderExpansion(_ path: String) {
+        if expandedFolders.contains(path) {
+            expandedFolders.remove(path)
+        } else {
+            expandedFolders.insert(path)
+        }
+        saveExpandedFolders()
+    }
+
+    func isFolderExpanded(_ path: String) -> Bool {
+        expandedFolders.contains(path)
+    }
+
+    private func saveExpandedFolders() {
+        if let data = try? JSONEncoder().encode(Array(expandedFolders)) {
+            UserDefaults.standard.set(data, forKey: "expandedFolders")
+        }
+    }
+
+    private func loadExpandedFolders() {
+        if let data = UserDefaults.standard.data(forKey: "expandedFolders"),
+           let folders = try? JSONDecoder().decode([String].self, from: data) {
+            expandedFolders = Set(folders)
+        }
+    }
+
+    func clearExpandedFolders() {
+        expandedFolders = []
+        UserDefaults.standard.removeObject(forKey: "expandedFolders")
     }
 
     func refreshWorkspaceFiles() {
@@ -503,11 +384,71 @@ class AppState: ObservableObject {
         }
 
         var root = FileItem(url: url)
-        root.loadChildren()
-        workspaceFiles = root.children ?? []
+
+        if smartFilteringEnabled {
+            // Load children first
+            root.loadChildren()
+
+            // Start filtering in background
+            Task {
+                let filteredChildren = await filterChildren(root.children ?? [])
+                await MainActor.run {
+                    var updatedRoot = root
+                    updatedRoot.children = filteredChildren
+                    self.workspaceFiles = updatedRoot.children ?? []
+                }
+            }
+        } else {
+            // Load all files immediately (no filtering)
+            root.loadChildren()
+            workspaceFiles = root.children ?? []
+        }
 
         // Refresh git status after loading files
         refreshGitStatus()
+    }
+
+    /// Filter children based on whether folders contain markdown files
+    private func filterChildren(_ children: [FileItem]) async -> [FileItem] {
+        var filteredChildren: [FileItem] = []
+
+        for var child in children {
+            if child.isDirectory {
+                // Check cache or scan folder
+                let containsMarkdown = await FolderScanCache.shared.scanFolder(at: child.url)
+                if containsMarkdown {
+                    filteredChildren.append(child)
+                } else {
+                    child.isFiltered = true
+                }
+            } else {
+                // Always include markdown files
+                filteredChildren.append(child)
+            }
+        }
+
+        return filteredChildren
+    }
+
+    /// Expand a folder and load its children (with smart filtering if enabled)
+    func expandFolder(at index: Int) {
+        guard index < workspaceFiles.count else { return }
+
+        var item = workspaceFiles[index]
+        item.loadChildren()
+
+        if smartFilteringEnabled {
+            // Filter in background
+            Task {
+                let filteredChildren = await filterChildren(item.children ?? [])
+                await MainActor.run {
+                    self.workspaceFiles[index].children = filteredChildren
+                    self.workspaceFiles[index].isScanning = false
+                }
+            }
+        } else {
+            workspaceFiles[index].children = item.children
+        }
     }
 
     // MARK: - Git Operations
@@ -529,24 +470,23 @@ class AppState: ObservableObject {
 
             let gitService = GitService.shared
 
-            // Check if workspace is a git repo
-            let isRepo = gitService.isGitRepository(at: url)
-
-            await MainActor.run {
-                self.isGitRepository = isRepo
-            }
-
-            guard isRepo else {
+            // Check if workspace is a git repo and get the actual repo root
+            guard let repoRoot = gitService.getRepositoryRoot(for: url) else {
                 await MainActor.run {
+                    self.isGitRepository = false
                     self.clearGitState()
                 }
                 return
             }
 
-            // Get branch and file statuses
-            let branch = gitService.getCurrentBranch(for: url)
-            let changedFiles = gitService.getChangedFiles(for: url)
-            let statuses = gitService.getFileStatuses(for: url)
+            await MainActor.run {
+                self.isGitRepository = true
+            }
+
+            // Get branch and file statuses using the repo root
+            let branch = gitService.getCurrentBranch(for: repoRoot)
+            let changedFiles = gitService.getChangedFiles(for: repoRoot)
+            let statuses = gitService.getFileStatuses(for: repoRoot)
 
             let staged = changedFiles.filter { $0.isStaged }
             let unstaged = changedFiles.filter { !$0.isStaged }
@@ -568,15 +508,21 @@ class AppState: ObservableObject {
         unstagedFiles = []
     }
 
+    /// Get the git repository root for the current workspace
+    private func getGitRepoRoot() -> URL? {
+        guard let workspaceURL else { return nil }
+        return GitService.shared.getRepositoryRoot(for: workspaceURL)
+    }
+
     func stageFile(_ url: URL) {
-        guard let workspaceURL else { return }
-        _ = GitService.shared.stageFiles([url], in: workspaceURL)
+        guard let repoRoot = getGitRepoRoot() else { return }
+        _ = GitService.shared.stageFiles([url], in: repoRoot)
         refreshGitStatus()
     }
 
     func stageAllFiles() {
-        guard let workspaceURL else { return }
-        _ = GitService.shared.stageAll(in: workspaceURL)
+        guard let repoRoot = getGitRepoRoot() else { return }
+        _ = GitService.shared.stageAll(in: repoRoot)
         refreshGitStatus()
     }
 
@@ -586,14 +532,14 @@ class AppState: ObservableObject {
     }
 
     func unstageFile(_ url: URL) {
-        guard let workspaceURL else { return }
-        _ = GitService.shared.unstageFiles([url], in: workspaceURL)
+        guard let repoRoot = getGitRepoRoot() else { return }
+        _ = GitService.shared.unstageFiles([url], in: repoRoot)
         refreshGitStatus()
     }
 
     func unstageAllFiles() {
-        guard let workspaceURL else { return }
-        _ = GitService.shared.unstageAll(in: workspaceURL)
+        guard let repoRoot = getGitRepoRoot() else { return }
+        _ = GitService.shared.unstageAll(in: repoRoot)
         refreshGitStatus()
     }
 
@@ -603,38 +549,38 @@ class AppState: ObservableObject {
     }
 
     func discardChanges(_ url: URL) {
-        guard let workspaceURL else { return }
-        _ = GitService.shared.discardChanges([url], in: workspaceURL)
+        guard let repoRoot = getGitRepoRoot() else { return }
+        _ = GitService.shared.discardChanges([url], in: repoRoot)
         refreshGitStatus()
         refreshWorkspaceFiles()
     }
 
-    func commitChanges(message: String) -> (success: Bool, error: String?) {
-        guard let workspaceURL else { return (false, "No workspace open") }
-        let result = GitService.shared.commit(message: message, in: workspaceURL)
-        if result.success {
+    func commitChanges(message: String, deferRefresh: Bool = false) -> (success: Bool, error: String?) {
+        guard let repoRoot = getGitRepoRoot() else { return (false, "No workspace open") }
+        let result = GitService.shared.commit(message: message, in: repoRoot)
+        if result.success && !deferRefresh {
             refreshGitStatus()
         }
         return result
     }
 
-    func pushChanges() -> (success: Bool, error: String?) {
-        guard let workspaceURL else { return (false, "No workspace open") }
-        let result = GitService.shared.push(in: workspaceURL)
+    func pushChanges() -> (success: Bool, error: String?, alreadyUpToDate: Bool) {
+        guard let repoRoot = getGitRepoRoot() else { return (false, "No workspace open", false) }
+        let result = GitService.shared.push(in: repoRoot)
         if result.success {
             refreshGitStatus()
 
-            // Trigger git.push webhooks
+            // Trigger git.push webhooks (use repo root for webhook path)
             Task {
-                await WebhookService.shared.triggerGitPush(repositoryPath: workspaceURL.path)
+                await WebhookService.shared.triggerGitPush(repositoryPath: repoRoot.path)
             }
         }
-        return result
+        return (result.success, result.error, result.alreadyUpToDate)
     }
 
     func pullChanges() -> (success: Bool, error: String?) {
-        guard let workspaceURL else { return (false, "No workspace open") }
-        let result = GitService.shared.pull(in: workspaceURL)
+        guard let repoRoot = getGitRepoRoot() else { return (false, "No workspace open") }
+        let result = GitService.shared.pull(in: repoRoot)
         if result.success {
             refreshGitStatus()
             refreshWorkspaceFiles()
@@ -677,6 +623,18 @@ class AppState: ObservableObject {
             if let index = documents.firstIndex(where: { $0.fileURL == url }) {
                 documents[index].fileURL = newURL
                 documents[index].title = newURL.deletingPathExtension().lastPathComponent
+            }
+
+            // Update recent files list
+            if let recentIndex = recentFiles.firstIndex(of: url) {
+                recentFiles[recentIndex] = newURL
+                saveRecentFiles()
+            }
+
+            // Update favorites list
+            if let favoriteIndex = favoriteFiles.firstIndex(of: url) {
+                favoriteFiles[favoriteIndex] = newURL
+                saveFavorites()
             }
         } catch {
             showToast("Failed to rename file", icon: "exclamationmark.triangle.fill")
@@ -814,295 +772,7 @@ class AppState: ObservableObject {
     // MARK: - Export
 
     func exportAsPDF() {
-        let panel = NSSavePanel()
-        panel.allowedContentTypes = [UTType.pdf]
-        panel.nameFieldStringValue = "\(currentDocument.title).pdf"
-
-        guard panel.runModal() == .OK, let url = panel.url else { return }
-
-        // Render markdown to HTML with print styles
-        let html = wrapHTMLForPrint(MarkdownRenderer.render(currentDocument.content))
-
-        // Create and retain WebView and delegate
-        let webView = WKWebView(frame: NSRect(x: 0, y: 0, width: 612, height: 792))
-        let delegate = WebViewExportDelegate { [weak self] in
-            self?.finishPDFExport()
-        }
-        self.exportWebView = webView
-        self.exportDelegate = delegate
-        self.pendingPDFURL = url
-
-        webView.navigationDelegate = delegate
-        webView.loadHTMLString(html, baseURL: nil)
-    }
-
-    private func finishPDFExport() {
-        guard let webView = exportWebView, let url = pendingPDFURL else { return }
-
-        // Use print operation for proper multi-page PDF
-        let printInfo = NSPrintInfo()
-        printInfo.paperSize = NSSize(width: 612, height: 792) // Letter
-        printInfo.topMargin = 54    // 0.75 inch
-        printInfo.bottomMargin = 54
-        printInfo.leftMargin = 54
-        printInfo.rightMargin = 54
-        printInfo.horizontalPagination = .fit
-        printInfo.verticalPagination = .automatic
-        printInfo.isHorizontallyCentered = false
-        printInfo.isVerticallyCentered = false
-        printInfo.jobDisposition = .save
-        printInfo.dictionary()[NSPrintInfo.AttributeKey.jobSavingURL] = url
-
-        let printOp = webView.printOperation(with: printInfo)
-        printOp.showsPrintPanel = false
-        printOp.showsProgressPanel = false
-
-        printOp.runModal(for: NSApp.mainWindow ?? NSWindow(), delegate: nil, didRun: nil, contextInfo: nil)
-
-        // Trigger document.export webhooks
-        let (frontmatter, _) = Frontmatter.parse(from: currentDocument.content)
-        Task {
-            await WebhookService.shared.triggerDocumentExport(
-                filename: url.lastPathComponent,
-                title: frontmatter?.title,
-                path: url.path,
-                exportFormat: "pdf"
-            )
-        }
-
-        // Clean up after print
-        exportWebView = nil
-        exportDelegate = nil
-        pendingPDFURL = nil
-    }
-
-    private func wrapHTMLForPrint(_ content: String) -> String {
-        """
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="utf-8">
-            <title>\(currentDocument.title)</title>
-            <style>
-                @page {
-                    size: letter;
-                    margin: 0.75in 1in;
-                }
-                body {
-                    font-family: 'Georgia', 'Times New Roman', serif;
-                    font-size: 11pt;
-                    line-height: 1.6;
-                    color: #1a1a1a;
-                    margin: 0;
-                    padding: 0;
-                }
-                /* Headings */
-                h1 {
-                    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
-                    font-size: 22pt;
-                    font-weight: 600;
-                    margin: 0 0 14pt 0;
-                    padding-bottom: 6pt;
-                    border-bottom: 1pt solid #e0e0e0;
-                    page-break-after: avoid;
-                }
-                h2 {
-                    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
-                    font-size: 16pt;
-                    font-weight: 600;
-                    margin: 18pt 0 10pt 0;
-                    page-break-after: avoid;
-                }
-                h3 {
-                    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
-                    font-size: 13pt;
-                    font-weight: 600;
-                    margin: 14pt 0 8pt 0;
-                    page-break-after: avoid;
-                }
-                h4, h5, h6 {
-                    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
-                    font-size: 11pt;
-                    font-weight: 600;
-                    margin: 12pt 0 6pt 0;
-                    page-break-after: avoid;
-                }
-                h5, h6 { color: #4a4a4a; }
-
-                /* Paragraphs */
-                p {
-                    margin: 0 0 10pt 0;
-                    orphans: 3;
-                    widows: 3;
-                    text-align: justify;
-                    hyphens: auto;
-                }
-
-                /* Code */
-                code {
-                    font-family: 'SF Mono', 'Menlo', 'Consolas', monospace;
-                    background: #f4f4f4;
-                    padding: 1pt 4pt;
-                    border-radius: 2pt;
-                    font-size: 9pt;
-                    color: #333;
-                }
-                pre {
-                    background: #f8f8f8;
-                    padding: 10pt;
-                    border-radius: 4pt;
-                    border: 0.5pt solid #e0e0e0;
-                    overflow-x: auto;
-                    page-break-inside: avoid;
-                    margin: 0 0 10pt 0;
-                }
-                pre code {
-                    background: none;
-                    padding: 0;
-                    font-size: 8.5pt;
-                    line-height: 1.4;
-                    border: none;
-                }
-
-                /* Blockquotes */
-                blockquote {
-                    border-left: 3pt solid #d0d0d0;
-                    margin: 0 0 10pt 0;
-                    padding: 6pt 0 6pt 12pt;
-                    color: #555;
-                    font-style: italic;
-                    page-break-inside: avoid;
-                }
-                blockquote p { margin-bottom: 6pt; }
-                blockquote p:last-child { margin-bottom: 0; }
-
-                /* Links */
-                a {
-                    color: #0055aa;
-                    text-decoration: none;
-                }
-
-                /* Lists */
-                ul, ol {
-                    margin: 0 0 10pt 0;
-                    padding-left: 20pt;
-                }
-                li {
-                    margin-bottom: 4pt;
-                }
-                li > ul, li > ol {
-                    margin-top: 4pt;
-                    margin-bottom: 0;
-                }
-
-                /* Task lists */
-                input[type="checkbox"] {
-                    margin-right: 6pt;
-                }
-
-                /* Horizontal rule */
-                hr {
-                    border: none;
-                    border-top: 0.5pt solid #ccc;
-                    margin: 16pt 0;
-                }
-
-                /* Tables */
-                table {
-                    border-collapse: collapse;
-                    margin: 0 0 10pt 0;
-                    page-break-inside: avoid;
-                    width: 100%;
-                    font-size: 10pt;
-                }
-                th, td {
-                    border: 0.5pt solid #ccc;
-                    padding: 6pt 10pt;
-                    text-align: left;
-                }
-                th {
-                    background: #f4f4f4;
-                    font-weight: 600;
-                }
-
-                /* Images */
-                img {
-                    max-width: 100%;
-                    height: auto;
-                    page-break-inside: avoid;
-                }
-
-                /* Callouts */
-                .callout {
-                    padding: 10pt 12pt;
-                    border-radius: 4pt;
-                    margin: 0 0 10pt 0;
-                    border-left: 4pt solid;
-                    page-break-inside: avoid;
-                }
-                .callout strong { display: block; margin-bottom: 4pt; }
-                .callout p { margin: 4pt 0; }
-                .callout p:last-child { margin-bottom: 0; }
-                .callout-note { background: #e8f4fd; border-color: #0969da; }
-                .callout-tip { background: #e6f6e6; border-color: #1a7f37; }
-                .callout-warning { background: #fff8e6; border-color: #d29922; }
-                .callout-important { background: #f6e8ff; border-color: #8250df; }
-                .callout-caution { background: #ffe8e8; border-color: #cf222e; }
-
-                /* Footnotes */
-                .footnotes {
-                    margin-top: 24pt;
-                    padding-top: 12pt;
-                    border-top: 0.5pt solid #ccc;
-                    font-size: 9pt;
-                    color: #555;
-                }
-                .footnotes ol { padding-left: 16pt; }
-                .footnotes li { margin-bottom: 6pt; }
-                sup a {
-                    color: #0055aa;
-                    font-weight: 500;
-                }
-
-                /* Table of Contents */
-                .toc {
-                    background: #f8f8f8;
-                    border: 0.5pt solid #e0e0e0;
-                    border-radius: 4pt;
-                    padding: 12pt 16pt;
-                    margin: 0 0 16pt 0;
-                    page-break-inside: avoid;
-                }
-                .toc ul { list-style: none; padding-left: 0; margin: 0; }
-                .toc ul ul { padding-left: 14pt; margin-top: 4pt; }
-                .toc li { margin-bottom: 4pt; }
-                .toc a { color: #333; }
-
-                /* Definition lists */
-                dl { margin: 0 0 10pt 0; }
-                dt { font-weight: 600; margin-top: 8pt; }
-                dt:first-child { margin-top: 0; }
-                dd { margin: 2pt 0 6pt 20pt; color: #444; }
-
-                /* Collapsible sections (print expanded) */
-                details { margin: 0 0 10pt 0; }
-                summary { font-weight: 600; cursor: default; }
-
-                /* Strikethrough and mark */
-                del { color: #666; }
-                mark { background: #fff3b0; padding: 1pt 2pt; }
-
-                /* Print-specific */
-                @media print {
-                    a[href]:after { content: ""; }  /* Don't show URLs after links */
-                }
-            </style>
-        </head>
-        <body>
-            \(content)
-        </body>
-        </html>
-        """
+        ExportService.shared.exportAsPDF(document: currentDocument, showToast: showToast)
     }
 
     func exportAsHTML() {
@@ -1116,6 +786,17 @@ class AppState: ObservableObject {
 
         do {
             try html.write(to: url, atomically: true, encoding: .utf8)
+
+            // Context-aware success notification
+            let hasRelativeImages = currentDocument.content.contains("](./assets/") ||
+                                   currentDocument.content.contains("](assets/")
+            if hasRelativeImages {
+                showToast("Images use relative paths - keep assets folder",
+                         icon: "photo", duration: 3.0)
+            } else {
+                showToast("HTML exported successfully",
+                         icon: "checkmark.circle.fill", duration: 2.0)
+            }
 
             // Trigger document.export webhooks
             let (frontmatter, _) = Frontmatter.parse(from: currentDocument.content)
@@ -1192,7 +873,16 @@ class AppState: ObservableObject {
     func copyAsMarkdown() {
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(currentDocument.content, forType: .string)
-        showToast("Copied to clipboard", icon: "doc.on.clipboard.fill")
+
+        // Context-aware notification
+        let hasRelativeImages = currentDocument.content.contains("](./assets/") ||
+                               currentDocument.content.contains("](assets/")
+
+        if hasRelativeImages {
+            showToast("Copied (images not included)", icon: "doc.on.clipboard", duration: 2.5)
+        } else {
+            showToast("Copied to clipboard", icon: "doc.on.clipboard.fill", duration: 1.5)
+        }
     }
 
     // MARK: - Toast Notifications
@@ -1288,51 +978,123 @@ class AppState: ObservableObject {
         }
     }
 
-    // MARK: - Print
+    func exportToWordPress() {
+        // Get WordPress email address from settings
+        let wordpressEmail = UserDefaults.standard.string(forKey: "plugin.wordpress.emailAddress") ?? ""
 
-    /// WebView and delegate for printing (retained during print operation)
-    private var printWebView: WKWebView?
-    private var printDelegate: WebViewPrintDelegate?
-
-    func printDocument() {
-        guard !currentDocument.isEmpty else { return }
-
-        // Render markdown to HTML for printing
-        let html = wrapHTMLForPrint(MarkdownRenderer.render(currentDocument.content))
-
-        // Create WebView for rendering
-        let webView = WKWebView(frame: NSRect(x: 0, y: 0, width: 612, height: 792))
-        let delegate = WebViewPrintDelegate { [weak self] in
-            self?.showPrintDialog()
+        guard !wordpressEmail.isEmpty else {
+            showToast("Configure WordPress email in Settings", icon: "envelope.badge.fill")
+            return
         }
-        self.printWebView = webView
-        self.printDelegate = delegate
 
-        webView.navigationDelegate = delegate
-        webView.loadHTMLString(html, baseURL: Bundle.main.resourceURL)
+        // Parse frontmatter for title, categories, and tags
+        let (frontmatter, body) = Frontmatter.parse(from: currentDocument.content)
+        let title = frontmatter?.title ?? currentDocument.title
+
+        // Convert markdown to HTML (WordPress supports HTML in email)
+        let htmlContent = MarkdownRenderer.render(body)
+
+        // Build email body with WordPress formatting
+        var emailBody = htmlContent
+
+        // Add categories if present (WordPress syntax: [category CategoryName])
+        if let categories = frontmatter?.categories, !categories.isEmpty {
+            let categorySyntax = categories.map { "[category \($0)]" }.joined(separator: " ")
+            emailBody = "\(categorySyntax)\n\n\(emailBody)"
+        }
+
+        // Add tags if present (WordPress syntax: tags: tag1, tag2, tag3)
+        if let tags = frontmatter?.tags, !tags.isEmpty {
+            let tagSyntax = "tags: \(tags.joined(separator: ", "))"
+            emailBody = "\(tagSyntax)\n\n\(emailBody)"
+        }
+
+        // Check content length - mailto URLs have practical limits of ~2000-8000 chars
+        // URL encoding makes it 2-3x longer, so we need to be conservative
+        let estimatedEncodedLength = emailBody.count * 3
+
+        if estimatedEncodedLength > 7000 {
+            // Content too long for mailto URL - save to temp file and show instructions
+            let tempDir = FileManager.default.temporaryDirectory
+            let tempFile = tempDir.appendingPathComponent("\(title).html")
+
+            do {
+                try emailBody.write(to: tempFile, atomically: true, encoding: .utf8)
+                NSWorkspace.shared.activateFileViewerSelecting([tempFile])
+
+                showToast("Content too long for email. HTML file saved - copy content manually",
+                         icon: "exclamationmark.triangle.fill", duration: 5.0)
+
+                // Also copy to clipboard for convenience
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(emailBody, forType: .string)
+
+                // Show dialog with instructions
+                DispatchQueue.main.async {
+                    let alert = NSAlert()
+                    alert.messageText = "Document Too Long for Email"
+                    alert.informativeText = """
+                    Your document (\(emailBody.count) characters) exceeds email URL limits.
+
+                    Options:
+                    1. HTML file opened in Finder - manually attach to email
+                    2. Content copied to clipboard - paste into email
+                    3. Consider using WordPress API publishing instead
+
+                    Send to: \(wordpressEmail)
+                    Subject: \(title)
+                    """
+                    alert.alertStyle = .warning
+                    alert.addButton(withTitle: "OK")
+                    alert.runModal()
+                }
+            } catch {
+                showToast("Failed to save content: \(error.localizedDescription)",
+                         icon: "exclamationmark.triangle.fill", duration: 3.0)
+            }
+            return
+        }
+
+        // URL encode the subject and body
+        guard let encodedSubject = title.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+              let encodedBody = emailBody.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
+            showToast("Failed to encode email", icon: "exclamationmark.triangle.fill")
+            return
+        }
+
+        // Create mailto URL
+        let mailtoURL = "mailto:\(wordpressEmail)?subject=\(encodedSubject)&body=\(encodedBody)"
+
+        // Verify URL is not too long
+        if mailtoURL.count > 8000 {
+            showToast("Email content too long - try shorter document",
+                     icon: "exclamationmark.triangle.fill", duration: 3.0)
+            return
+        }
+
+        // Open default email client
+        if let url = URL(string: mailtoURL) {
+            NSWorkspace.shared.open(url)
+            showToast("Opening email client...", icon: "envelope.fill")
+
+            // Trigger document.export webhooks
+            Task {
+                await WebhookService.shared.triggerDocumentExport(
+                    filename: currentDocument.fileURL?.lastPathComponent ?? "\(title).md",
+                    title: frontmatter?.title,
+                    path: currentDocument.fileURL?.path ?? "",
+                    exportFormat: "wordpress"
+                )
+            }
+        } else {
+            showToast("Failed to open email client", icon: "exclamationmark.triangle.fill")
+        }
     }
 
-    private func showPrintDialog() {
-        guard let webView = printWebView else { return }
+    // MARK: - Print
 
-        let printInfo = NSPrintInfo.shared
-        printInfo.paperSize = NSSize(width: 612, height: 792)
-        printInfo.topMargin = 54
-        printInfo.bottomMargin = 54
-        printInfo.leftMargin = 54
-        printInfo.rightMargin = 54
-        printInfo.horizontalPagination = .fit
-        printInfo.verticalPagination = .automatic
-
-        let printOp = webView.printOperation(with: printInfo)
-        printOp.showsPrintPanel = true
-        printOp.showsProgressPanel = true
-
-        printOp.runModal(for: NSApp.mainWindow ?? NSWindow(), delegate: nil, didRun: nil, contextInfo: nil)
-
-        // Clean up
-        printWebView = nil
-        printDelegate = nil
+    func printDocument() {
+        ExportService.shared.printDocument(currentDocument)
     }
 
     // MARK: - Recent Files
@@ -1465,38 +1227,4 @@ class AppState: ObservableObject {
 private struct SavedTabInfo: Codable {
     let tabURLs: [URL]
     let activeTabURL: URL?
-}
-
-// MARK: - WebView Export Delegate
-
-class WebViewExportDelegate: NSObject, WKNavigationDelegate {
-    private let onFinish: () -> Void
-
-    init(onFinish: @escaping () -> Void) {
-        self.onFinish = onFinish
-    }
-
-    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        // Small delay to ensure rendering is complete
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            self.onFinish()
-        }
-    }
-}
-
-// MARK: - WebView Print Delegate
-
-class WebViewPrintDelegate: NSObject, WKNavigationDelegate {
-    private let onFinish: () -> Void
-
-    init(onFinish: @escaping () -> Void) {
-        self.onFinish = onFinish
-    }
-
-    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        // Small delay to ensure rendering is complete
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            self.onFinish()
-        }
-    }
 }

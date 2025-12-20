@@ -88,12 +88,12 @@ struct TabItemView: View {
     var body: some View {
         Button(action: onSelect) {
             HStack(spacing: 6) {
-                // Modified indicator
-                if document.isModified {
-                    Circle()
-                        .fill(Color.primary.opacity(0.5))
-                        .frame(width: 6, height: 6)
-                }
+                // Modified indicator (always reserve space)
+                Circle()
+                    .fill(Color.primary.opacity(0.5))
+                    .frame(width: 6, height: 6)
+                    .opacity(document.isModified ? 1.0 : 0)
+                    .animation(.easeInOut(duration: 0.15), value: document.isModified)
 
                 // Filename
                 Text(document.fileURL?.lastPathComponent ?? "Untitled.md")
@@ -101,17 +101,18 @@ struct TabItemView: View {
                     .lineLimit(1)
                     .foregroundColor(isActive ? .primary : .secondary)
 
-                // Close button (visible on hover or if active)
-                if isHovered || isActive {
-                    Button(action: onClose) {
-                        Image(systemName: "xmark")
-                            .font(.system(size: 9, weight: .medium))
-                            .foregroundColor(.secondary)
-                    }
-                    .buttonStyle(.plain)
-                    .frame(width: 14, height: 14)
-                    .contentShape(Rectangle())
+                // Close button (always reserve space, show on hover/active)
+                Button(action: onClose) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 9, weight: .medium))
+                        .foregroundColor(.secondary)
                 }
+                .buttonStyle(.animatedIcon)
+                .frame(width: 14, height: 14)
+                .contentShape(Rectangle())
+                .opacity(isHovered || isActive ? 1.0 : 0)
+                .animation(.easeInOut(duration: 0.15), value: isHovered || isActive)
+                .allowsHitTesting(isHovered || isActive)
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 5)

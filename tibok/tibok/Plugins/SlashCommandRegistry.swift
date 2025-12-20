@@ -1,8 +1,10 @@
 //
-//  SlashCommandRegistry.swift
+//  SlashCommandService.swift
 //  tibok
 //
-//  Registry for slash commands, mirroring CommandRegistry pattern.
+//  Registry for slash commands, mirroring CommandService pattern.
+//
+//  MIT License - See LICENSE file in Plugins directory
 //
 
 import SwiftUI
@@ -72,14 +74,14 @@ struct SlashCommand: Identifiable, Hashable {
 
 // MARK: - Slash Command Registry
 
-/// Registry for slash commands, mirroring CommandRegistry pattern.
+/// Registry for slash commands, mirroring CommandService pattern.
 /// Manages all available slash commands including built-in and plugin-provided.
 @MainActor
-final class SlashCommandRegistry: ObservableObject {
-    static let shared = SlashCommandRegistry()
+final class SlashCommandService: ObservableObject {
+    static let shared = SlashCommandService()
 
     /// Nonisolated accessor for use from NSTextView delegates (which run on main thread)
-    nonisolated static var syncShared: SlashCommandRegistry {
+    nonisolated static var syncShared: SlashCommandService {
         MainActor.assumeIsolated { shared }
     }
 

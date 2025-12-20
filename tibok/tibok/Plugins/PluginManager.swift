@@ -4,6 +4,8 @@
 //
 //  Manages plugin lifecycle: discovery, initialization, and deactivation.
 //
+//  MIT License - See LICENSE file in Plugins directory
+//
 
 import Foundation
 
@@ -14,6 +16,7 @@ final class PluginManager: ObservableObject {
 
     @Published private(set) var loadedPlugins: [any TibokPlugin] = []
     @Published private(set) var pluginErrors: [String: Error] = [:]
+    @Published private(set) var discoveredManifests: [(url: URL, manifest: PluginManifest, source: PluginSource)] = []
 
     /// All available plugin types (registered at compile time)
     private(set) var availablePluginTypes: [any TibokPlugin.Type] = []
@@ -21,27 +24,34 @@ final class PluginManager: ObservableObject {
     private var context: PluginContext?
     private var isInitialized = false
     private let stateManager = PluginStateManager.shared
+    private let dynamicLoader = DynamicPluginLoader()
 
     private init() {}
 
     /// Initialize the plugin system with required dependencies.
     /// Call this once during app startup after AppState is created.
     func initialize(
-        slashCommandRegistry: SlashCommandRegistry,
-        commandRegistry: CommandRegistry,
+        slashCommandService: SlashCommandService,
+        commandRegistry: CommandService,
         appState: AppState
     ) {
         guard !isInitialized else { return }
         isInitialized = true
 
         self.context = PluginContext(
-            slashCommandRegistry: slashCommandRegistry,
+            slashCommandService: slashCommandService,
             commandRegistry: commandRegistry,
             appState: appState
         )
 
+        // Ensure plugin directories exist
+        PluginDiscovery.Folders.ensureDirectoriesExist()
+
         // Register all known plugin types
         registerPluginTypes()
+
+        // Discover plugins from folders
+        discoverPluginsFromFolders()
 
         // Load only enabled plugins
         loadEnabledPlugins()
@@ -52,16 +62,34 @@ final class PluginManager: ObservableObject {
         availablePluginTypes = [
             CoreSlashCommandsPlugin.self,
             FrontmatterPlugin.self,
+            WordPressExportPlugin.self,
         ]
+    }
+
+    /// Discover plugins from folders on the file system
+    private func discoverPluginsFromFolders() {
+        discoveredManifests = PluginDiscovery.discoverAllManifests()
+        print("Discovered \(discoveredManifests.count) plugin manifests")
+        for manifest in discoveredManifests {
+            print("  - \(manifest.manifest.identifier): \(manifest.manifest.name) (\(manifest.source.displayName))")
+        }
     }
 
     /// Load only plugins that are enabled
     private func loadEnabledPlugins() {
         guard let context = context else { return }
 
+        // Load enabled built-in plugins
         for pluginType in availablePluginTypes {
             if stateManager.isEnabled(pluginType.identifier) {
                 loadPlugin(pluginType, context: context)
+            }
+        }
+        
+        // Load enabled discovered plugins (dynamic loading)
+        for discovered in discoveredManifests {
+            if stateManager.isEnabled(discovered.manifest.identifier) {
+                loadDiscoveredPlugin(discovered, context: context)
             }
         }
     }
@@ -77,6 +105,53 @@ final class PluginManager: ObservableObject {
         loadedPlugins.append(plugin)
         pluginErrors.removeValue(forKey: identifier)
     }
+    
+    /// Load a discovered plugin dynamically from a framework
+    private func loadDiscoveredPlugin(
+        _ discovered: (url: URL, manifest: PluginManifest, source: PluginSource),
+        context: PluginContext
+    ) {
+        let identifier = discovered.manifest.identifier
+        
+        // Don't load if already loaded
+        guard !isLoaded(identifier) else { return }
+        
+        do {
+            // Validate entry point
+            guard let entryPoint = discovered.manifest.entryPoint else {
+                throw PluginLoadingError.missingEntryPoint
+            }
+            
+            guard let frameworkName = entryPoint.framework else {
+                throw PluginLoadingError.missingEntryPoint
+            }
+            
+            guard let className = entryPoint.className else {
+                throw PluginLoadingError.missingEntryPoint
+            }
+            
+            // Find framework
+            let frameworkURL = discovered.url.appendingPathComponent("\(frameworkName).framework")
+            
+            // Load plugin dynamically
+            let plugin = try dynamicLoader.loadPlugin(
+                from: frameworkURL,
+                className: className,
+                identifier: identifier
+            )
+            
+            // Register plugin
+            plugin.register(with: context)
+            loadedPlugins.append(plugin)
+            pluginErrors.removeValue(forKey: identifier)
+            
+            print("Successfully loaded dynamic plugin: \(identifier)")
+            
+        } catch {
+            pluginErrors[identifier] = error
+            print("Failed to load discovered plugin \(identifier): \(error)")
+        }
+    }
 
     /// Enable a plugin by identifier
     func enablePlugin(_ identifier: String) {
@@ -84,9 +159,15 @@ final class PluginManager: ObservableObject {
 
         stateManager.setEnabled(identifier, true)
 
-        // Find and load the plugin type
+        // Try built-in plugins first
         if let pluginType = availablePluginTypes.first(where: { $0.identifier == identifier }) {
             loadPlugin(pluginType, context: context)
+            return
+        }
+        
+        // Try discovered plugins (dynamic loading)
+        if let discovered = discoveredManifests.first(where: { $0.manifest.identifier == identifier }) {
+            loadDiscoveredPlugin(discovered, context: context)
         }
     }
 
@@ -106,10 +187,18 @@ final class PluginManager: ObservableObject {
 
         // Deactivate and remove from registries
         plugin.deactivate()
-        context?.slashCommandRegistry.unregister(source: identifier)
+        context?.slashCommandService.unregister(source: identifier)
         context?.commandRegistry.unregister(source: identifier)
 
         loadedPlugins.remove(at: index)
+        
+        // If this was a dynamically loaded plugin, mark framework as unloaded
+        if let discovered = discoveredManifests.first(where: { $0.manifest.identifier == identifier }),
+           let entryPoint = discovered.manifest.entryPoint,
+           let frameworkName = entryPoint.framework {
+            let frameworkURL = discovered.url.appendingPathComponent("\(frameworkName).framework")
+            dynamicLoader.unloadFramework(at: frameworkURL)
+        }
     }
 
     /// Deactivate all plugins (called on app termination)
@@ -133,8 +222,45 @@ final class PluginManager: ObservableObject {
         }
     }
 
-    /// All plugins (loaded or not) for Settings UI
-    var allPluginInfo: [(type: any TibokPlugin.Type, isLoaded: Bool)] {
-        availablePluginTypes.map { ($0, isLoaded($0.identifier)) }
+    /// All plugins (loaded or not) for Settings UI - includes both built-in and discovered
+    var allPluginInfo: [(type: (any TibokPlugin.Type)?, manifest: PluginManifest?, source: PluginSource, isLoaded: Bool)] {
+        var info: [(type: (any TibokPlugin.Type)?, manifest: PluginManifest?, source: PluginSource, isLoaded: Bool)] = []
+
+        // Add built-in plugins
+        for pluginType in availablePluginTypes {
+            info.append((
+                type: pluginType,
+                manifest: nil,
+                source: .builtin,
+                isLoaded: isLoaded(pluginType.identifier)
+            ))
+        }
+
+        // Add discovered plugins
+        for discovered in discoveredManifests {
+            info.append((
+                type: nil,
+                manifest: discovered.manifest,
+                source: discovered.source,
+                isLoaded: isLoaded(discovered.manifest.identifier)
+            ))
+        }
+
+        return info
+    }
+
+    /// Get a discovered plugin manifest by identifier
+    func getDiscoveredPlugin(_ identifier: String) -> PluginManifest? {
+        discoveredManifests.first { $0.manifest.identifier == identifier }?.manifest
+    }
+
+    /// Check if a plugin is from a discovered manifest
+    func isDiscoveredPlugin(_ identifier: String) -> Bool {
+        discoveredManifests.contains { $0.manifest.identifier == identifier }
+    }
+
+    /// Reload plugin discovery (useful if plugins folder changes)
+    func reloadDiscovery() {
+        discoverPluginsFromFolders()
     }
 }

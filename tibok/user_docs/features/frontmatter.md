@@ -1,6 +1,6 @@
 # Frontmatter Editor
 
-Tibok includes a built-in frontmatter editor for Jekyll and Hugo static site generators. The inspector panel lets you edit frontmatter metadata through a form-based interface.
+tibok includes a built-in frontmatter editor for Jekyll and Hugo static site generators. The inspector panel lets you edit frontmatter metadata through a form-based interface.
 
 ## Opening the Inspector
 
@@ -15,12 +15,30 @@ Tibok includes a built-in frontmatter editor for Jekyll and Hugo static site gen
 | Jekyll | YAML | `---` |
 | Hugo | YAML | `---` |
 | Hugo | TOML | `+++` |
+| WordPress | YAML | `---` |
+
+### WordPress Publishing Fields
+
+When WordPress Export plugin is enabled, frontmatter supports publishing metadata:
+
+| Field | Description | Behavior |
+|-------|-------------|----------|
+| `title` | Post title | Overrides document title |
+| `description` | Post excerpt/summary | Used as WordPress excerpt |
+| `categories` | Array of category names | Auto-created if missing on WordPress |
+| `tags` | Array of tag names | Auto-created if missing on WordPress |
+| `draft` | Boolean (`true`/`false`) | `true` = draft, `false` = publish |
+| `author` | Author display name | Falls back to authenticated user if not found |
+
+**Note**: The `layout` field is ignored by WordPress (used by Jekyll/Hugo for page templates).
+
+See [WordPress Publishing](wordpress-publishing.md) for full publishing documentation.
 
 ## Creating Frontmatter
 
 When you open the inspector on a document without frontmatter:
 
-1. Choose your static site generator (Jekyll or Hugo)
+1. Choose your static site generator (Jekyll, Hugo, or WordPress)
 2. Click "Add Frontmatter"
 3. The frontmatter block is added with your default settings
 

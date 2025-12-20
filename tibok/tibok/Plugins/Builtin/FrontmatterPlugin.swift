@@ -4,6 +4,8 @@
 //
 //  Plugin providing frontmatter-related slash commands for Jekyll/Hugo.
 //
+//  MIT License - See LICENSE file in Plugins directory
+//
 
 import Foundation
 
@@ -20,7 +22,7 @@ final class FrontmatterPlugin: TibokPlugin {
     init() {}
 
     func register(with context: PluginContext) {
-        context.slashCommandRegistry.register(Self.frontmatterCommands)
+        context.slashCommandService.register(Self.frontmatterCommands)
     }
 
     func deactivate() {

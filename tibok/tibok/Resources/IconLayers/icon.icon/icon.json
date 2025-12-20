@@ -6,10 +6,19 @@
     {
       "layers" : [
         {
-          "glass" : false,
+          "glass" : true,
+          "hidden" : false,
           "image-name" : "muted-hash 3.svg",
           "name" : "muted-hash 3",
-          "opacity" : 0.75
+          "opacity-specializations" : [
+            {
+              "value" : 0.75
+            },
+            {
+              "appearance" : "tinted",
+              "value" : 1
+            }
+          ]
         },
         {
           "fill-specializations" : [
@@ -20,7 +29,7 @@
               }
             }
           ],
-          "glass" : false,
+          "glass" : true,
           "image-name" : "foreground-t 3.svg",
           "name" : "foreground-t 3"
         }
@@ -37,29 +46,44 @@
     {
       "layers" : [
         {
-          "blend-mode" : "normal",
+          "blend-mode-specializations" : [
+            {
+              "value" : "normal"
+            },
+            {
+              "appearance" : "dark",
+              "value" : "normal"
+            }
+          ],
           "fill-specializations" : [
             {
-              "value" : {
-                "solid" : "display-p3:0.33142,0.70190,0.64966,1.00000"
-              }
+              "value" : "automatic"
             },
             {
               "appearance" : "dark",
               "value" : {
-                "solid" : "display-p3:0.23165,0.48268,0.44709,1.00000"
+                "solid" : "display-p3:0.14294,0.04550,0.04742,1.00000"
               }
+            },
+            {
+              "appearance" : "tinted",
+              "value" : "none"
             }
           ],
+          "glass" : true,
           "image-name" : "background 3.svg",
           "name" : "background 3",
           "opacity-specializations" : [
             {
-              "value" : 1
+              "value" : 0.75
+            },
+            {
+              "appearance" : "dark",
+              "value" : 0.75
             },
             {
               "appearance" : "tinted",
-              "value" : 0.25
+              "value" : 1
             }
           ],
           "position" : {

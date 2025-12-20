@@ -1,28 +1,28 @@
-# Tibok FAQ
+# tibok FAQ
 
 ## General
 
-### What is Tibok?
-Tibok is a native macOS markdown editor built for writers who love simplicity. It provides a clean, distraction-free writing environment with live preview and essential markdown features.
+### What is tibok?
+tibok is a native macOS markdown editor built for writers who love simplicity. It provides a clean, distraction-free writing environment with live preview and essential markdown features.
 
-### What does "Tibok" mean?
-"Tibok" is a Filipino word meaning "heartbeat" or "pulse," reflecting the app's goal to be the heart of your writing workflow.
+### What does "tibok" mean?
+"tibok" is a Filipino word meaning "heartbeat" or "pulse," reflecting the app's goal to be the heart of your writing workflow.
 
 ### What macOS versions are supported?
-Tibok requires macOS 14.0 (Sonoma) or later.
+tibok requires macOS 14.0 (Sonoma) or later.
 
 ---
 
 ## Documents & Files
 
 ### Where are my documents saved?
-Documents are saved wherever you choose when using Save As. Tibok doesn't enforce a specific location.
+Documents are saved wherever you choose when using Save As. tibok doesn't enforce a specific location.
 
-### Does Tibok auto-save my work?
+### Does tibok auto-save my work?
 Yes, auto-save is enabled by default. You can toggle this in Settings > General.
 
-### What file formats does Tibok support?
-Tibok works with `.md` (Markdown), `.txt` (plain text), and other text-based files like `.csv`.
+### What file formats does tibok support?
+tibok works with `.md` (Markdown), `.txt` (plain text), and other text-based files like `.csv`.
 
 ### Can I open a folder of markdown files?
 Yes, use File > Open Folder (Cmd+Shift+O) to open a workspace. The sidebar will show all markdown files in the folder.
@@ -51,13 +51,36 @@ Type `/` at the beginning of a line to open the slash command menu. Use arrow ke
 ### How do I add images?
 Three ways to add images:
 1. **Drag & drop**: Drag image files directly into the editor
-2. **Paste**: Copy an image and paste with Cmd+V
+2. **Paste**: Copy an image and paste with Cmd+V (preserves GIF, PNG, JPEG formats)
 3. **Slash command**: Type `/image` and enter the URL
 
-When you drag or paste images, they're automatically copied to an `assets` folder next to your document.
+When you drag or paste images:
+- They're automatically copied to an `assets` folder next to your document
+- The cursor is placed in the alt text field: `![|](path)` for accessibility
+- You'll see toast notifications confirming the save
+- **Tip**: Save your document first to enable relative paths
+
+### What image formats are supported?
+tibok supports all common web image formats:
+- **Animated**: GIF (preserves animation when copying from Finder)
+- **Photos**: PNG, JPG, JPEG
+- **Graphics**: SVG, WEBP
+- **Other**: BMP, TIFF (converted to PNG for web compatibility)
+
+**Format detection**: When pasting, tibok detects the original format and preserves it when possible. Images copied from apps may be converted to standard formats.
 
 ### Can I use Find and Replace?
 Yes, use Cmd+F for Find and Cmd+Option+F for Find and Replace.
+
+### Are there keyboard shortcuts for markdown formatting?
+Yes! Use these shortcuts to quickly format selected text:
+- **Cmd+B**: Bold (`**text**`)
+- **Cmd+Shift+I**: Italic (`*text*`)
+- **Cmd+E**: Inline code (`` `code` ``)
+- **Cmd+Shift+X**: Strikethrough (`~~text~~`)
+- **Cmd+L**: Link (`[text](url)`)
+
+If no text is selected, placeholder text is inserted and selected for easy replacement. You can also find these in the Format menu.
 
 ---
 
@@ -68,6 +91,16 @@ Use View > Toggle Preview or press Cmd+\.
 
 ### Does the preview update in real-time?
 Yes, the preview updates as you type.
+
+### How do I create nested lists?
+Use 2-space indentation per nesting level:
+```markdown
+- Parent item
+  - Child item (2 spaces)
+    - Grandchild item (4 spaces)
+```
+
+You can mix ordered and unordered lists, and nest up to 3 levels deep. Task lists can also be nested. See [Preview Features](features/preview.md#nested-lists) for more details.
 
 ---
 
@@ -144,7 +177,7 @@ See [Frontmatter Editor](features/frontmatter.md) for more details.
 ## Plugins
 
 ### What are plugins?
-Plugins are extensions that add commands and features to Tibok. You can enable or disable them from Settings > Plugins.
+Plugins are extensions that add commands and features to tibok. You can enable or disable them from Settings > Plugins.
 
 ### Where are the slash commands?
 Slash commands are provided by the "Core Slash Commands" plugin. If slash commands aren't working, check Settings > Plugins to ensure it's enabled.
@@ -168,9 +201,16 @@ See [Webhooks](features/webhooks.md) for more details.
 ## Troubleshooting
 
 ### The preview isn't showing my images
-- For local images, make sure the path is correct relative to your document
-- Images in the `assets` folder use paths like `./assets/image.png`
-- Remote images require an internet connection
+Check the toast notifications when adding images - they indicate success or errors:
+- ✅ "Image saved to assets/filename" means it worked
+- ⚠️ "Save document to paste images" means you need to save first (Cmd+S)
+- ❌ "Failed to save image" shows the specific error
+
+Common issues:
+- **Document not saved**: Pasted images require a saved document for relative paths
+- **Wrong path format**: Images in `assets` folder use `./assets/image.png` format
+- **File doesn't exist**: Verify the image file is in the specified location
+- **Remote images**: Check your internet connection for https:// URLs
 
 ### My document won't save
 - Check that you have write permissions to the folder

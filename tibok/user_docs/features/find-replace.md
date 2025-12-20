@@ -1,6 +1,6 @@
 # Find and Replace
 
-Tibok includes a built-in find and replace feature powered by macOS's native find bar.
+tibok includes a built-in find and replace feature powered by macOS's native find bar.
 
 ## Opening Find
 

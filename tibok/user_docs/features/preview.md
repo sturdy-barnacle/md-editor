@@ -1,6 +1,6 @@
 # Markdown Preview
 
-Tibok provides a live preview pane that renders your markdown as you type.
+tibok provides a live preview pane that renders your markdown as you type.
 
 ## Showing/Hiding Preview
 
@@ -28,6 +28,7 @@ The preview supports standard markdown elements:
 | Code blocks | ` ```lang ``` ` | Syntax highlighted |
 | Blockquotes | `> quote` | Styled quotes |
 | Lists | `- item` or `1. item` | Formatted lists |
+| Nested lists | 2-space indentation | Up to 3 levels deep |
 | Task lists | `- [ ] task` | Checkboxes |
 | Tables | Pipe syntax | Formatted tables |
 | Horizontal rule | `---` | Divider line |
@@ -68,6 +69,41 @@ GitHub-style callouts are supported:
 ```
 
 Available types: NOTE, TIP, WARNING, IMPORTANT, CAUTION
+
+### Nested Lists
+
+Create nested lists using 2-space indentation per level. Mix ordered and unordered lists freely:
+
+```markdown
+- Parent item
+  - Child item
+  - Another child
+    - Grandchild (level 3)
+- Second parent
+
+1. Ordered parent
+   - Unordered child
+   - Another child
+2. Second ordered item
+```
+
+**Features:**
+- Up to 3 levels of nesting (parent → child → grandchild)
+- Mix ordered (`1.`) and unordered (`-`, `*`, `+`) at any level
+- Task lists can be nested too:
+  ```markdown
+  - [ ] Parent task
+    - [x] Completed subtask
+    - [ ] Pending subtask
+  ```
+
+**Indentation rules:**
+- Use exactly 2 spaces per nesting level
+- Level 1 (root): No indentation
+- Level 2: 2 spaces
+- Level 3: 4 spaces
+
+**Note:** Empty lines close all open lists. For multi-paragraph list items, avoid blank lines within the list structure.
 
 ### Code Syntax Highlighting
 

@@ -126,7 +126,38 @@ final class WebhookService: ObservableObject {
 
     // MARK: - Webhook Execution
 
+    /// Validate webhook URL to prevent SSRF attacks
+    private func validateWebhookURL(_ urlString: String) -> (valid: Bool, error: String?) {
+        guard let url = URL(string: urlString),
+              let scheme = url.scheme?.lowercased(),
+              scheme == "https",  // HTTPS only
+              let host = url.host else {
+            return (false, "Invalid URL or missing HTTPS scheme")
+        }
+
+        // Block private/reserved IP ranges
+        let blockedPatterns = [
+            "^localhost$", "^127\\..*", "^192\\.168\\..*",
+            "^10\\..*", "^172\\.(1[6-9]|2[0-9]|3[01])\\..*",
+            "^0\\.0\\.0\\.0$", "^169\\.254\\..*"
+        ]
+
+        for pattern in blockedPatterns {
+            if host.range(of: pattern, options: .regularExpression) != nil {
+                return (false, "Webhook URL blocked: private IP address or localhost not allowed")
+            }
+        }
+
+        return (true, nil)
+    }
+
     private func executeWebhook(_ webhook: WebhookConfig, context: WebhookContext) async -> WebhookResult {
+        // Validate URL for security (SSRF protection)
+        let validation = validateWebhookURL(webhook.url)
+        guard validation.valid else {
+            return WebhookResult(webhook: webhook, success: false, error: validation.error ?? "Invalid URL")
+        }
+
         guard let url = URL(string: webhook.url) else {
             return WebhookResult(webhook: webhook, success: false, error: "Invalid URL")
         }

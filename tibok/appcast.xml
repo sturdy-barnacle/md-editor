@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+    <channel>
+        <title>tibok Updates</title>
+        <link>https://raw.githubusercontent.com/YOURUSER/tibok/main/appcast.xml</link>
+        <description>tibok markdown editor release notes</description>
+        <language>en</language>
+
+        <!-- Latest version item - update this when releasing new versions -->
+        <item>
+            <title>Version 1.0.0</title>
+            <description>
+                <![CDATA[
+                    <h2>tibok 1.0 - Initial Release</h2>
+                    <p>The first public release of tibok markdown editor with all essential features:</p>
+                    <ul>
+                        <li>Clean, distraction-free markdown editor with live preview</li>
+                        <li>35+ slash commands for markdown formatting and structure</li>
+                        <li>Integrated Git workflow (stage, commit, push, pull, branch management)</li>
+                        <li>Direct WordPress publishing support</li>
+                        <li>Plugin system for extensibility</li>
+                        <li>Math/LaTeX rendering with bundled KaTeX</li>
+                        <li>Workspace and file management with smart filtering</li>
+                        <li>Dark/light mode with system preference support</li>
+                        <li>Customizable editor fonts, line height, and preview width</li>
+                        <li>Keyboard shortcuts for all major functions</li>
+                    </ul>
+                    <h3>System Requirements</h3>
+                    <p>macOS 14.0 (Sonoma) or later, Apple Silicon (ARM64)</p>
+                ]]>
+            </description>
+            <pubDate>Fri, 19 Dec 2025 00:00:00 +0000</pubDate>
+            <sparkle:version>1</sparkle:version>
+            <sparkle:shortVersionString>1.0.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <enclosure
+                url="https://github.com/YOURUSER/tibok/releases/download/v1.0.0/tibok-1.0.0.dmg"
+                sparkle:edSignature="SIGNATURE_PLACEHOLDER"
+                length="0"
+                type="application/octet-stream"
+            />
+        </item>
+
+        <!-- Example of how to add future releases (below 1.0.0):
+        <item>
+            <title>Version 1.0.1</title>
+            <description><![CDATA[
+                <h2>tibok 1.0.1 - Bug Fixes</h2>
+                <ul>
+                    <li>Fixed...</li>
+                </ul>
+            ]]></description>
+            <pubDate>Mon, 22 Dec 2025 00:00:00 +0000</pubDate>
+            <sparkle:version>2</sparkle:version>
+            <sparkle:shortVersionString>1.0.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <enclosure
+                url="https://github.com/YOURUSER/tibok/releases/download/v1.0.1/tibok-1.0.1.dmg"
+                sparkle:edSignature="SIGNATURE"
+                length="0"
+                type="application/octet-stream"
+            />
+        </item>
+        -->
+    </channel>
+</rss>

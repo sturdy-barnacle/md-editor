@@ -29,10 +29,18 @@ let package = Package(
             exclude: ["Resources/tibok.entitlements", "Resources/Info.plist", "Resources/IconLayers"],
             resources: [
                 .process("Resources/Assets.xcassets"),
-                .copy("Resources/AppIcon.icns")
+                .copy("Resources/AppIcon.icns"),
+                .copy("Resources/katex")
             ]
         ),
-        // Note: Tests require Xcode. Run with: xcodebuild test -scheme tibok -destination 'platform=macOS'
-        // Or open the package in Xcode and run tests from there.
+        .testTarget(
+            name: "tibokTests",
+            dependencies: [
+                .target(name: "tibok"),
+                .product(name: "Markdown", package: "swift-markdown"),
+                .product(name: "Highlightr", package: "Highlightr"),
+            ],
+            path: "tibokTests"
+        ),
     ]
 )

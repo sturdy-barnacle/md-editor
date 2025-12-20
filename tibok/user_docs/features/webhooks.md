@@ -1,6 +1,6 @@
 # Webhooks
 
-Webhooks allow Tibok to send HTTP requests to external services when events occur, such as saving a document or pushing to Git. This is useful for triggering build pipelines, notifying services, or integrating with automation tools.
+Webhooks allow tibok to send HTTP requests to external services when events occur, such as saving a document or pushing to Git. This is useful for triggering build pipelines, notifying services, or integrating with automation tools.
 
 ## Accessing Webhooks
 

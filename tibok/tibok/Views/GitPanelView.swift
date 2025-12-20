@@ -10,10 +10,14 @@ import SwiftUI
 struct GitPanelView: View {
     @EnvironmentObject var appState: AppState
     @State private var commitMessage = ""
+    @State private var sheetMessage = ""  // Separate state for sheet to isolate bindings
     @State private var showCommitSheet = false
     @State private var commitError: String?
     @State private var showError = false
+    @State private var committingStagedCount = 0
     @AppStorage("sidebar.showGit") private var persistShowGit = true
+
+    let uiState = UIStateService.shared
 
     var body: some View {
         Section {
@@ -74,7 +78,7 @@ struct GitPanelView: View {
                             Image(systemName: "plus.circle")
                                 .font(.system(size: 12))
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.animatedIcon)
                         .help("Stage All")
                     }
 
@@ -86,15 +90,22 @@ struct GitPanelView: View {
                             Image(systemName: "minus.circle")
                                 .font(.system(size: 12))
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.animatedIcon)
                         .help("Unstage All")
                     }
 
                     Spacer()
 
                     // Commit button
-                    if !appState.stagedFiles.isEmpty {
+                    if !appState.stagedFiles.isEmpty || !appState.unstagedFiles.isEmpty {
                         Button {
+                            // Silently stage all unstaged files first
+                            if !appState.unstagedFiles.isEmpty {
+                                appState.stageAll()
+                            }
+                            // Capture count AFTER staging
+                            committingStagedCount = appState.stagedFiles.count
+                            sheetMessage = ""  // Reset sheet message
                             showCommitSheet = true
                         } label: {
                             HStack(spacing: 4) {
@@ -107,6 +118,53 @@ struct GitPanelView: View {
                         .buttonStyle(.borderedProminent)
                         .controlSize(.small)
                     }
+
+                    // Refresh button
+                    Button {
+                        appState.refreshGitStatus()
+                    } label: {
+                        Image(systemName: "arrow.clockwise")
+                            .font(.system(size: 12))
+                    }
+                    .buttonStyle(.animatedIcon)
+                    .help("Refresh Status")
+
+                    // Push button
+                    Button {
+                        uiState.showToast("Pushing...", icon: "arrow.up", duration: 1.0)
+                        let result = appState.pushChanges()
+
+                        if result.success {
+                            if result.alreadyUpToDate {
+                                uiState.showToast("Already up to date", icon: "checkmark.circle.fill", duration: 2.0)
+                            } else {
+                                uiState.showToast("Push successful", icon: "checkmark.circle.fill", duration: 2.0)
+                            }
+                        } else {
+                            uiState.showToast("Push failed: \(result.error ?? "unknown")", icon: "xmark.circle", duration: 2.0)
+                        }
+                    } label: {
+                        Image(systemName: "arrow.up.circle")
+                            .font(.system(size: 12))
+                    }
+                    .buttonStyle(.animatedIcon)
+                    .help("Push")
+
+                    // Pull button
+                    Button {
+                        uiState.showToast("Pulling...", icon: "arrow.down", duration: 1.0)
+                        let result = appState.pullChanges()
+                        uiState.showToast(
+                            result.success ? "Pull successful" : "Pull failed: \(result.error ?? "unknown")",
+                            icon: result.success ? "checkmark.circle.fill" : "xmark.circle",
+                            duration: 2.0
+                        )
+                    } label: {
+                        Image(systemName: "arrow.down.circle")
+                            .font(.system(size: 12))
+                    }
+                    .buttonStyle(.animatedIcon)
+                    .help("Pull")
                 }
                 .padding(.top, 4)
             }
@@ -118,16 +176,32 @@ struct GitPanelView: View {
         }
         .sheet(isPresented: $showCommitSheet) {
             GitCommitSheet(
-                message: $commitMessage,
-                stagedCount: appState.stagedFiles.count,
+                message: $sheetMessage,
+                stagedCount: committingStagedCount,
                 onCommit: {
-                    let result = appState.commitChanges(message: commitMessage)
-                    if result.success {
-                        commitMessage = ""
+                    // Capture message before clearing
+                    let messageToCommit = sheetMessage
+
+                    // Close sheet immediately without any state changes
+                    withTransaction(Transaction(animation: nil)) {
                         showCommitSheet = false
-                    } else {
-                        commitError = result.error
-                        showError = true
+                    }
+
+                    // Commit and refresh after sheet fully dismisses (1.2+ seconds)
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+                        let result = appState.commitChanges(message: messageToCommit, deferRefresh: true)
+                        if result.success {
+                            // Refresh after commit
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                                appState.refreshGitStatus()
+                            }
+                            // Clear both message vars after everything completes
+                            sheetMessage = ""
+                            commitMessage = ""
+                        } else {
+                            commitError = result.error
+                            showError = true
+                        }
                     }
                 },
                 onCancel: {
@@ -176,7 +250,7 @@ struct GitFileRow: View {
                         .font(.system(size: 9, weight: .bold))
                         .foregroundColor(.secondary)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.animatedIcon)
                 .help("Unstage")
             } else {
                 Button {
@@ -186,7 +260,7 @@ struct GitFileRow: View {
                         .font(.system(size: 9, weight: .bold))
                         .foregroundColor(.secondary)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.animatedIcon)
                 .help("Stage")
 
                 if file.status != .untracked {
@@ -197,7 +271,7 @@ struct GitFileRow: View {
                             .font(.system(size: 9, weight: .bold))
                             .foregroundColor(.secondary)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.animatedIcon)
                     .help("Discard Changes")
                 }
             }
@@ -317,5 +391,22 @@ struct GitCommitSheet: View {
         .onAppear {
             isMessageFocused = true
         }
+    }
+}
+
+// MARK: - Animated Icon Button Style
+
+struct AnimatedIconButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.97 : 1.0)
+            .opacity(configuration.isPressed ? 0.9 : 1.0)
+            .animation(.spring(response: 0.2, dampingFraction: 0.6), value: configuration.isPressed)
+    }
+}
+
+extension ButtonStyle where Self == AnimatedIconButtonStyle {
+    static var animatedIcon: AnimatedIconButtonStyle {
+        AnimatedIconButtonStyle()
     }
 }

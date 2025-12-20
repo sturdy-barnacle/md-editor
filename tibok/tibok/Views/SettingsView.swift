@@ -15,6 +15,7 @@ enum L10n {
         static let frontmatter = "Frontmatter"
         static let plugins = "Plugins"
         static let webhooks = "Webhooks"
+        static let wordpress = "WordPress"
         static let about = "About"
     }
     enum General {
@@ -143,6 +144,7 @@ enum AppearanceMode: String, CaseIterable {
 struct SettingsView: View {
     @AppStorage(SettingsKeys.autoSaveEnabled) private var autoSaveEnabled = true
     @AppStorage(SettingsKeys.appearanceMode) private var appearanceMode: String = AppearanceMode.system.rawValue
+    @ObservedObject private var pluginManager = PluginManager.shared
 
     var body: some View {
         TabView {
@@ -176,12 +178,20 @@ struct SettingsView: View {
                     Label(L10n.Tabs.webhooks, systemImage: "arrow.up.right.square")
                 }
 
+            // WordPress tab - only show if plugin is enabled
+            if pluginManager.isLoaded("com.tibok.wordpress-export") {
+                WordPressSettingsView()
+                    .tabItem {
+                        Label(L10n.Tabs.wordpress, systemImage: "w.square")
+                    }
+            }
+
             AboutSettingsView()
                 .tabItem {
                     Label(L10n.Tabs.about, systemImage: "info.circle")
                 }
         }
-        .frame(width: 480, height: 400)
+        .frame(width: 700, height: 600)
     }
 }
 
@@ -328,8 +338,10 @@ struct EditorSettingsView: View {
     @AppStorage(SettingsKeys.editorSmartLists) private var smartLists: Bool = true
 
     var body: some View {
-        Form {
-            Section(L10n.Editor.fontSection) {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                Form {
+                    Section(L10n.Editor.fontSection) {
                 Picker(L10n.Editor.fontFamily, selection: $fontFamily) {
                     ForEach(EditorFont.availableFonts, id: \.rawValue) { font in
                         Text(font.displayName).tag(font.rawValue)
@@ -403,8 +415,10 @@ struct EditorSettingsView: View {
                         .cornerRadius(4)
                 }
             }
+                }
+                .formStyle(.grouped)
+            }
         }
-        .formStyle(.grouped)
         .padding()
     }
 }
@@ -551,8 +565,10 @@ struct FrontmatterSettingsView: View {
     ]
 
     var body: some View {
-        Form {
-            Section("Date & Time") {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                Form {
+                    Section("Date & Time") {
                 Picker("Timezone", selection: $timezone) {
                     ForEach(commonTimezones, id: \.id) { tz in
                         Text(tz.label).tag(tz.id)
@@ -612,8 +628,10 @@ struct FrontmatterSettingsView: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
+                }
+                .formStyle(.grouped)
+            }
         }
-        .formStyle(.grouped)
         .padding()
     }
 

@@ -9,6 +9,12 @@ import Foundation
 
 struct MarkdownRenderer {
 
+    /// Represents a level in the list nesting stack
+    private struct ListLevel {
+        let type: String        // "ul" or "ol"
+        let indentLevel: Int    // 0, 1, or 2 (max 3 levels)
+    }
+
     /// Renders markdown text to HTML
     static func render(_ markdown: String) -> String {
         // Strip frontmatter before processing (Jekyll/Hugo YAML/TOML)
@@ -143,8 +149,7 @@ struct MarkdownRenderer {
         // Process block elements line by line
         let lines = html.components(separatedBy: "\n")
         var processedLines: [String] = []
-        var inList = false
-        var listType = ""
+        var listStack: [ListLevel] = []  // Track nested list levels
         var inCallout = false
         var calloutType = ""
         var collectedHeaders: [(level: Int, text: String, id: String)] = []
@@ -186,9 +191,10 @@ struct MarkdownRenderer {
             }
             // Horizontal rule (must be only dashes, asterisks, or underscores with optional spaces)
             else if isHorizontalRule(processedLine) {
-                if inList {
-                    processedLines.append(listType == "ul" ? "</ul>" : "</ol>")
-                    inList = false
+                while !listStack.isEmpty {
+                    processedLines.append("</li>")
+                    let closed = listStack.removeLast()
+                    processedLines.append("</\(closed.type)>")
                 }
                 processedLine = "<hr>"
             }
@@ -216,18 +222,50 @@ struct MarkdownRenderer {
             else if inCallout && !processedLine.trimmingCharacters(in: .whitespaces).isEmpty {
                 processedLines.append("</div>")
                 inCallout = false
-                // Re-process this line
-                if processedLine.hasPrefix("- ") || processedLine.hasPrefix("* ") || processedLine.hasPrefix("+ ") {
-                    if !inList || listType != "ul" {
-                        if inList {
-                            processedLines.append(listType == "ul" ? "</ul>" : "</ol>")
-                        }
-                        processedLines.append("<ul>")
-                        inList = true
-                        listType = "ul"
+                // Re-process this line - check if it's a list item
+                if let (level, type, rawContent) = parseListItem(processedLine) {
+                    var currentLevel = listStack.last?.indentLevel ?? -1
+
+                    // Going deeper - open new nested list(s)
+                    while currentLevel < level && listStack.count < 3 {
+                        processedLines.append("<\(type)>")
+                        listStack.append(ListLevel(type: type, indentLevel: level))
+                        currentLevel = level
                     }
-                    let content = String(processedLine.dropFirst(2))
-                    processedLine = "<li>\(processInline(content))</li>"
+
+                    // Going shallower - close nested list(s)
+                    while !listStack.isEmpty && listStack.last!.indentLevel > level {
+                        processedLines.append("</li>")
+                        let closed = listStack.removeLast()
+                        processedLines.append("</\(closed.type)>")
+                    }
+
+                    // Same level - close previous item
+                    if !listStack.isEmpty && listStack.last!.indentLevel == level {
+                        processedLines.append("</li>")
+
+                        // Check for type change (ul → ol or vice versa)
+                        if listStack.last!.type != type {
+                            let closed = listStack.removeLast()
+                            processedLines.append("</\(closed.type)>")
+                            processedLines.append("<\(type)>")
+                            listStack.append(ListLevel(type: type, indentLevel: level))
+                        }
+                    }
+
+                    // Handle task list checkboxes
+                    var content = rawContent
+                    if processedLine.trimmingCharacters(in: .whitespaces).hasPrefix("- [ ] ") {
+                        content = "<input type=\"checkbox\" disabled> \(processInline(rawContent))"
+                    } else if processedLine.trimmingCharacters(in: .whitespaces).hasPrefix("- [x] ") ||
+                              processedLine.trimmingCharacters(in: .whitespaces).hasPrefix("- [X] ") {
+                        content = "<input type=\"checkbox\" disabled checked> \(processInline(rawContent))"
+                    } else {
+                        content = processInline(rawContent)
+                    }
+
+                    processedLines.append("<li>\(content)")
+                    processedLine = ""
                 } else if !processedLine.hasPrefix("<") {
                     processedLine = "<p>\(processInline(processedLine))</p>"
                 }
@@ -238,68 +276,76 @@ struct MarkdownRenderer {
                 inCallout = false
                 processedLine = ""
             }
-            // Unordered list
-            else if processedLine.hasPrefix("- ") || processedLine.hasPrefix("* ") || processedLine.hasPrefix("+ ") {
-                if !inList || listType != "ul" {
-                    if inList {
-                        processedLines.append(listType == "ul" ? "</ul>" : "</ol>")
-                    }
-                    processedLines.append("<ul>")
-                    inList = true
-                    listType = "ul"
+            // Try parsing as list item (supports nesting with indentation)
+            else if let (level, type, rawContent) = parseListItem(processedLine) {
+                var currentLevel = listStack.last?.indentLevel ?? -1
+
+                // Going deeper - open new nested list(s)
+                while currentLevel < level && listStack.count < 3 {
+                    processedLines.append("<\(type)>")
+                    listStack.append(ListLevel(type: type, indentLevel: level))
+                    currentLevel = level
                 }
-                let content = String(processedLine.dropFirst(2))
-                processedLine = "<li>\(processInline(content))</li>"
-            }
-            // Ordered list
-            else if let match = processedLine.range(of: "^\\d+\\. ", options: .regularExpression) {
-                if !inList || listType != "ol" {
-                    if inList {
-                        processedLines.append(listType == "ul" ? "</ul>" : "</ol>")
-                    }
-                    processedLines.append("<ol>")
-                    inList = true
-                    listType = "ol"
+
+                // Going shallower - close nested list(s)
+                while !listStack.isEmpty && listStack.last!.indentLevel > level {
+                    processedLines.append("</li>")
+                    let closed = listStack.removeLast()
+                    processedLines.append("</\(closed.type)>")
                 }
-                let content = String(processedLine[match.upperBound...])
-                processedLine = "<li>\(processInline(content))</li>"
-            }
-            // Task list
-            else if processedLine.hasPrefix("- [ ] ") || processedLine.hasPrefix("- [x] ") || processedLine.hasPrefix("- [X] ") {
-                if !inList || listType != "ul" {
-                    if inList {
-                        processedLines.append(listType == "ul" ? "</ul>" : "</ol>")
+
+                // Same level - close previous item
+                if !listStack.isEmpty && listStack.last!.indentLevel == level {
+                    processedLines.append("</li>")
+
+                    // Check for type change (ul → ol or vice versa)
+                    if listStack.last!.type != type {
+                        let closed = listStack.removeLast()
+                        processedLines.append("</\(closed.type)>")
+                        processedLines.append("<\(type)>")
+                        listStack.append(ListLevel(type: type, indentLevel: level))
                     }
-                    processedLines.append("<ul>")
-                    inList = true
-                    listType = "ul"
                 }
-                let isChecked = processedLine.hasPrefix("- [x] ") || processedLine.hasPrefix("- [X] ")
-                let content = String(processedLine.dropFirst(6))
-                let checkbox = isChecked ? "<input type=\"checkbox\" disabled checked>" : "<input type=\"checkbox\" disabled>"
-                processedLine = "<li>\(checkbox) \(processInline(content))</li>"
+
+                // Handle task list checkboxes
+                var content = rawContent
+                if processedLine.trimmingCharacters(in: .whitespaces).hasPrefix("- [ ] ") {
+                    content = "<input type=\"checkbox\" disabled> \(processInline(rawContent))"
+                } else if processedLine.trimmingCharacters(in: .whitespaces).hasPrefix("- [x] ") ||
+                          processedLine.trimmingCharacters(in: .whitespaces).hasPrefix("- [X] ") {
+                    content = "<input type=\"checkbox\" disabled checked> \(processInline(rawContent))"
+                } else {
+                    content = processInline(rawContent)
+                }
+
+                // Add list item (don't close </li> yet - nested lists go inside)
+                processedLines.append("<li>\(content)")
+                processedLine = ""
             }
-            // Empty line - close list if open
+            // Empty line - close all open lists
             else if processedLine.trimmingCharacters(in: .whitespaces).isEmpty {
-                if inList {
-                    processedLines.append(listType == "ul" ? "</ul>" : "</ol>")
-                    inList = false
+                while !listStack.isEmpty {
+                    processedLines.append("</li>")
+                    let closed = listStack.removeLast()
+                    processedLines.append("</\(closed.type)>")
                 }
                 processedLine = ""
             }
             // Code block placeholder - pass through
             else if processedLine.contains("<!--CODEBLOCK") {
-                if inList {
-                    processedLines.append(listType == "ul" ? "</ul>" : "</ol>")
-                    inList = false
+                while !listStack.isEmpty {
+                    processedLines.append("</li>")
+                    let closed = listStack.removeLast()
+                    processedLines.append("</\(closed.type)>")
                 }
                 // Don't wrap in paragraph
             }
             // Regular paragraph
             else if !processedLine.trimmingCharacters(in: .whitespaces).isEmpty {
-                if inList {
-                    processedLines.append(listType == "ul" ? "</ul>" : "</ol>")
-                    inList = false
+                while !listStack.isEmpty {
+                    processedLines.append("</li>")
+                    let closed = listStack.removeLast()
+                    processedLines.append("</\(closed.type)>")
                 }
                 if !processedLine.hasPrefix("<") {
                     processedLine = "<p>\(processInline(processedLine))</p>"
@@ -309,9 +355,11 @@ struct MarkdownRenderer {
             processedLines.append(processedLine)
         }
 
-        // Close any open list
-        if inList {
-            processedLines.append(listType == "ul" ? "</ul>" : "</ol>")
+        // Close any open lists
+        while !listStack.isEmpty {
+            processedLines.append("</li>")
+            let closed = listStack.removeLast()
+            processedLines.append("</\(closed.type)>")
         }
 
         // Close any open callout
@@ -381,6 +429,42 @@ struct MarkdownRenderer {
         }
 
         return html
+    }
+
+    /// Parses a line to determine if it's a list item and extract its properties
+    /// Returns: (indentLevel, listType, content) or nil if not a list item
+    private static func parseListItem(_ line: String) -> (level: Int, type: String, content: String)? {
+        // Count leading spaces
+        let leadingSpaces = line.prefix(while: { $0 == " " }).count
+
+        // Calculate indentation level (2 spaces per level)
+        let indentLevel = leadingSpaces / 2
+
+        // Enforce max depth of 3 levels (0, 1, 2)
+        guard indentLevel < 3 else { return nil }
+
+        // Get content after leading spaces
+        let trimmed = line.dropFirst(leadingSpaces)
+
+        // Check for task list: - [ ] or - [x] or - [X]
+        if trimmed.hasPrefix("- [ ] ") || trimmed.hasPrefix("- [x] ") || trimmed.hasPrefix("- [X] ") {
+            let content = String(trimmed.dropFirst(6))
+            return (indentLevel, "ul", content)
+        }
+
+        // Check for unordered list: -, *, +
+        if trimmed.hasPrefix("- ") || trimmed.hasPrefix("* ") || trimmed.hasPrefix("+ ") {
+            let content = String(trimmed.dropFirst(2))
+            return (indentLevel, "ul", content)
+        }
+
+        // Check for ordered list: \d+.
+        if let match = trimmed.range(of: "^\\d+\\. ", options: .regularExpression) {
+            let content = String(trimmed[match.upperBound...])
+            return (indentLevel, "ol", content)
+        }
+
+        return nil
     }
 
     /// Process markdown tables into HTML
