@@ -8,10 +8,26 @@
 import SwiftUI
 import AppKit
 import WebKit
+import Sparkle
 
+// MARK: - App Delegate for Sparkle
+
+class AppDelegate: NSObject, NSApplicationDelegate {
+    let updaterController: SPUStandardUpdaterController
+
+    override init() {
+        self.updaterController = SPUStandardUpdaterController(
+            startingUpdater: true,
+            updaterDelegate: nil,
+            userDriverDelegate: nil
+        )
+        super.init()
+    }
+}
 
 @main
 struct tibokApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var appState = AppState()
     @AppStorage("appearanceMode") private var appearanceMode: String = AppearanceMode.system.rawValue
 
@@ -271,8 +287,14 @@ struct tibokApp: App {
                 .disabled(!appState.isGitRepository)
             }
 
-            // Help menu
+            // Help menu with Sparkle update check
             CommandGroup(replacing: .help) {
+                Button("Check for Updates...") {
+                    appDelegate.updaterController.updater.checkForUpdates()
+                }
+
+                Divider()
+
                 Button("tibok Help") {
                     if let url = URL(string: "https://www.tibok.app/support") {
                         NSWorkspace.shared.open(url)

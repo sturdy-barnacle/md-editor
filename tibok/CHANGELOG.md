@@ -1,6 +1,42 @@
 # Changelog
 
-## Beta v0.7 (In Progress)
+## [1.0.0] - 2025-12-19
+### Initial Public Release
+
+The first public release of Tibok, a clean and distraction-free markdown editor for macOS.
+
+### Features
+- **Markdown Editing** - Beautiful editor with live preview, syntax highlighting, and 35+ slash commands
+- **Git Integration** - Full git workflow: stage, commit, push, pull, branch management, and stash operations
+- **WordPress Publishing** - Direct publishing to WordPress sites via REST API with Application Password authentication
+- **Plugin System** - Extensible architecture with built-in plugins and support for community plugins
+- **Advanced Markdown** - Nested lists, tables, footnotes, callouts, task lists, Table of Contents generation
+- **Math Rendering** - Inline and block LaTeX with bundled KaTeX for offline support
+- **File Management** - Multiple open tabs, workspace folders with smart filtering, recents, and favorites
+- **Frontmatter Editor** - Visual inspector for Jekyll/Hugo metadata (YAML/TOML)
+- **Webhooks** - HTTP notifications on document save, export, and git push
+- **Keyboard Shortcuts** - 40+ shortcuts for powerful editing and navigation
+- **Settings** - Customizable fonts, colors, appearance modes, and preview styling
+- **Export** - PDF, HTML, RTF export with proper formatting
+- **Code Signing & Notarization** - Signed and notarized for secure distribution
+
+### Additions in v1.0
+- Code signing with Apple Developer ID certificate
+- Notarization with Apple's security service
+- DMG distribution package with professional styling
+- Automated build scripts for reproducible releases
+- Sparkle framework prepared for future auto-update support
+
+### System Requirements
+- macOS 14.0 (Sonoma) or later
+- Apple Silicon (ARM64)
+
+### Note
+Sparkle auto-updates are prepared but disabled in v1.0 due to framework signing complexity. Auto-update support will be enabled in v1.1.
+
+---
+
+## Beta v0.7 (Completed)
 
 ### Tab UI/UX Polish
 - **Fixed tab width** - Tab width no longer shifts when documents become modified

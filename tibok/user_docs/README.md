@@ -28,8 +28,9 @@ Tibok features a clean, distraction-free interface:
 ### General
 - [FAQ](FAQ.md) - Frequently asked questions
 
-### Features
+### Features - Core
 - [Slash Commands](features/slash-commands.md) - Quick formatting with `/` commands
+- [Tab Management](features/tab-management.md) - Working with multiple open documents
 - [Frontmatter Editor](features/frontmatter.md) - Jekyll/Hugo metadata editing
 - [Image Handling](features/image-handling.md) - Drag, drop, and paste images
 - [Workspace & Files](features/workspace.md) - File and folder management
@@ -40,6 +41,10 @@ Tibok features a clean, distraction-free interface:
 - [Plugins](features/plugins.md) - Enable/disable editor extensions
 - [Webhooks](features/webhooks.md) - HTTP notifications on events
 - [Keyboard Shortcuts](features/keyboard-shortcuts.md) - Complete shortcut reference
+
+### Features - Advanced Topics
+- [Session Persistence](features/session-persistence.md) - Automatic state restoration
+- [Performance Optimizations](features/performance-optimizations.md) - Smart filtering and caching
 
 ### For Plugin Developers
 - [Plugin Development Guide](features/plugin-development.md) - Complete guide to creating plugins

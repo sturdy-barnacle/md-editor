@@ -24,10 +24,6 @@ Complete reference for all keyboard shortcuts in Tibok.
 | Toggle Inspector | Cmd+I |
 | Focus Mode | Ctrl+Cmd+. |
 | Command Palette | Cmd+K |
-| Next Tab | Cmd+Shift+] |
-| Previous Tab | Cmd+Shift+[ |
-
-Note: Tab bar is always visible when documents are open for consistent navigation.
 
 ### Focus Mode
 
@@ -38,6 +34,27 @@ Focus mode provides a distraction-free writing environment by hiding:
 - Status bar
 
 Press Ctrl+Cmd+. again or Escape to exit focus mode. Your sidebar and preview state is restored when you exit.
+
+## Tab Management
+
+| Action | Shortcut | Notes |
+|--------|----------|-------|
+| Switch to Tab 1-9 | **Cmd+1** through **Cmd+9** | Jump directly to that tab position |
+| Next Tab | Cmd+Shift+] | Move right through open tabs |
+| Previous Tab | Cmd+Shift+[ | Move left through open tabs |
+| Recent Tab | **Ctrl+Tab** | Toggle between two most recent tabs |
+| Close Tab | Cmd+W | Close current tab (prompts if unsaved) |
+| Reopen Closed Tab | **Cmd+Shift+T** | Restore last 10 closed tabs (repeat to go back) |
+| Close Workspace | Cmd+Shift+W | Close all tabs in workspace |
+
+**Tips for Tab Switching:**
+- **Cmd+1 through Cmd+9** are the fastest for frequent switching (most common)
+- **Ctrl+Tab** is ideal when switching between just 2 tabs
+- **Cmd+Shift+]** and **Cmd+Shift+[** are best for sequential browsing
+
+**For detailed tab management instructions**, see [Tab Management](tab-management.md).
+
+Note: Tab bar is always visible when documents are open for consistent navigation.
 
 ## Find
 
