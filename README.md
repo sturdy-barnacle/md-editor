@@ -1,8 +1,8 @@
-# tibok
+# tibok markdown editor
 
 A native macOS markdown editor built with SwiftUI for Apple Silicon.
 
-**Website:** [tibok.app](https://tibok.app)
+**Website:** [tibok.app](https://www.tibok.app)
 
 ## Features
 
@@ -49,12 +49,6 @@ Build with Xcode 15+ and run on your Mac.
 - Open any `.md` file or create a new document
 - Toggle preview with `⌘\`
 - Access all commands with `⌘K`
-
-### Quick Commands
-- `/table` - Insert table template
-- `/code` - Insert code block
-- `/link` - Insert link
-- `/image` - Insert image
 
 ### Git Workflow
 1. Open a folder that's a Git repository
