@@ -59,13 +59,10 @@ Build with Xcode 15+ and run on your Mac.
 4. Commit with `⌘⇧K`
 5. Push to remote
 
-## Documentation
-
-- [Roadmap](tibok/planning/roadmap.md) - Development roadmap and milestones
 
 ## Development
 
-See [CLAUDE.md](tibok/CLAUDE.md) for development guidelines and [progress/](tibok/progress/) for daily progress notes.
+See [CLAUDE.md](tibok/CLAUDE.md) for development guidelines.
 
 ### GitHub Actions Setup
 
