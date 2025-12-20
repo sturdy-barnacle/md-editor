@@ -24,6 +24,7 @@ final class PluginManager: ObservableObject {
     private var context: PluginContext?
     private var isInitialized = false
     private let stateManager = PluginStateManager.shared
+    private let dynamicLoader = DynamicPluginLoader()
 
     private init() {}
 
@@ -78,9 +79,17 @@ final class PluginManager: ObservableObject {
     private func loadEnabledPlugins() {
         guard let context = context else { return }
 
+        // Load enabled built-in plugins
         for pluginType in availablePluginTypes {
             if stateManager.isEnabled(pluginType.identifier) {
                 loadPlugin(pluginType, context: context)
+            }
+        }
+        
+        // Load enabled discovered plugins (dynamic loading)
+        for discovered in discoveredManifests {
+            if stateManager.isEnabled(discovered.manifest.identifier) {
+                loadDiscoveredPlugin(discovered, context: context)
             }
         }
     }
@@ -91,10 +100,62 @@ final class PluginManager: ObservableObject {
         // Don't load if already loaded
         guard !isLoaded(identifier) else { return }
 
-        let plugin = pluginType.init()
-        plugin.register(with: context)
-        loadedPlugins.append(plugin)
-        pluginErrors.removeValue(forKey: identifier)
+        do {
+            let plugin = pluginType.init()
+            plugin.register(with: context)
+            loadedPlugins.append(plugin)
+            pluginErrors.removeValue(forKey: identifier)
+        } catch {
+            pluginErrors[identifier] = error
+            print("Failed to load built-in plugin \(identifier): \(error)")
+        }
+    }
+    
+    /// Load a discovered plugin dynamically from a framework
+    private func loadDiscoveredPlugin(
+        _ discovered: (url: URL, manifest: PluginManifest, source: PluginSource),
+        context: PluginContext
+    ) {
+        let identifier = discovered.manifest.identifier
+        
+        // Don't load if already loaded
+        guard !isLoaded(identifier) else { return }
+        
+        do {
+            // Validate entry point
+            guard let entryPoint = discovered.manifest.entryPoint else {
+                throw PluginLoadingError.missingEntryPoint
+            }
+            
+            guard let frameworkName = entryPoint.framework else {
+                throw PluginLoadingError.missingEntryPoint
+            }
+            
+            guard let className = entryPoint.className else {
+                throw PluginLoadingError.missingEntryPoint
+            }
+            
+            // Find framework
+            let frameworkURL = discovered.url.appendingPathComponent("\(frameworkName).framework")
+            
+            // Load plugin dynamically
+            let plugin = try dynamicLoader.loadPlugin(
+                from: frameworkURL,
+                className: className,
+                identifier: identifier
+            )
+            
+            // Register plugin
+            plugin.register(with: context)
+            loadedPlugins.append(plugin)
+            pluginErrors.removeValue(forKey: identifier)
+            
+            print("Successfully loaded dynamic plugin: \(identifier)")
+            
+        } catch {
+            pluginErrors[identifier] = error
+            print("Failed to load discovered plugin \(identifier): \(error)")
+        }
     }
 
     /// Enable a plugin by identifier
@@ -103,9 +164,15 @@ final class PluginManager: ObservableObject {
 
         stateManager.setEnabled(identifier, true)
 
-        // Find and load the plugin type
+        // Try built-in plugins first
         if let pluginType = availablePluginTypes.first(where: { $0.identifier == identifier }) {
             loadPlugin(pluginType, context: context)
+            return
+        }
+        
+        // Try discovered plugins (dynamic loading)
+        if let discovered = discoveredManifests.first(where: { $0.manifest.identifier == identifier }) {
+            loadDiscoveredPlugin(discovered, context: context)
         }
     }
 
@@ -129,6 +196,14 @@ final class PluginManager: ObservableObject {
         context?.commandRegistry.unregister(source: identifier)
 
         loadedPlugins.remove(at: index)
+        
+        // If this was a dynamically loaded plugin, mark framework as unloaded
+        if let discovered = discoveredManifests.first(where: { $0.manifest.identifier == identifier }),
+           let entryPoint = discovered.manifest.entryPoint,
+           let frameworkName = entryPoint.framework {
+            let frameworkURL = discovered.url.appendingPathComponent("\(frameworkName).framework")
+            dynamicLoader.unloadFramework(at: frameworkURL)
+        }
     }
 
     /// Deactivate all plugins (called on app termination)

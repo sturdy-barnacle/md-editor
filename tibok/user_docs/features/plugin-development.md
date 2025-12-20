@@ -37,7 +37,34 @@ Plugins are written in **Swift** and packaged with a manifest file. tibok discov
 
 ## Plugin Structure
 
-A minimal plugin has this structure:
+### For Dynamic Loading (Third-Party Plugins)
+
+Third-party plugins must be distributed as **Swift frameworks** (`.framework` bundles) for dynamic loading:
+
+```
+MyPlugin/
+├── manifest.json              # Plugin metadata (REQUIRED)
+├── MyPlugin.framework/        # Compiled Swift framework (REQUIRED)
+│   ├── MyPlugin              # Binary executable
+│   ├── Headers/               # Public headers (if any)
+│   └── Resources/            # Resources (if any)
+└── README.md                  # Documentation
+```
+
+**Important:** The `manifest.json` must specify the framework name and class name:
+
+```json
+{
+  "entryPoint": {
+    "framework": "MyPlugin",
+    "className": "MyPluginClass"
+  }
+}
+```
+
+### For Built-in Plugins
+
+Built-in plugins (included with tibok) use a simpler structure:
 
 ```
 MyPlugin/
@@ -46,9 +73,9 @@ MyPlugin/
 └── README.md               # Documentation
 ```
 
-### Recommended Structure
+### Recommended Structure (Development)
 
-For more complex plugins, use this structure:
+For developing plugins, use this structure:
 
 ```
 MyPlugin/
@@ -64,6 +91,8 @@ MyPlugin/
 ├── LICENSE                 # License file
 └── CHANGELOG.md            # Version history
 ```
+
+**Note:** After development, you must compile the plugin as a framework for distribution.
 
 ## Creating a Plugin
 
@@ -93,9 +122,9 @@ Create a Swift file that implements the `TibokPlugin` protocol:
 
 ```swift
 import Foundation
-@testable import tibok
 
-final class MyPlugin: TibokPlugin {
+@MainActor
+final class MyPluginClass: TibokPlugin {
     static let identifier = "com.example.myplugin"
     static let name = "My Plugin"
     static let version = "1.0.0"
@@ -148,6 +177,74 @@ final class MyPlugin: TibokPlugin {
 }
 ```
 
+### Step 3: Build as Framework
+
+For third-party plugins, you must compile your plugin as a Swift framework. Here are the options:
+
+#### Option A: Using Xcode
+
+1. Create a new Xcode project
+2. Choose "Framework" as the template
+3. Add your plugin code
+4. Build the framework (Product → Build)
+5. Find the `.framework` in `DerivedData` or use the Archive option
+
+#### Option B: Using Swift Package Manager
+
+Create a `Package.swift`:
+
+```swift
+// swift-tools-version: 5.9
+import PackageDescription
+
+let package = Package(
+    name: "MyPlugin",
+    platforms: [.macOS(.v14)],
+    products: [
+        .library(name: "MyPlugin", type: .dynamic, targets: ["MyPlugin"])
+    ],
+    targets: [
+        .target(name: "MyPlugin", dependencies: [])
+    ]
+)
+```
+
+Build the framework:
+
+```bash
+swift build -c release
+# Framework will be in .build/release/
+```
+
+#### Option C: Using Command Line (swiftc)
+
+```bash
+swiftc -emit-library \
+  -emit-module \
+  -module-name MyPlugin \
+  -o MyPlugin.framework/MyPlugin \
+  MyPlugin.swift
+```
+
+**Important Requirements:**
+- Framework must be built for **macOS 14+**
+- Architecture must match: **arm64** (Apple Silicon) or **x86_64** (Intel)
+- Framework name must match the `entryPoint.framework` value in `manifest.json`
+- Plugin class must be marked `@MainActor` and conform to `TibokPlugin`
+
+#### Final Plugin Structure
+
+After building, your plugin folder should look like:
+
+```
+MyPlugin/
+├── manifest.json              # Plugin metadata
+├── MyPlugin.framework/        # Compiled framework
+│   ├── MyPlugin              # Binary
+│   └── ...
+└── README.md                  # Documentation
+```
+
 ## Plugin Manifest
 
 The `manifest.json` file describes your plugin to tibok:
@@ -171,21 +268,16 @@ The `entryPoint` object specifies how to load your plugin:
 ```json
 {
   "entryPoint": {
-    "className": "MyPlugin"
-  }
-}
-```
-
-For future versions supporting different plugin types:
-
-```json
-{
-  "entryPoint": {
     "framework": "MyPlugin",
     "className": "MyPluginClass"
   }
 }
 ```
+
+**Important for Dynamic Loading:**
+- `framework`: Name of the `.framework` bundle (without extension)
+- `className`: Name of the plugin class that conforms to `TibokPlugin`
+- Both fields are **required** for third-party plugins
 
 ## Available APIs
 

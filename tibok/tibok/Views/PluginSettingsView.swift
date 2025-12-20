@@ -129,11 +129,6 @@ struct PluginSettingsView: View {
 struct PluginRow: View {
     let plugin: PluginDisplayInfo
     @ObservedObject var stateManager = PluginStateManager.shared
-    
-    // Check if this is a built-in plugin (can be toggled)
-    private var isBuiltIn: Bool {
-        PluginManager.shared.availablePluginTypes.contains { $0.identifier == plugin.identifier }
-    }
 
     var body: some View {
         HStack(spacing: 12) {
@@ -164,7 +159,17 @@ struct PluginRow: View {
                 .font(.caption)
                 .foregroundColor(.secondary)
 
-            if isBuiltIn {
+            // Check if plugin has an error
+            if let error = PluginManager.shared.pluginErrors[plugin.identifier] {
+                VStack(alignment: .trailing, spacing: 2) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundColor(.orange)
+                    Text("Error")
+                        .font(.caption2)
+                        .foregroundColor(.orange)
+                }
+                .help(error.localizedDescription)
+            } else {
                 Toggle("", isOn: Binding(
                     get: { stateManager.isEnabled(plugin.identifier) },
                     set: { enabled in
@@ -177,17 +182,6 @@ struct PluginRow: View {
                 ))
                 .toggleStyle(.switch)
                 .labelsHidden()
-            } else {
-                // Third-party plugins discovered but not yet loadable
-                // Dynamic plugin loading not yet implemented
-                VStack(alignment: .trailing, spacing: 2) {
-                    Text("Installed")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    Text("Not yet supported")
-                        .font(.caption2)
-                        .foregroundColor(.secondary.opacity(0.7))
-                }
             }
         }
         .padding(.vertical, 4)
