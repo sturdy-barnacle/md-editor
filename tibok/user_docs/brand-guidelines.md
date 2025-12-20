@@ -133,5 +133,5 @@ The tibok icon uses the `#t` combination, emphasizing both markdown syntax and t
 
 ## References
 
-For complete branding guidelines including technical specifications, icon construction, and marketing assets, see [planning/branding.md](../../planning/branding.md).
+For complete branding guidelines including technical specifications, icon construction, and marketing assets, see [planning/branding.md](../../../docs/planning/branding.md).
 

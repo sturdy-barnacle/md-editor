@@ -111,10 +111,11 @@ docs/build/
 _site/
 
 # =====================================
-# Planning
+# Planning & Documentation
 # =====================================
-planning/
+# Note: docs/ folder is tracked, but some subdirectories may be ignored
+docs/progress/
+docs/archive/
 design_docs/
-/progress/
 .claude/
 .cursorrules

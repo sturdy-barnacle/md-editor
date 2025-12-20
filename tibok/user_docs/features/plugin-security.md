@@ -2,7 +2,7 @@
 
 This document explains the security model for tibok plugins, including best practices for developers and guidelines for users.
 
-For the complete security architecture, see [Plugin Security Model](../../planning/plugin-security-model.md).
+For the complete security architecture, see [Plugin Security Model](../../../docs/planning/plugins/plugin-security-model.md).
 
 ## Overview
 

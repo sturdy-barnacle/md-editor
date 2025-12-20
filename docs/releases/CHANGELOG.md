@@ -87,7 +87,7 @@ Sparkle auto-updates are prepared but disabled in v1.0 due to framework signing 
 - **Two plugin sources**:
   - Built-in: Core plugins included with tibok
   - Community: User-installed plugins from `~/Library/Application Support/tibok/Plugins/ThirdParty/`
-- **Plugin registry** - `PLUGIN_REGISTRY.md` lists available community plugins
+- **Plugin registry** - `docs/registry/PLUGIN_REGISTRY.md` lists available community plugins
 - **Developer guides**:
   - Complete plugin development guide
   - Plugin template/starter code

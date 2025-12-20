@@ -584,7 +584,7 @@ For now, develop and test locally. We'll update this guide when code signing is 
    - Include ZIP download of your plugin folder
 
 4. **Add to Plugin Registry**
-   - Open issue/PR on [tibok repository](https://github.com/tibok/tibok)
+   - Open issue/PR on [tibok repository](https://github.com/sturdy-barnacle/md-editor)
    - Include: plugin name, repo link, description
    - We'll add it to [PLUGIN_REGISTRY.md](../../PLUGIN_REGISTRY.md)
 
@@ -692,7 +692,7 @@ ls -la ~/Library/Application Support/tibok/Plugins/
 
 ## API Stability
 
-The tibok plugin API is **stable as of v1.0**. See the [Plugin API Specification](../../planning/plugin-api-specification.md) for the complete stable API definition.
+The tibok plugin API is **stable as of v1.0**. See the [Plugin API Specification](../../../docs/planning/plugins/plugin-api-specification.md) for the complete stable API definition.
 
 1. Monitor release notes for API changes
 2. Test plugins with each tibok release
@@ -701,8 +701,8 @@ The tibok plugin API is **stable as of v1.0**. See the [Plugin API Specification
 ## API Documentation
 
 **Essential Reading:**
-- **[Plugin API Specification](../../planning/plugin-api-specification.md)** - Complete stable API reference (v1.0)
-- **[Plugin Security Model](../../planning/plugin-security-model.md)** - Security architecture and best practices
+- **[Plugin API Specification](../../../docs/planning/plugins/plugin-api-specification.md)** - Complete stable API reference (v1.0)
+- **[Plugin Security Model](../../../docs/planning/plugins/plugin-security-model.md)** - Security architecture and best practices
 
 **Additional Resources:**
 - **[Plugin Template](plugin-template.md)** - Ready-to-use starter code

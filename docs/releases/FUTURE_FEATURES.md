@@ -114,7 +114,7 @@ Git panel is located in left sidebar below Workspace/Recent/Favorites sections.
 Phase 2 plugin system is complete with:
 - Folder-based discovery (`~/Library/Application Support/tibok/Plugins/ThirdParty/`)
 - Simple installation (download ZIP, extract folder)
-- Plugin registry (`PLUGIN_REGISTRY.md`)
+- Plugin registry (`docs/registry/PLUGIN_REGISTRY.md`)
 - Complete developer guides
 
 ### If Plugin Ecosystem Grows
@@ -177,7 +177,7 @@ Complete Git branch operations integrated into the app:
 - Protected branch detection (main/master)
 - Smart switching: options to stash or bring changes when switching branches
 
-**Documentation:** See CHANGELOG.md v0.6 and user_docs/features/git-integration.md
+**Documentation:** See CHANGELOG.md v0.6 and ../../tibok/user_docs/features/git-integration.md
 
 ### Epic: Stash Management ✅
 **Status:** Shipped in Beta v0.6 (December 18, 2024)
@@ -189,7 +189,7 @@ Complete stash workflow for temporary change storage:
 - Drop/delete stashes
 - Integrated with branch switching
 
-**Documentation:** See CHANGELOG.md v0.6 and user_docs/features/git-integration.md
+**Documentation:** See CHANGELOG.md v0.6 and ../../tibok/user_docs/features/git-integration.md
 
 ### Epic: Smart Workspace Filtering ✅
 **Status:** Shipped in Beta v0.7 (December 19, 2024)
@@ -202,7 +202,7 @@ Performance optimization with intelligent folder filtering:
 - Lazy evaluation: folders scanned only when expanded
 - Thread-safe with NSLock protection
 
-**Documentation:** See CHANGELOG.md v0.7 and user_docs/features/performance-optimizations.md
+**Documentation:** See CHANGELOG.md v0.7 and ../../tibok/user_docs/features/performance-optimizations.md
 
 ### Epic: Service Layer Refactoring (Phase 2) ✅
 **Status:** Shipped in Beta v0.7 (December 19, 2024)
@@ -236,7 +236,7 @@ Direct publishing to WordPress via REST API v2:
 - Browser integration (opens published post)
 - Command palette integration ("Publish to WordPress")
 
-**Documentation:** See CHANGELOG.md v0.6 and user_docs/features/wordpress-publishing.md
+**Documentation:** See CHANGELOG.md v0.6 and ../../tibok/user_docs/features/wordpress-publishing.md
 
 ### Test Coverage Expansion ✅
 **Status:** Shipped in Beta v0.7 (December 19, 2024)
@@ -247,7 +247,7 @@ Massive increase in automated test coverage:
 - 6 new test suites: GitServiceTests, ServiceLayerTests, WordPressTests, FolderScanCacheTests, KeyboardShortcutsTests, DocumentTests
 - CI/CD infrastructure with GitHub Actions
 
-**Documentation:** See CHANGELOG.md v0.7 and TEST_REPORT.md
+**Documentation:** See CHANGELOG.md v0.7 and ../archive/TEST_REPORT.md
 
 ### CI/CD Infrastructure ✅
 **Status:** Shipped in Beta v0.7 (December 19, 2024)

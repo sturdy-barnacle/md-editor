@@ -17,12 +17,12 @@ Community-created plugins for tibok. All plugins are optional extensions that ad
 
 ### Getting Started
 
-Are you a developer? [Create your first plugin](user_docs/features/plugin-development.md)!
+Are you a developer? [Create your first plugin](../tibok/user_docs/features/plugin-development.md)!
 
 Once your plugin is ready:
 1. Publish it on GitHub
 2. Create a release with installation instructions
-3. Open an issue or PR on the [tibok repository](https://github.com/tibok/tibok) to add your plugin to this registry
+3. Open an issue or PR on the [md-editor repository](https://github.com/sturdy-barnacle/md-editor) to add your plugin to this registry
 
 Include:
 - Plugin name
@@ -32,9 +32,9 @@ Include:
 
 ## Plugin Template & Guide
 
-- **[Plugin Development Guide](user_docs/features/plugin-development.md)** - Complete guide to creating plugins
-- **[Plugin Template](user_docs/features/plugin-template.md)** - Ready-to-use starter code
-- **[Plugin Security](user_docs/features/plugin-security.md)** - Security best practices
+- **[Plugin Development Guide](../tibok/user_docs/features/plugin-development.md)** - Complete guide to creating plugins
+- **[Plugin Template](../tibok/user_docs/features/plugin-template.md)** - Ready-to-use starter code
+- **[Plugin Security](../tibok/user_docs/features/plugin-security.md)** - Security best practices
 
 ## Contributing
 
@@ -49,10 +49,11 @@ We'll add it to this registry!
 
 ## Support
 
-- **Questions about plugins?** Check the [Plugin Development Guide](user_docs/features/plugin-development.md)
-- **Need help creating a plugin?** See the [Plugin Template](user_docs/features/plugin-template.md)
-- **Security concerns?** Read [Plugin Security](user_docs/features/plugin-security.md)
-- **Bugs or feature requests?** Open an issue on the plugin's GitHub repository
+- **Questions about plugins?** Check the [Plugin Development Guide](../tibok/user_docs/features/plugin-development.md)
+- **Need help creating a plugin?** See the [Plugin Template](../tibok/user_docs/features/plugin-template.md)
+- **Security concerns?** Read [Plugin Security](../tibok/user_docs/features/plugin-security.md)
+- **Bugs or feature requests for a specific plugin?** Open an issue on the plugin's GitHub repository
+- **Bugs or feature requests for the plugin system itself?** Open an issue on the [tibok repository](https://github.com/sturdy-barnacle/md-editor)
 
 ## Built-in Plugins
 
@@ -62,4 +63,4 @@ These plugins come with tibok and are always available:
 - **Frontmatter Editor** (`com.tibok.frontmatter`) - Jekyll/Hugo metadata editing (Cmd+I)
 - **WordPress Export** (`com.tibok.wordpress-export`) - Publish directly to WordPress
 
-See [Plugins](user_docs/features/plugins.md) for more information.
+See [Plugins](../tibok/user_docs/features/plugins.md) for more information.

@@ -36,8 +36,8 @@ For cost optimization with Claude Code:
   - `Models/` - Data models and AppState
   - `Plugins/` - Plugin system
 - `tibokTests/` - Unit tests
-- `user_docs/` - User-facing documentation
-- `FUTURE_FEATURES.md` - Planned features and design docs
+- `tibok/user_docs/` - User-facing documentation
+- `docs/releases/FUTURE_FEATURES.md` - Planned features and design docs
 
 ## Architecture
 
@@ -110,8 +110,8 @@ For cost optimization with Claude Code:
 7. Unload - Plugin removed from memory
 
 **Plugin API & Security:**
-- **[Plugin API Specification](../planning/plugin-api-specification.md)** - Complete stable API reference (v1.0)
-- **[Plugin Security Model](../planning/plugin-security-model.md)** - Security architecture and threat model
+- **[Plugin API Specification](../planning/plugins/plugin-api-specification.md)** - Complete stable API reference (v1.0)
+- **[Plugin Security Model](../planning/plugins/plugin-security-model.md)** - Security architecture and threat model
 - API is **stable as of v1.0** - breaking changes will result in major version bumps
 
 ## Development Guidelines
@@ -150,14 +150,43 @@ This applies to:
 
 The plugin system is licensed under MIT (see `tibok/tibok/Plugins/LICENSE`), separate from the core app's proprietary license.
 
+## Documentation Structure
+
+**IMPORTANT**: All documentation follows a clear organizational structure:
+
+### Internal Documentation (`docs/`)
+- `docs/planning/` - Planning documents, epics, user stories
+- `docs/planning/plugins/` - Plugin-specific planning and API specs
+- `docs/releases/` - CHANGELOG.md, FUTURE_FEATURES.md, APPSTORE_SUBMISSION.md
+- `docs/development/` - Development guidelines (this file), session notes
+- `docs/architecture/` - Technical architecture documents
+- `docs/registry/` - Plugin registry
+- `docs/progress/` - Daily progress notes (gitignored)
+- `docs/archive/` - Archived/completed documents (gitignored)
+
+### User Documentation (`tibok/user_docs/`)
+- All user-facing documentation lives here
+- Separate from internal docs for clarity
+
+### When Creating New Documentation
+1. **User-facing docs** → `tibok/user_docs/`
+2. **Planning docs** → `docs/planning/`
+3. **Release docs** → `docs/releases/`
+4. **Development notes** → `docs/development/`
+5. **Architecture docs** → `docs/architecture/`
+6. **Progress notes** → `docs/progress/`
+7. **Completed/outdated docs** → `docs/archive/`
+
+See `docs/README.md` for complete documentation structure guide.
+
 ## User Documentation Maintenance
 
 **CRITICAL**: Always update user docs when changing features.
 
 ### Documentation Location
-All user-facing documentation lives in `/user_docs`:
+All user-facing documentation lives in `tibok/user_docs/`:
 ```
-user_docs/
+tibok/user_docs/
 ├── README.md                    # Documentation index
 ├── FAQ.md                       # Frequently asked questions
 └── features/
@@ -176,8 +205,18 @@ user_docs/
     └── webhooks.md              # HTTP webhook notifications
 ```
 
-**Plugin-related root files:**
-- `PLUGIN_REGISTRY.md` - Central registry of community-created plugins
+**Internal documentation structure:**
+- `docs/planning/` - Planning documents and epics
+- `docs/planning/plugins/` - Plugin-specific planning docs
+- `docs/releases/` - CHANGELOG, FUTURE_FEATURES, APPSTORE_SUBMISSION
+- `docs/development/` - Development guidelines (this file), session notes
+- `docs/architecture/` - Technical architecture documents
+- `docs/registry/` - Plugin registry
+- `docs/progress/` - Daily progress notes
+- `docs/archive/` - Archived/completed documents
+
+**Plugin-related files:**
+- `docs/registry/PLUGIN_REGISTRY.md` - Central registry of community-created plugins
 
 ### When to Update Docs
 
@@ -335,8 +374,8 @@ Follow these principles in all user-facing text:
 - **Semantic**: Success (#34C759), Warning (#FF9500), Error (#FF3B30), Info (#5AC8FA)
 
 ### Brand References
-- Complete guidelines: `planning/branding.md`
-- User-facing reference: `user_docs/brand-guidelines.md`
+- Complete guidelines: `docs/planning/branding.md`
+- User-facing reference: `tibok/user_docs/brand-guidelines.md`
 - Always use lowercase "tibok" in all documentation and code comments
 
 ## Notes for Claude
