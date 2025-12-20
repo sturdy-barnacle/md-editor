@@ -100,15 +100,10 @@ final class PluginManager: ObservableObject {
         // Don't load if already loaded
         guard !isLoaded(identifier) else { return }
 
-        do {
-            let plugin = pluginType.init()
-            plugin.register(with: context)
-            loadedPlugins.append(plugin)
-            pluginErrors.removeValue(forKey: identifier)
-        } catch {
-            pluginErrors[identifier] = error
-            print("Failed to load built-in plugin \(identifier): \(error)")
-        }
+        let plugin = pluginType.init()
+        plugin.register(with: context)
+        loadedPlugins.append(plugin)
+        pluginErrors.removeValue(forKey: identifier)
     }
     
     /// Load a discovered plugin dynamically from a framework

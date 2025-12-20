@@ -11,6 +11,30 @@ import Foundation
 import AppKit
 import UniformTypeIdentifiers
 
+/// Errors that can occur during plugin installation
+enum PluginInstallationError: LocalizedError {
+    case cancelled
+    case extractionFailed(String)
+    case invalidPlugin(String)
+    case manifestReadFailed
+    case installationFailed(String)
+    
+    var errorDescription: String? {
+        switch self {
+        case .cancelled:
+            return "Installation cancelled"
+        case .extractionFailed(let message):
+            return "Failed to extract ZIP: \(message)"
+        case .invalidPlugin(let message):
+            return "Invalid plugin: \(message)"
+        case .manifestReadFailed:
+            return "Failed to read plugin manifest"
+        case .installationFailed(let message):
+            return "Failed to install plugin: \(message)"
+        }
+    }
+}
+
 /// Service for installing third-party plugins
 @MainActor
 final class PluginInstaller {
@@ -19,8 +43,8 @@ final class PluginInstaller {
     private init() {}
     
     /// Show file picker and install selected plugin
-    /// Returns success message or error message
-    func installPlugin() async -> Result<String, String> {
+    /// Returns success message or error
+    func installPlugin() async -> Result<String, Error> {
         let panel = NSOpenPanel()
         panel.allowedContentTypes = [
             .folder,
@@ -34,14 +58,14 @@ final class PluginInstaller {
         panel.message = "Choose a plugin folder or ZIP archive to install"
         
         guard panel.runModal() == .OK, let selectedURL = panel.url else {
-            return .failure("Installation cancelled")
+            return .failure(PluginInstallationError.cancelled)
         }
         
         return await installPlugin(from: selectedURL)
     }
     
     /// Install plugin from a URL (folder or ZIP)
-    func installPlugin(from sourceURL: URL) async -> Result<String, String> {
+    func installPlugin(from sourceURL: URL) async -> Result<String, Error> {
         // Determine if it's a ZIP file or folder
         let isZIP = sourceURL.pathExtension.lowercased() == "zip"
         
@@ -70,7 +94,7 @@ final class PluginInstaller {
                 
                 guard process.terminationStatus == 0 else {
                     try? FileManager.default.removeItem(at: tempDir)
-                    return .failure("Failed to extract ZIP file")
+                    return .failure(PluginInstallationError.extractionFailed("unzip command failed"))
                 }
                 
                 // Find the plugin folder inside extracted contents
@@ -113,13 +137,13 @@ final class PluginInstaller {
                 
                 guard let folder = foundPluginFolder else {
                     try? FileManager.default.removeItem(at: tempDir)
-                    return .failure("Could not find plugin folder in ZIP. Expected a folder containing manifest.json")
+                    return .failure(PluginInstallationError.extractionFailed("Could not find plugin folder in ZIP. Expected a folder containing manifest.json"))
                 }
                 
                 pluginFolder = folder
             } catch {
                 try? FileManager.default.removeItem(at: tempDir)
-                return .failure("Failed to extract ZIP: \(error.localizedDescription)")
+                return .failure(PluginInstallationError.extractionFailed(error.localizedDescription))
             }
         } else {
             // It's a folder
@@ -132,7 +156,7 @@ final class PluginInstaller {
             if isZIP {
                 try? FileManager.default.removeItem(at: pluginFolder.deletingLastPathComponent())
             }
-            return .failure("Invalid plugin: \(validation.errors.joined(separator: ", "))")
+            return .failure(PluginInstallationError.invalidPlugin(validation.errors.joined(separator: ", ")))
         }
         
         // Load manifest to get plugin identifier
@@ -142,7 +166,7 @@ final class PluginInstaller {
             if isZIP {
                 try? FileManager.default.removeItem(at: pluginFolder.deletingLastPathComponent())
             }
-            return .failure("Failed to read plugin manifest")
+            return .failure(PluginInstallationError.manifestReadFailed)
         }
         
         // Check if plugin already exists
@@ -162,7 +186,7 @@ final class PluginInstaller {
                 if isZIP {
                     try? FileManager.default.removeItem(at: pluginFolder.deletingLastPathComponent())
                 }
-                return .failure("Installation cancelled")
+                return .failure(PluginInstallationError.cancelled)
             }
             
             // Remove existing plugin
@@ -189,7 +213,7 @@ final class PluginInstaller {
             if isZIP {
                 try? FileManager.default.removeItem(at: pluginFolder.deletingLastPathComponent())
             }
-            return .failure("Failed to install plugin: \(error.localizedDescription)")
+            return .failure(PluginInstallationError.installationFailed(error.localizedDescription))
         }
     }
 }

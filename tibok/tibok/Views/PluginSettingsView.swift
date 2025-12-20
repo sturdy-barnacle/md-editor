@@ -44,7 +44,7 @@ struct PluginSettingsView: View {
         }
         
         // Add discovered third-party plugins
-        for (type, manifest, source, isLoaded) in pluginManager.allPluginInfo {
+        for (type, manifest, _, isLoaded) in pluginManager.allPluginInfo {
             // Skip if already added as built-in
             if type != nil { continue }
             
@@ -119,7 +119,7 @@ struct PluginSettingsView: View {
                 case .success(let message):
                     uiState.showToast(message, icon: "checkmark.circle.fill", duration: 2.0)
                 case .failure(let error):
-                    uiState.showToast(error, icon: "exclamationmark.triangle.fill", duration: 3.0)
+                    uiState.showToast(error.localizedDescription, icon: "exclamationmark.triangle.fill", duration: 3.0)
                 }
             }
         }

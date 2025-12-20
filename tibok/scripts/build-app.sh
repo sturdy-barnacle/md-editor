@@ -14,6 +14,7 @@ echo "Creating app bundle..."
 rm -rf "$APP_DIR"
 mkdir -p "$APP_DIR/Contents/MacOS"
 mkdir -p "$APP_DIR/Contents/Resources"
+mkdir -p "$APP_DIR/Contents/Frameworks"
 
 # Copy executable
 cp .build/debug/tibok "$APP_DIR/Contents/MacOS/"
@@ -37,6 +38,15 @@ elif [ -f "tibok/Resources/AppIcon.icns" ]; then
     cp tibok/Resources/AppIcon.icns "$APP_DIR/Contents/Resources/icon.icns"
 fi
 
+# Copy Sparkle framework (required for auto-updates)
+if [ -d ".build/arm64-apple-macosx/debug/Sparkle.framework" ]; then
+    echo "Copying Sparkle framework..."
+    cp -r .build/arm64-apple-macosx/debug/Sparkle.framework "$APP_DIR/Contents/Frameworks/"
+elif [ -d ".build/debug/Sparkle.framework" ]; then
+    echo "Copying Sparkle framework..."
+    cp -r .build/debug/Sparkle.framework "$APP_DIR/Contents/Frameworks/"
+fi
+
 # Copy resource bundles
 cp -r .build/debug/tibok_tibok.bundle "$APP_DIR/Contents/Resources/" 2>/dev/null || true
 cp -r .build/debug/Highlightr_Highlightr.bundle "$APP_DIR/Contents/Resources/" 2>/dev/null || true
@@ -53,6 +63,18 @@ fi
 
 # Create PkgInfo
 echo "APPL????" > "$APP_DIR/Contents/PkgInfo"
+
+# Fix Sparkle framework rpath if it exists
+if [ -d "$APP_DIR/Contents/Frameworks/Sparkle.framework" ]; then
+    echo "Fixing Sparkle framework rpath..."
+    # Update the Sparkle framework path in the executable
+    install_name_tool -change "@rpath/Sparkle.framework/Versions/B/Sparkle" \
+        "@executable_path/../Frameworks/Sparkle.framework/Versions/B/Sparkle" \
+        "$APP_DIR/Contents/MacOS/tibok" 2>/dev/null || true
+    # Also add rpath for future frameworks
+    install_name_tool -add_rpath "@executable_path/../Frameworks" \
+        "$APP_DIR/Contents/MacOS/tibok" 2>/dev/null || true
+fi
 
 echo "Done! App bundle created at: $APP_DIR"
 echo "Run with: open $APP_DIR"

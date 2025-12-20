@@ -94,12 +94,8 @@ final class DynamicPluginLoader {
         }
         
         // Instantiate the plugin
-        do {
-            let plugin = pluginType.init()
-            return plugin
-        } catch {
-            throw PluginLoadingError.pluginInitializationFailed(error)
-        }
+        let plugin = pluginType.init()
+        return plugin
     }
     
     /// Unload a framework (marks as unloaded, but framework may remain in memory).
@@ -182,15 +178,9 @@ final class DynamicPluginLoader {
         #endif
         
         // Check framework binary
-        let binaryPath = url.appendingPathComponent(url.deletingPathExtension().lastPathComponent)
-        
-        // Use file command to check architecture (if available)
-        // For now, we'll be lenient and allow universal binaries
-        // In the future, we can add more strict checking
-        
-        // Note: This is a simplified check. A more robust implementation would
-        // use `lipo -info` or similar to check architectures.
-        // For v1.1, we'll allow the load and let the system handle architecture mismatches.
+        // Note: Architecture validation is simplified for v1.1
+        // We allow universal binaries and let the system handle architecture mismatches
+        // Future: Use `lipo -info` or similar for strict architecture checking
     }
 }
 
