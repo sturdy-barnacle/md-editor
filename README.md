@@ -25,6 +25,10 @@ A native macOS markdown editor built with SwiftUI for Apple Silicon.
 
 Coming soon to the Mac App Store.
 
+### Download the latest release here on GitHub
+
+[![Latest Release](https://img.shields.io/github/v/release/sturdy-barnacle/md-editor?style=flat-square)](https://github.com/sturdy-barnacle/md-editor/releases/latest)     
+
 ### Build from Source
 
 ```bash
