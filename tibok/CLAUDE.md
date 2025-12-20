@@ -347,3 +347,60 @@ Follow these principles in all user-facing text:
 - User preferences are stored with @AppStorage (UserDefaults)
 - The app uses a document-based architecture but is not a true NSDocument app
 - **Always use lowercase "tibok"** - never capitalize the app name
+
+## Critical Technical Issues Resolved (v1.0.1)
+
+### Sparkle Framework Issue (RESOLVED)
+**Problem**: App crashed on launch with dyld error: `Library not loaded: @rpath/Sparkle.framework/Versions/B/Sparkle`
+
+**Root Cause Analysis**:
+- Sparkle was included in Package.swift as unconditional dependency
+- Binary compiled with Sparkle linked via @rpath (dynamic path)
+- dyld couldn't resolve the path at runtime, causing crash before Swift code ran
+- Compiler directives (#if !DEBUG) only affect Swift code, not Mach-O load commands
+
+**Solution Implemented**:
+- Removed Sparkle entirely from Package.swift dependencies
+- Removed AppDelegate and Sparkle initialization from tibokApp.swift
+- Removed "Check for Updates" menu item (re-enable in v1.1)
+- Debug and release builds no longer depend on Sparkle
+
+**Impact**: App now launches successfully on first run without crashes
+
+### Why Sparkle Was Disabled
+- Notarization complexity: Sparkle requires special signing configuration
+- Framework linking issues with @rpath in bundled frameworks
+- Planned for v1.1 with proper framework signing resolution
+- release build script (build-release-dmg.sh) already had Sparkle disabled with comments
+
+## App Store Submission Preparation
+
+### Important Considerations
+1. **App Store requires different signing**: Use App Store Distribution certificate, not Developer ID
+2. **Sandbox entitlements**: May need to adjust `tibok-dmg.entitlements` for App Store requirements
+3. **Privacy manifests**: Might need PrivacyInfo.xcprivacy for required privacy declarations
+4. **Code signing differences**:
+   - Development ID: For direct distribution (current)
+   - App Store: Requires different certificate and provisioning profile
+5. **Sparkle auto-updates**: NOT allowed on App Store (uses native App Store updates)
+6. **Binary architecture**: Currently ARM64 only; may need universal binary for App Store
+
+### Files to Review for App Store
+- `tibok/Resources/tibok-dmg.entitlements` - May need new entitlements file for App Store
+- `Package.swift` - Verify all dependencies are App Store compatible
+- `scripts/build-release-dmg.sh` - Workflow needs adaptation for App Store
+- Consider creating new scripts: `build-app-store.sh`, `notarize-app-store.sh`
+
+### Current Release Architecture
+- ARM64 only (Apple Silicon M1+)
+- Direct distribution via GitHub releases
+- Developer ID code signing and notarization
+- Sparkle framework prepared but disabled
+
+### Next Steps for App Store
+1. Request App Store Distribution certificate from Apple Developer Portal
+2. Create new entitlements file for sandbox (tibok-app-store.entitlements)
+3. Build with App Store signing configuration
+4. Test sandbox restrictions thoroughly
+5. Submit via Transporter or App Store Connect
+6. Handle App Store's review process and privacy questions
