@@ -4,6 +4,8 @@
 //
 //  Plugin discovery from file system folders.
 //
+//  MIT License - See LICENSE file in Plugins directory
+//
 
 import Foundation
 
@@ -12,7 +14,7 @@ struct PluginDiscovery {
     /// Standard plugin folders
     struct Folders {
         /// Built-in plugins folder: ~/Library/Application Support/tibok/Plugins/BuiltIn
-        /// Contains plugins that ship with Tibok
+        /// Contains plugins that ship with tibok
         static let builtIn: URL = {
             let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
             return appSupport.appendingPathComponent("tibok/Plugins/BuiltIn")
@@ -169,7 +171,7 @@ enum PluginSource: String, Codable {
     var description: String {
         switch self {
         case .builtin:
-            return "Included with Tibok"
+            return "Included with tibok"
         case .thirdParty:
             return "Community-created plugins"
         }

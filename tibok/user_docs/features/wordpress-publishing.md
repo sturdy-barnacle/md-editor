@@ -1,6 +1,6 @@
 # WordPress Publishing
 
-Tibok can publish your markdown documents directly to WordPress sites using either the REST API or email posting.
+tibok can publish your markdown documents directly to WordPress sites using either the REST API or email posting.
 
 ## Quick Start
 
@@ -78,7 +78,7 @@ Email publishing requires manual composition:
 
 ### Email Format
 
-Tibok includes WordPress shortcodes in the email for metadata:
+tibok includes WordPress shortcodes in the email for metadata:
 
 ```
 [category Blog] [category Tutorial]

@@ -4,6 +4,8 @@
 //
 //  Registry for slash commands, mirroring CommandService pattern.
 //
+//  MIT License - See LICENSE file in Plugins directory
+//
 
 import SwiftUI
 

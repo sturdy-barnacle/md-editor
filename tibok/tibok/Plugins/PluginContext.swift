@@ -4,6 +4,8 @@
 //
 //  Context provided to plugins during registration.
 //
+//  MIT License - See LICENSE file in Plugins directory
+//
 
 import Foundation
 

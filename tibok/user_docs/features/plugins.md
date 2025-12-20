@@ -1,14 +1,14 @@
 # Plugins
 
-Tibok supports a plugin system that allows extending the editor with additional commands and features. Plugins can be enabled or disabled from Settings.
+tibok supports a plugin system that allows extending the editor with additional commands and features. Plugins can be enabled or disabled from Settings.
 
 ## Plugin Types
 
-Tibok discovers plugins from two locations:
+tibok discovers plugins from two locations:
 
-### 1. Built-in Plugins (Included with Tibok)
+### 1. Built-in Plugins (Included with tibok)
 - Location: `~/Library/Application Support/tibok/Plugins/BuiltIn/`
-- Updated with Tibok releases
+- Updated with tibok releases
 - Always available
 - Examples: Core Slash Commands, Frontmatter, WordPress Export
 
@@ -35,21 +35,42 @@ When you enable a plugin:
 
 ## Installing Plugins
 
-### From Release/Download
+### Using the Install Button (Recommended)
 
+1. Open **Settings** (Cmd+,)
+2. Click the **Plugins** tab
+3. Click **"Install Plugin..."** button
+4. Select a plugin folder or ZIP file
+5. The plugin will be automatically installed and discovered
+6. Toggle the plugin on/off as needed
+
+**Supported formats:**
+- Plugin folder (containing `manifest.json`)
+- ZIP file containing a plugin folder
+
+The installer will:
+- Extract ZIP files automatically
+- Validate plugin structure
+- Handle plugin updates (replaces existing plugins with same identifier)
+- Show success/error notifications
+
+### Manual Installation
+
+If you prefer to install manually:
+
+**From ZIP file:**
 1. Download a plugin (usually a .zip file)
 2. Extract the plugin folder
 3. Move to `~/Library/Application Support/tibok/Plugins/ThirdParty/`
-4. Restart Tibok
+4. Restart tibok
 5. Go to Settings > Plugins and enable the plugin
 
-### Manual Folder Access
-
+**From folder:**
 1. Open Finder
 2. Press Cmd+Shift+G (Go to folder)
 3. Paste: `~/Library/Application Support/tibok/Plugins/ThirdParty/`
 4. Drag plugin folders here
-5. Restart Tibok
+5. Restart tibok
 
 ### Removing Plugins
 
@@ -58,7 +79,7 @@ When you enable a plugin:
 3. Open Finder to plugin folder (Cmd+Shift+G)
 4. Navigate to `~/Library/Application Support/tibok/Plugins/ThirdParty/`
 5. Delete the plugin folder
-6. Restart Tibok
+6. Restart tibok
 
 ## Built-in Plugins
 
@@ -106,6 +127,19 @@ Each plugin displays:
 - **Version** number
 - **Author** (if provided)
 - **Icon** representing the plugin type
+
+## Third-Party Plugin Status
+
+**Current Status:** Third-party plugins can be installed and discovered, but **dynamic loading is not yet implemented**. This means:
+
+- ✅ Third-party plugins can be installed via the "Install Plugin..." button
+- ✅ Installed plugins appear in the Settings > Plugins list
+- ❌ Third-party plugins cannot be enabled/disabled or executed yet
+- ❌ Third-party plugins will show as "Installed - Not yet supported"
+
+**Built-in plugins** (Core Slash Commands, Frontmatter, WordPress Export) work fully and can be toggled on/off.
+
+Dynamic plugin loading will be implemented in a future update, allowing third-party plugins to be fully functional.
 
 ## Troubleshooting
 

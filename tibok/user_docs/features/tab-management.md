@@ -2,7 +2,7 @@
 
 ## Overview
 
-Tibok supports multiple open documents using a tab interface. This allows you to quickly switch between files, compare content, and work on multiple projects simultaneously without opening multiple windows.
+tibok supports multiple open documents using a tab interface. This allows you to quickly switch between files, compare content, and work on multiple projects simultaneously without opening multiple windows.
 
 The tab bar appears below the title bar whenever you have 2 or more documents open.
 
@@ -33,7 +33,7 @@ Files you starred with the ❤️ icon appear in "Favorites" section:
 
 ### Drag & Drop
 
-You can drag files from Finder into Tibok:
+You can drag files from Finder into tibok:
 - **Single file drag** → Opens in new tab
 - **Multiple file drag** → Opens each in separate tab
 - Already existing tabs will be switched to (not duplicated)
@@ -52,7 +52,7 @@ Use the command palette (Cmd+K) to quickly search and open files:
 The tab bar appears **below the title bar** when 2+ documents are open:
 
 ```
-Tibok — tibok
+tibok — tibok
 ┌─────────────────────────────────────────────────────┐
 │ [📄 Document.md] [✱ Untitled]     [🔍] [⊕] [≡]    │
 └─────────────────────────────────────────────────────┘
@@ -189,7 +189,7 @@ See [Session Persistence](session-persistence.md) for details.
 
 ### After Crash
 
-If Tibok crashes:
+If tibok crashes:
 - Tabs from last session restore
 - Content reflects last auto-save (every 30 seconds)
 - Any edits since last save are lost (unless auto-saved to file)
@@ -334,9 +334,9 @@ You want to compare similar files:
 
 ## Comparison to Other Editors
 
-How Tibok's tabs compare to other markdown editors:
+How tibok's tabs compare to other markdown editors:
 
-| Feature | Tibok | VS Code | Obsidian | Notion |
+| Feature | tibok | VS Code | Obsidian | Notion |
 |---|---|---|---|---|
 | **Unlimited tabs** | ✅ | ✅ | ❌ Panes only | ❌ Single doc |
 | **Cmd+1-9 switching** | ✅ | ✅ | ❌ | ❌ |
@@ -346,8 +346,8 @@ How Tibok's tabs compare to other markdown editors:
 | **Split view** | 🔄 Planned | ✅ | ✅ | ✅ |
 | **Tab context menu** | ✅ Basic | ✅ Full | N/A | N/A |
 
-**Tibok advantages**: Blazing fast switching, persistent state, clean interface
-**Tibok gaps**: Drag reorder and split view (planned for future)
+**tibok advantages**: Blazing fast switching, persistent state, clean interface
+**tibok gaps**: Drag reorder and split view (planned for future)
 
 ## Troubleshooting
 

@@ -1,6 +1,6 @@
-# Tibok User Documentation
+# tibok User Documentation
 
-Welcome to the Tibok documentation. Tibok is a native macOS markdown editor built for writers who love simplicity.
+Welcome to the tibok documentation. tibok is a native macOS markdown editor built for writers who love simplicity.
 
 ## Quick Start
 
@@ -14,7 +14,7 @@ Welcome to the Tibok documentation. Tibok is a native macOS markdown editor buil
 
 ## Interface
 
-Tibok features a clean, distraction-free interface:
+tibok features a clean, distraction-free interface:
 
 - **Tab bar**: Always visible when documents are open
 - **Sidebar**: Workspace, Favorites, Recent files, plus collapsible Git panel
@@ -27,6 +27,7 @@ Tibok features a clean, distraction-free interface:
 
 ### General
 - [FAQ](FAQ.md) - Frequently asked questions
+- [Brand Guidelines](brand-guidelines.md) - Visual identity and voice guidelines
 
 ### Features - Core
 - [Slash Commands](features/slash-commands.md) - Quick formatting with `/` commands
@@ -67,4 +68,4 @@ If you can't find an answer in these docs:
 
 ## Version
 
-This documentation covers Tibok Beta v0.6-0.7 (features in active development).
+This documentation covers tibok Beta v0.6-0.7 (features in active development).

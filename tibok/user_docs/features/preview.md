@@ -1,6 +1,6 @@
 # Markdown Preview
 
-Tibok provides a live preview pane that renders your markdown as you type.
+tibok provides a live preview pane that renders your markdown as you type.
 
 ## Showing/Hiding Preview
 

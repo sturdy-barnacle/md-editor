@@ -1,6 +1,6 @@
 # Image Handling
 
-Tibok makes it easy to add images to your markdown documents with drag & drop, paste, and slash commands.
+tibok makes it easy to add images to your markdown documents with drag & drop, paste, and slash commands.
 
 ## Adding Images
 
@@ -42,7 +42,7 @@ This encourages adding descriptive alt text for screen readers and SEO. Type you
 
 ## Visual Feedback
 
-Tibok provides toast notifications for all image operations:
+tibok provides toast notifications for all image operations:
 
 | Action | Notification | Icon | Duration |
 |--------|-------------|------|----------|
@@ -63,7 +63,7 @@ When exporting or copying documents with images:
 
 ## Assets Folder
 
-When you drag or paste images, Tibok automatically:
+When you drag or paste images, tibok automatically:
 
 1. Creates an `assets` folder next to your document (if it doesn't exist)
 2. Copies the image to this folder
@@ -121,8 +121,8 @@ Images in the preview pane are rendered when:
 
 ### "Save document first" message
 - Save your document with Cmd+S before pasting images
-- This allows Tibok to create the assets folder in the right location
+- This allows tibok to create the assets folder in the right location
 
 ### Duplicate filenames
-- Tibok automatically appends numbers to avoid conflicts
+- tibok automatically appends numbers to avoid conflicts
 - `photo.png` becomes `photo-1.png`, `photo-2.png`, etc.

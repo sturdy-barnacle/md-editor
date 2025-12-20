@@ -4,6 +4,8 @@
 //
 //  Built-in plugin providing the core slash commands.
 //
+//  MIT License - See LICENSE file in Plugins directory
+//
 
 import Foundation
 

@@ -89,4 +89,21 @@ This repository uses GitHub Actions for CI/CD and Claude Code integration. To en
 
 ## License
 
-Core: GPL
+**Hybrid Licensing Model**
+
+tibok uses a hybrid licensing approach:
+
+- **Core Application**: Proprietary non-commercial license
+  - See [LICENSE](LICENSE) for full terms
+  - Non-commercial use only
+  - Commercial use requires a separate license
+  - Source code available for viewing and non-commercial modification
+
+- **Plugin System**: MIT License
+  - See [tibok/tibok/Plugins/LICENSE](tibok/tibok/Plugins/LICENSE)
+  - Open source and freely usable
+  - Encourages community plugin development
+
+**Commercial Licensing**
+
+For commercial use, distribution, or sale of tibok, please contact k@emberwisp.xyz to obtain a commercial license.

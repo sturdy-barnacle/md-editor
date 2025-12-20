@@ -1,13 +1,15 @@
 # Plugin Security
 
-This document explains the security model for Tibok plugins, including best practices for developers and guidelines for users.
+This document explains the security model for tibok plugins, including best practices for developers and guidelines for users.
+
+For the complete security architecture, see [Plugin Security Model](../../planning/plugin-security-model.md).
 
 ## Overview
 
-Plugins extend Tibok with new functionality. To maintain security and stability:
+Plugins extend tibok with new functionality. To maintain security and stability:
 
 - **Plugins are user-installed**: Users intentionally add plugins from trusted sources
-- **Plugins have limited scope**: Plugins can only access specific Tibok APIs
+- **Plugins have limited scope**: Plugins can only access specific tibok APIs
 - **Future code signing**: All plugins will require code signing for distribution
 - **Transparency**: Plugin capabilities are declared in manifests
 
@@ -21,7 +23,7 @@ When installing a plugin:
 2. **Review permissions**: Check what the plugin declares in its manifest
 3. **Read the README**: Understand what the plugin does and who maintains it
 4. **Start small**: Test plugins one at a time to isolate issues
-5. **Keep Tibok updated**: Updates include security fixes
+5. **Keep tibok updated**: Updates include security fixes
 
 ### What Plugins Can Do
 
@@ -40,7 +42,7 @@ Plugins cannot:
 - ❌ Access the file system (except through provided APIs)
 - ❌ Make network requests (unless declared)
 - ❌ Access system files or other applications
-- ❌ Modify Tibok settings without permission
+- ❌ Modify tibok settings without permission
 - ❌ Run arbitrary code outside the sandbox
 - ❌ Access user credentials or keychain
 
@@ -49,14 +51,14 @@ Plugins cannot:
 **Disable a plugin** (keep it installed):
 1. Go to Settings → Plugins
 2. Toggle off the plugin
-3. Tibok removes its commands immediately
+3. tibok removes its commands immediately
 
 **Remove a plugin** (delete it completely):
 1. Disable the plugin first
 2. Open Finder
 3. Navigate to `~/Library/Application Support/tibok/Plugins/ThirdParty/`
 4. Delete the plugin folder
-5. Restart Tibok
+5. Restart tibok
 
 ### Reporting Security Issues
 
@@ -64,9 +66,9 @@ If you find a security issue in a plugin:
 
 1. **Contact the plugin author** directly (check plugin README)
 2. **Do not share publicly** until fixed
-3. **Report to Tibok** if the issue affects the core system
+3. **Report to tibok** if the issue affects the core system
 
-For Tibok core security issues:
+For tibok core security issues:
 - Email: security@tibok.app (future)
 - Do not create public GitHub issues for security problems
 
@@ -231,13 +233,13 @@ Clearly list what your plugin needs:
   "name": "My Plugin",
   "minimumTibokVersion": "0.6.0",
   "capabilities": ["slash-commands", "command-palette"],
-  "description": "Requires Tibok 0.6.0 or later for API support"
+  "description": "Requires tibok 0.6.0 or later for API support"
 }
 ```
 
 #### 9. Version Compatibility
 
-Test with multiple Tibok versions:
+Test with multiple tibok versions:
 
 ```bash
 # Test with different versions
@@ -292,7 +294,7 @@ Declare what your plugin uses in manifest.json:
 
 ### Code Signing (Future)
 
-In a future release, Tibok will require code signing for distributed plugins:
+In a future release, tibok will require code signing for distributed plugins:
 
 **What this means**:
 - You sign your plugin with your private key
@@ -337,10 +339,10 @@ func parseInput(_ input: String) {
 }
 
 // ✅ Test: Memory usage
-// Monitor Tibok memory usage before/after enabling plugin
+// Monitor tibok memory usage before/after enabling plugin
 
 // ✅ Test: Crash recovery
-// If plugin crashes, Tibok should recover gracefully
+// If plugin crashes, tibok should recover gracefully
 ```
 
 ### Security Checklist
@@ -356,7 +358,7 @@ Before releasing your plugin:
 - [ ] Manifests declare required capabilities
 - [ ] Performance tested (< 100ms per command)
 - [ ] Memory leaks tested (Instruments)
-- [ ] Works with latest Tibok version
+- [ ] Works with latest tibok version
 - [ ] README explains security implications
 - [ ] No hardcoded credentials
 - [ ] No logging sensitive data
@@ -369,7 +371,7 @@ If you find a security issue:
 
 1. **Document the issue**: Write down steps to reproduce
 2. **Contact the author**: Email the plugin creator
-3. **Report to Tibok**: If it affects the core system
+3. **Report to tibok**: If it affects the core system
 4. **Do not share publicly**: Wait for a fix
 
 ### For Plugin Developers
@@ -390,7 +392,7 @@ We plan to add:
 - ✅ Plugin sandboxing (enhanced)
 - ✅ Code signing for distribution
 - ✅ Plugin permissions UI (users can see what each plugin accesses)
-- ✅ Plugin runtime monitoring (Tibok can detect issues)
+- ✅ Plugin runtime monitoring (tibok can detect issues)
 - ✅ Automated security scanning (community plugins)
 - ✅ Plugin update mechanism (automatic security patches)
 

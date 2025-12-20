@@ -1,6 +1,6 @@
 # Keyboard Shortcuts
 
-Complete reference for all keyboard shortcuts in Tibok.
+Complete reference for all keyboard shortcuts in tibok.
 
 ## File Operations
 

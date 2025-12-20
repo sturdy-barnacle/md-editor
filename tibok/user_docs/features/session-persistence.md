@@ -2,11 +2,11 @@
 
 ## Overview
 
-Tibok automatically saves your workspace state and restores it when you relaunch the app. This means you can close the app in the middle of a project and pick up exactly where you left off—same files open, same cursor positions, same panel visibility.
+tibok automatically saves your workspace state and restores it when you relaunch the app. This means you can close the app in the middle of a project and pick up exactly where you left off—same files open, same cursor positions, same panel visibility.
 
 ## What's Automatically Saved
 
-Tibok persists an extensive amount of state about your session:
+tibok persists an extensive amount of state about your session:
 
 ### Panel Visibility & Layout
 - **Preview panel** - Whether markdown preview is shown/hidden
@@ -37,7 +37,7 @@ Tibok persists an extensive amount of state about your session:
 
 ### On App Launch
 
-When you open Tibok, the following happens automatically (you don't need to do anything):
+When you open tibok, the following happens automatically (you don't need to do anything):
 
 1. **Restores last workspace** - Opens the folder you were working in
 2. **Reopens all tabs** - All documents from your last session appear
@@ -56,7 +56,7 @@ State is saved automatically at multiple points:
 - **Every 30 seconds** - Auto-save interval captures any state changes
 - **On document save** - When you press Cmd+S, state updates immediately
 - **On workspace close** - When you close a folder, state is saved
-- **On app quit** - Before Tibok closes, final state snapshot is saved
+- **On app quit** - Before tibok closes, final state snapshot is saved
 - **On panel resize** - When you drag dividers, new positions are saved
 
 ### Storage Location
@@ -95,21 +95,21 @@ If you want to start completely fresh:
 
 **Option 1: Manual clear (Nuclear Option)**
 ```bash
-# Quit Tibok first
+# Quit tibok first
 # Then in Terminal:
 defaults delete com.tibok.app persistedState
 
-# Relaunch Tibok—it will open with no workspace
+# Relaunch tibok—it will open with no workspace
 ```
 
 **Option 2: Close workspace before quitting**
 1. File > Close Workspace (Cmd+Shift+W)
-2. Quit Tibok (Cmd+Q)
+2. Quit tibok (Cmd+Q)
 3. Next launch starts with no workspace open
 4. State is still saved, but workspace is empty
 
 **Option 3: Future feature (not yet available)**
-- Hold Option key while launching Tibok
+- Hold Option key while launching tibok
 - Would start with clean slate while preserving state for future
 
 ## Use Cases
@@ -117,15 +117,15 @@ defaults delete com.tibok.app persistedState
 ### Daily Workflow
 
 You're working on a blog post:
-1. Open Tibok with `~/my-blog/` workspace (or it opens automatically)
+1. Open tibok with `~/my-blog/` workspace (or it opens automatically)
 2. You have 5 documents open: `index.md`, `post-1.md`, `post-2.md`, `draft.md`, `notes.md`
 3. Cursor is in `post-1.md` at line 47
 4. Preview panel is hidden; sidebar is expanded
 
 **Later that day:**
-- Close Tibok (Cmd+Q)
+- Close tibok (Cmd+Q)
 - Few hours pass...
-- Open Tibok again
+- Open tibok again
 - Everything restored: same 5 documents, cursor at line 47, preview hidden, sidebar expanded
 - You continue editing without missing a beat
 
@@ -153,9 +153,9 @@ This works because each workspace has its own saved state.
 
 ### Crash Recovery
 
-If Tibok crashes unexpectedly:
+If tibok crashes unexpectedly:
 1. Last saved state is still preserved
-2. Relaunch Tibok
+2. Relaunch tibok
 3. Everything restores to last known good state
 4. Unsaved changes from last 30 seconds (since last auto-save) may be lost
 5. Actual file content is safe (auto-saved when you hit Cmd+S)
@@ -248,7 +248,7 @@ These features would allow more control (not yet implemented):
 
 ## What State Survives App Updates?
 
-When Tibok updates to a new version:
+When tibok updates to a new version:
 
 | State | Survives | Notes |
 |---|---|---|

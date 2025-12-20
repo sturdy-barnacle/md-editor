@@ -4,6 +4,8 @@
 //
 //  Plugin protocol definition for tibok extensions.
 //
+//  MIT License - See LICENSE file in Plugins directory
+//
 
 import Foundation
 

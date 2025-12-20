@@ -2,7 +2,7 @@
 
 ## Overview
 
-Tibok includes several performance optimizations to ensure fast workspace opening and smooth editing, even with large folder structures (5,000+ files). These optimizations work automatically in the background without requiring any configuration.
+tibok includes several performance optimizations to ensure fast workspace opening and smooth editing, even with large folder structures (5,000+ files). These optimizations work automatically in the background without requiring any configuration.
 
 ## Smart Filtering Performance
 
@@ -12,7 +12,7 @@ Smart filtering automatically identifies and skips folders that don't contain ma
 
 ### How It Works
 
-When you open or expand a workspace folder, Tibok:
+When you open or expand a workspace folder, tibok:
 1. **Scans folders for markdown files** - Checks folder contents to determine if they contain `.md` files
 2. **Caches results** - Remembers results for 1 hour
 3. **Skips empty folders** - Folders without markdown are hidden in the sidebar
@@ -39,7 +39,7 @@ Smart filtering provides dramatic performance improvements:
 | 5,000+ files | 1-2 seconds | <100ms | 80-90% faster |
 | 10,000+ files | 2-3 seconds | <100ms | Dramatic improvement |
 
-**The first time you open a large workspace, Tibok scans it once and caches the results. Every subsequent open is nearly instant.**
+**The first time you open a large workspace, tibok scans it once and caches the results. Every subsequent open is nearly instant.**
 
 ### Settings
 
@@ -55,7 +55,7 @@ Smart filtering is **always enabled** by default. Currently, there are no settin
 
 ### Folder Scan Cache
 
-Tibok maintains an intelligent cache of folder scan results:
+tibok maintains an intelligent cache of folder scan results:
 
 - **Duration**: 1 hour time-to-live (TTL)
 - **Storage**: Persists across app restarts (stored in UserDefaults)

@@ -1,0 +1,44 @@
+tibok CORE SOFTWARE LICENSE
+
+Copyright (c) 2025 Kristina Quinones
+
+NON-COMMERCIAL USE LICENSE
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to use,
+copy, modify, and distribute the Software for NON-COMMERCIAL purposes only,
+subject to the following conditions:
+
+1. NON-COMMERCIAL USE ONLY
+   - You may use the Software for personal, educational, or non-commercial purposes
+   - You may view and study the source code
+   - You may modify the source code for personal use
+   - You may share modifications with others for non-commercial purposes
+
+2. COMMERCIAL USE RESTRICTIONS
+   - You may NOT sell, rent, lease, or otherwise commercially distribute the Software
+   - You may NOT use the Software in a commercial product or service without a separate commercial license
+   - You may NOT remove copyright notices or license terms
+
+3. SOURCE CODE
+   - Source code must be included with any distribution
+   - Modifications must be clearly marked
+   - Original copyright notices must be preserved
+
+4. COMMERCIAL LICENSING
+   For commercial use, distribution, or sale, please contact k@emberwisp.xyz
+   to obtain a commercial license.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+This license applies to the core tibok application code. The plugin system
+is licensed separately under the MIT License (see tibok/tibok/Plugins/LICENSE).
+

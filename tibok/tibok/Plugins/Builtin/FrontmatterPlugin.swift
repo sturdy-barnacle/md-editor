@@ -4,6 +4,8 @@
 //
 //  Plugin providing frontmatter-related slash commands for Jekyll/Hugo.
 //
+//  MIT License - See LICENSE file in Plugins directory
+//
 
 import Foundation
 

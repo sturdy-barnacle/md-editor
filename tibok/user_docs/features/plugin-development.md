@@ -1,6 +1,6 @@
 # Plugin Development Guide
 
-Tibok supports community-created plugins that extend the editor with new commands, slash commands, and integrations. This guide explains how to create and distribute plugins for Tibok.
+tibok supports community-created plugins that extend the editor with new commands, slash commands, and integrations. This guide explains how to create and distribute plugins for tibok.
 
 ## Table of Contents
 
@@ -18,17 +18,17 @@ Tibok supports community-created plugins that extend the editor with new command
 
 ## Overview
 
-Tibok plugins allow developers to:
+tibok plugins allow developers to:
 
 - Add **slash commands** (triggered with `/`)
 - Register **command palette commands** (Cmd+K palette)
 - Access editor context and document metadata
-- Extend Tibok with custom functionality
+- Extend tibok with custom functionality
 
-Plugins are written in **Swift** and packaged with a manifest file. Tibok discovers plugins from:
+Plugins are written in **Swift** and packaged with a manifest file. tibok discovers plugins from:
 
 1. **Built-in** (`~/Library/Application Support/tibok/Plugins/BuiltIn/`)
-   - Included with Tibok
+   - Included with tibok
    - Core plugins: Slash Commands, Frontmatter, WordPress Export
 
 2. **Community** (`~/Library/Application Support/tibok/Plugins/ThirdParty/`)
@@ -150,7 +150,7 @@ final class MyPlugin: TibokPlugin {
 
 ## Plugin Manifest
 
-The `manifest.json` file describes your plugin to Tibok:
+The `manifest.json` file describes your plugin to tibok:
 
 | Field | Required | Type | Description |
 |-------|----------|------|-------------|
@@ -160,7 +160,7 @@ The `manifest.json` file describes your plugin to Tibok:
 | `description` | | string | What the plugin does |
 | `author` | | string | Plugin creator |
 | `icon` | | string | SF Symbol icon (e.g., `sparkles`) |
-| `minimumTibokVersion` | | string | Minimum required Tibok version |
+| `minimumTibokVersion` | | string | Minimum required tibok version |
 | `capabilities` | | array | Features used: `["slash-commands", "command-palette", "export"]` |
 | `entryPoint` | | object | Plugin entry point configuration |
 
@@ -445,7 +445,7 @@ final class DailyJournalPlugin: TibokPlugin {
 
 1. Create a folder: `~/Library/Application Support/tibok/Plugins/ThirdParty/DailyJournal`
 2. Copy your files into that folder
-3. Restart Tibok
+3. Restart tibok
 4. Go to Settings → Plugins and enable "Daily Journal"
 
 ## Security
@@ -460,7 +460,7 @@ final class DailyJournalPlugin: TibokPlugin {
 
 ### Code Signing (Future)
 
-In a future release, Tibok will require plugins to be code-signed for distribution. This ensures:
+In a future release, tibok will require plugins to be code-signed for distribution. This ensures:
 
 - Plugin authenticity (you are who you claim to be)
 - Plugin integrity (code hasn't been modified)
@@ -492,7 +492,7 @@ For now, develop and test locally. We'll update this guide when code signing is 
    - Include ZIP download of your plugin folder
 
 4. **Add to Plugin Registry**
-   - Open issue/PR on [Tibok repository](https://github.com/tibok/tibok)
+   - Open issue/PR on [tibok repository](https://github.com/tibok/tibok)
    - Include: plugin name, repo link, description
    - We'll add it to [PLUGIN_REGISTRY.md](../../PLUGIN_REGISTRY.md)
 
@@ -502,28 +502,28 @@ Users will:
 1. Find your plugin in [PLUGIN_REGISTRY.md](../../PLUGIN_REGISTRY.md)
 2. Download the ZIP from your GitHub release
 3. Extract to `~/Library/Application Support/tibok/Plugins/ThirdParty/`
-4. Restart Tibok
+4. Restart tibok
 5. Enable in Settings > Plugins
 
 ### README Template
 
 ```markdown
-# Daily Journal Plugin for Tibok
+# Daily Journal Plugin for tibok
 
-Quick commands for daily journaling in Tibok.
+Quick commands for daily journaling in tibok.
 
 ## Features
 
 - Quick-start journal entries with today's date
 - Mood tracker with emoji support
 - Reflection prompts
-- Works with Tibok 0.6.0+
+- Works with tibok 0.6.0+
 
 ## Installation
 
 1. Download from latest release
 2. Extract to `~/Library/Application Support/tibok/Plugins/ThirdParty/`
-3. Restart Tibok
+3. Restart tibok
 4. Go to Settings → Plugins and enable "Daily Journal"
 
 ## Usage
@@ -560,10 +560,10 @@ json manifest.json
 # Check file permissions
 ls -la ~/Library/Application Support/tibok/Plugins/
 
-# Restart Tibok and check Console output (Cmd+Shift+C)
+# Restart tibok and check Console output (Cmd+Shift+C)
 ```
 
-### Plugin crashes Tibok
+### Plugin crashes tibok
 
 **Debug**:
 1. Open Console.app
@@ -600,12 +600,27 @@ ls -la ~/Library/Application Support/tibok/Plugins/
 
 ## API Stability
 
-The Tibok plugin API is currently in **beta** and may change. Plugin developers should:
+The tibok plugin API is **stable as of v1.0**. See the [Plugin API Specification](../../planning/plugin-api-specification.md) for the complete stable API definition.
 
 1. Monitor release notes for API changes
-2. Test plugins with each Tibok release
+2. Test plugins with each tibok release
 3. Update manifests with `minimumTibokVersion` when needed
-4. Communicate breaking changes to users
+
+## API Documentation
+
+**Essential Reading:**
+- **[Plugin API Specification](../../planning/plugin-api-specification.md)** - Complete stable API reference (v1.0)
+- **[Plugin Security Model](../../planning/plugin-security-model.md)** - Security architecture and best practices
+
+**Additional Resources:**
+- **[Plugin Template](plugin-template.md)** - Ready-to-use starter code
+- **[Plugin Security Guide](plugin-security.md)** - Security best practices for developers
+
+**API Stability:**
+- Monitor release notes for API changes
+- Test plugins with each tibok release
+- Update manifests with `minimumTibokVersion` when needed
+- Communicate breaking changes to users
 
 We commit to:
 - Maintaining backward compatibility where possible

@@ -1,10 +1,10 @@
 # Git Integration
 
-Tibok includes built-in Git integration for workspaces that are Git repositories. Track changes, stage files, and commit directly from the editor.
+tibok includes built-in Git integration for workspaces that are Git repositories. Track changes, stage files, and commit directly from the editor.
 
 ## Overview
 
-When you open a folder that's a Git repository, Tibok automatically detects it and shows:
+When you open a folder that's a Git repository, tibok automatically detects it and shows:
 - Branch name in the status bar
 - Change count indicator
 - Status indicators on files in the sidebar
@@ -170,13 +170,13 @@ The Git menu provides access to all Git operations:
 
 ## How It Works
 
-Tibok uses your system's Git installation (`/usr/bin/git`) to execute commands. This means:
+tibok uses your system's Git installation (`/usr/bin/git`) to execute commands. This means:
 
 - **Authentication**: Uses your existing SSH keys and credentials
 - **Configuration**: Respects your `.gitconfig` settings
 - **Compatibility**: Works with any Git remote (GitHub, GitLab, Bitbucket, etc.)
 
-If `git push` works in Terminal, it will work in Tibok.
+If `git push` works in Terminal, it will work in tibok.
 
 ## Requirements
 

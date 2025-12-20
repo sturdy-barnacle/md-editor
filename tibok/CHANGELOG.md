@@ -3,7 +3,7 @@
 ## [1.0.0] - 2025-12-19
 ### Initial Public Release
 
-The first public release of Tibok, a clean and distraction-free markdown editor for macOS.
+The first public release of tibok, a clean and distraction-free markdown editor for macOS.
 
 ### Features
 - **Markdown Editing** - Beautiful editor with live preview, syntax highlighting, and 35+ slash commands
@@ -58,14 +58,14 @@ Sparkle auto-updates are prepared but disabled in v1.0 due to framework signing 
 - **Folder-based plugin discovery** - Plugins discovered from file system folders
 - **Plugin manifest format** - JSON manifests describe plugins (identifier, name, version, capabilities)
 - **Two plugin sources**:
-  - Built-in: Core plugins included with Tibok
+  - Built-in: Core plugins included with tibok
   - Community: User-installed plugins from `~/Library/Application Support/tibok/Plugins/ThirdParty/`
 - **Plugin registry** - `PLUGIN_REGISTRY.md` lists available community plugins
 - **Developer guides**:
   - Complete plugin development guide
   - Plugin template/starter code
   - Security best practices guide
-- **Simple installation** - Download ZIP, extract to folder, restart Tibok
+- **Simple installation** - Download ZIP, extract to folder, restart tibok
 
 ### Service Layer Refactoring (Phase 2)
 - **AppState simplification** - Reduced from ~1606 lines to ~1230 lines (23% reduction)

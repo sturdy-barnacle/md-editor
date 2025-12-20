@@ -1,6 +1,6 @@
 # Frontmatter Editor
 
-Tibok includes a built-in frontmatter editor for Jekyll and Hugo static site generators. The inspector panel lets you edit frontmatter metadata through a form-based interface.
+tibok includes a built-in frontmatter editor for Jekyll and Hugo static site generators. The inspector panel lets you edit frontmatter metadata through a form-based interface.
 
 ## Opening the Inspector
 

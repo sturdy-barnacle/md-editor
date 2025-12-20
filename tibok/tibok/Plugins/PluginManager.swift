@@ -4,6 +4,8 @@
 //
 //  Manages plugin lifecycle: discovery, initialization, and deactivation.
 //
+//  MIT License - See LICENSE file in Plugins directory
+//
 
 import Foundation
 

@@ -4,6 +4,8 @@
 //
 //  Manages persistence for plugin enabled/disabled state.
 //
+//  MIT License - See LICENSE file in Plugins directory
+//
 
 import Foundation
 

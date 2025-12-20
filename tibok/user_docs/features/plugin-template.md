@@ -1,6 +1,6 @@
 # Plugin Template
 
-This template provides a complete starting point for creating a Tibok plugin.
+This template provides a complete starting point for creating a tibok plugin.
 
 ## Quick Start
 
@@ -290,7 +290,7 @@ context.slashCommandService.register(command, source: Self.identifier)
    cp MyPlugin.swift ~/Library/Application\ Support/tibok/Plugins/ThirdParty/MyPlugin/
    ```
 
-3. Restart Tibok and check Settings → Plugins
+3. Restart tibok and check Settings → Plugins
 
 ### Testing Checklist
 
@@ -365,7 +365,7 @@ tibok-myplugin/
 ### README.md Example
 
 ```markdown
-# My Plugin for Tibok
+# My Plugin for tibok
 
 Brief description of what your plugin does.
 
@@ -379,7 +379,7 @@ Brief description of what your plugin does.
 
 1. Download release ZIP
 2. Extract to `~/Library/Application Support/tibok/Plugins/ThirdParty/`
-3. Restart Tibok
+3. Restart tibok
 4. Enable in Settings → Plugins
 
 ## Usage

@@ -1,28 +1,28 @@
-# Tibok FAQ
+# tibok FAQ
 
 ## General
 
-### What is Tibok?
-Tibok is a native macOS markdown editor built for writers who love simplicity. It provides a clean, distraction-free writing environment with live preview and essential markdown features.
+### What is tibok?
+tibok is a native macOS markdown editor built for writers who love simplicity. It provides a clean, distraction-free writing environment with live preview and essential markdown features.
 
-### What does "Tibok" mean?
-"Tibok" is a Filipino word meaning "heartbeat" or "pulse," reflecting the app's goal to be the heart of your writing workflow.
+### What does "tibok" mean?
+"tibok" is a Filipino word meaning "heartbeat" or "pulse," reflecting the app's goal to be the heart of your writing workflow.
 
 ### What macOS versions are supported?
-Tibok requires macOS 14.0 (Sonoma) or later.
+tibok requires macOS 14.0 (Sonoma) or later.
 
 ---
 
 ## Documents & Files
 
 ### Where are my documents saved?
-Documents are saved wherever you choose when using Save As. Tibok doesn't enforce a specific location.
+Documents are saved wherever you choose when using Save As. tibok doesn't enforce a specific location.
 
-### Does Tibok auto-save my work?
+### Does tibok auto-save my work?
 Yes, auto-save is enabled by default. You can toggle this in Settings > General.
 
-### What file formats does Tibok support?
-Tibok works with `.md` (Markdown), `.txt` (plain text), and other text-based files like `.csv`.
+### What file formats does tibok support?
+tibok works with `.md` (Markdown), `.txt` (plain text), and other text-based files like `.csv`.
 
 ### Can I open a folder of markdown files?
 Yes, use File > Open Folder (Cmd+Shift+O) to open a workspace. The sidebar will show all markdown files in the folder.
@@ -61,13 +61,13 @@ When you drag or paste images:
 - **Tip**: Save your document first to enable relative paths
 
 ### What image formats are supported?
-Tibok supports all common web image formats:
+tibok supports all common web image formats:
 - **Animated**: GIF (preserves animation when copying from Finder)
 - **Photos**: PNG, JPG, JPEG
 - **Graphics**: SVG, WEBP
 - **Other**: BMP, TIFF (converted to PNG for web compatibility)
 
-**Format detection**: When pasting, Tibok detects the original format and preserves it when possible. Images copied from apps may be converted to standard formats.
+**Format detection**: When pasting, tibok detects the original format and preserves it when possible. Images copied from apps may be converted to standard formats.
 
 ### Can I use Find and Replace?
 Yes, use Cmd+F for Find and Cmd+Option+F for Find and Replace.
@@ -177,7 +177,7 @@ See [Frontmatter Editor](features/frontmatter.md) for more details.
 ## Plugins
 
 ### What are plugins?
-Plugins are extensions that add commands and features to Tibok. You can enable or disable them from Settings > Plugins.
+Plugins are extensions that add commands and features to tibok. You can enable or disable them from Settings > Plugins.
 
 ### Where are the slash commands?
 Slash commands are provided by the "Core Slash Commands" plugin. If slash commands aren't working, check Settings > Plugins to ensure it's enabled.

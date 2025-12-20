@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
     <channel>
-        <title>Tibok Updates</title>
+        <title>tibok Updates</title>
         <link>https://raw.githubusercontent.com/YOURUSER/tibok/main/appcast.xml</link>
-        <description>Tibok markdown editor release notes</description>
+        <description>tibok markdown editor release notes</description>
         <language>en</language>
 
         <!-- Latest version item - update this when releasing new versions -->
@@ -11,8 +11,8 @@
             <title>Version 1.0.0</title>
             <description>
                 <![CDATA[
-                    <h2>Tibok 1.0 - Initial Release</h2>
-                    <p>The first public release of Tibok markdown editor with all essential features:</p>
+                    <h2>tibok 1.0 - Initial Release</h2>
+                    <p>The first public release of tibok markdown editor with all essential features:</p>
                     <ul>
                         <li>Clean, distraction-free markdown editor with live preview</li>
                         <li>35+ slash commands for markdown formatting and structure</li>
@@ -34,7 +34,7 @@
             <sparkle:shortVersionString>1.0.0</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
             <enclosure
-                url="https://github.com/YOURUSER/tibok/releases/download/v1.0.0/Tibok-1.0.0.dmg"
+                url="https://github.com/YOURUSER/tibok/releases/download/v1.0.0/tibok-1.0.0.dmg"
                 sparkle:edSignature="SIGNATURE_PLACEHOLDER"
                 length="0"
                 type="application/octet-stream"
@@ -45,7 +45,7 @@
         <item>
             <title>Version 1.0.1</title>
             <description><![CDATA[
-                <h2>Tibok 1.0.1 - Bug Fixes</h2>
+                <h2>tibok 1.0.1 - Bug Fixes</h2>
                 <ul>
                     <li>Fixed...</li>
                 </ul>
@@ -55,7 +55,7 @@
             <sparkle:shortVersionString>1.0.1</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
             <enclosure
-                url="https://github.com/YOURUSER/tibok/releases/download/v1.0.1/Tibok-1.0.1.dmg"
+                url="https://github.com/YOURUSER/tibok/releases/download/v1.0.1/tibok-1.0.1.dmg"
                 sparkle:edSignature="SIGNATURE"
                 length="0"
                 type="application/octet-stream"

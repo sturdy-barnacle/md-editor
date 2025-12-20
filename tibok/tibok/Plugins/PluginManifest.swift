@@ -4,6 +4,8 @@
 //
 //  Plugin manifest format for describing third-party plugins.
 //
+//  MIT License - See LICENSE file in Plugins directory
+//
 
 import Foundation
 

@@ -1,6 +1,6 @@
 # Workspace & File Management
 
-Tibok supports working with individual files or entire folders of markdown documents.
+tibok supports working with individual files or entire folders of markdown documents.
 
 ## Opening Files
 
@@ -33,7 +33,7 @@ The sidebar provides quick access to your files when working with a workspace.
 
 ### Smart Folder Filtering
 
-Tibok automatically hides empty folders to keep your workspace clean and navigable.
+tibok automatically hides empty folders to keep your workspace clean and navigable.
 
 #### How it Works
 - Folders without markdown files are automatically hidden
@@ -75,7 +75,7 @@ If you prefer to see all folders:
 
 ## Auto-Save
 
-Tibok automatically saves your work as you type.
+tibok automatically saves your work as you type.
 
 ### Settings
 - **Location**: Settings > General

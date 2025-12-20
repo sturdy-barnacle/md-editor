@@ -4,6 +4,8 @@
 //
 //  Plugin for publishing markdown documents to WordPress via REST API or Post by Email
 //
+//  MIT License - See LICENSE file in Plugins directory
+//
 
 import Foundation
 import SwiftUI

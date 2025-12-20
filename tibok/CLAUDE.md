@@ -1,7 +1,7 @@
-# Tibok - Claude Code Guidelines
+# tibok - Claude Code Guidelines
 
 ## Project Summary
-Tibok is a native macOS markdown editor built with SwiftUI. It provides a clean, distraction-free writing experience with live preview, slash commands, and workspace support.
+tibok is a native macOS markdown editor built with SwiftUI. It provides a clean, distraction-free writing experience with live preview, slash commands, and workspace support.
 
 ## Quick Reference
 
@@ -109,6 +109,11 @@ For cost optimization with Claude Code:
 6. Deactivation - Plugin's `deactivate()` called when disabled
 7. Unload - Plugin removed from memory
 
+**Plugin API & Security:**
+- **[Plugin API Specification](../planning/plugin-api-specification.md)** - Complete stable API reference (v1.0)
+- **[Plugin Security Model](../planning/plugin-security-model.md)** - Security architecture and threat model
+- API is **stable as of v1.0** - breaking changes will result in major version bumps
+
 ## Development Guidelines
 
 ### Code Style
@@ -122,6 +127,28 @@ For cost optimization with Claude Code:
 2. Follow established patterns in the codebase
 3. Test changes build successfully
 4. Update user documentation (see below)
+
+### License Headers for Plugins
+
+**REQUIRED**: When adding new built-in plugins or plugin infrastructure files, always include the MIT license header:
+
+```swift
+//
+//  [FileName].swift
+//  tibok
+//
+//  [Brief description]
+//
+//  MIT License - See LICENSE file in Plugins directory
+//
+```
+
+This applies to:
+- All new files in `tibok/tibok/Plugins/` (including `Builtin/` subdirectory)
+- Plugin infrastructure files (PluginManager, PluginContext, PluginDiscovery, etc.)
+- All built-in plugin implementations
+
+The plugin system is licensed under MIT (see `tibok/tibok/Plugins/LICENSE`), separate from the core app's proprietary license.
 
 ## User Documentation Maintenance
 
@@ -270,6 +297,48 @@ Before completing any feature work, verify:
 - Git UI relocation (considering bottom panel)
 - Cloud sync
 
+## Brand Guidelines
+
+**CRITICAL**: Always follow tibok brand guidelines in all code, documentation, and user-facing text.
+
+### App Name
+- **Always use lowercase "t"**: `tibok` (never `Tibok` or `TIBOK`)
+- **Bundle ID**: `app.tibok.editor`
+- **Website**: `tibok.app`
+- **Marketing Name**: "tibok - Markdown for Mac"
+
+### Typography
+- **Primary Font**: Open Sans (weights: 300, 400, 500, 600, 700)
+- **Code Font**: SF Mono or Fira Code
+- **UI Text**: Open Sans Regular (13-14px) for body, SemiBold (13px) for buttons/headings
+
+### Voice & Tone
+Follow these principles in all user-facing text:
+1. **Clear** - Say what you mean, simply
+2. **Helpful** - Guide without condescending
+3. **Confident** - Know the product, own the voice
+4. **Warm** - Friendly but professional
+
+**Good Examples:**
+- "Your document is saved."
+- "Couldn't connect to GitHub. Check your credentials."
+- "Preview updates as you type."
+
+**Avoid:**
+- "Awesome! Your document has been successfully saved to disk!"
+- "Oops! Something went wrong with the GitHub thingy."
+- "Our revolutionary live preview technology..."
+
+### Color System
+- **Primary**: Ink (#1A1A1A), Paper (#FFFFFF), Accent (#007AFF)
+- **Secondary**: Stone (#6B6B6B), Mist (#F5F5F5), Border (#E5E5E5)
+- **Semantic**: Success (#34C759), Warning (#FF9500), Error (#FF3B30), Info (#5AC8FA)
+
+### Brand References
+- Complete guidelines: `planning/branding.md`
+- User-facing reference: `user_docs/brand-guidelines.md`
+- Always use lowercase "tibok" in all documentation and code comments
+
 ## Notes for Claude
 
 - This is a macOS-only app - no iOS/iPadOS support
@@ -277,3 +346,4 @@ Before completing any feature work, verify:
 - Markdown preview uses WebKit (WKWebView)
 - User preferences are stored with @AppStorage (UserDefaults)
 - The app uses a document-based architecture but is not a true NSDocument app
+- **Always use lowercase "tibok"** - never capitalize the app name
