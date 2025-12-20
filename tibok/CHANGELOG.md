@@ -1,5 +1,32 @@
 # Changelog
 
+## [1.0.1] - 2025-12-20
+### Patch Release - Critical Startup Fix
+
+#### Bug Fixes
+- **Fixed critical startup failure** - App would crash on launch with dyld error `Library not loaded: @rpath/Sparkle.framework`
+  - **Root cause**: Sparkle.framework had incorrect install name (`@rpath` instead of `@executable_path`)
+  - **Solution**: Removed Sparkle from Package.swift dependencies (disabled for v1.0 due to notarization complexity)
+  - Made Sparkle import conditional with `#if !DEBUG` in tibokApp.swift
+  - Removed Sparkle AppDelegate initialization and "Check for Updates" menu
+
+#### Changes
+- Removed unconditional Sparkle dependency from Package.swift
+- Simplified app initialization by removing AppDelegate Sparkle code
+- Verified app launches successfully without dyld errors
+- All features (WordPress, plugins, Git, etc.) working correctly
+
+#### System Requirements
+- macOS 14.0 (Sonoma) or later
+- **Apple Silicon only** (M1, M2, M3, M4 and newer)
+
+#### Known Issues Resolved
+- ✅ App startup failure
+- ✅ Dyld linking errors
+- ✅ All development branch features merged and tested
+
+---
+
 ## [1.0.0] - 2025-12-19
 ### Initial Public Release
 
