@@ -63,31 +63,6 @@ Build with Xcode 15+ and run on your Mac.
 4. Commit with `⌘⇧K`
 5. Push to remote
 
-
-## Development
-
-See [CLAUDE.md](tibok/CLAUDE.md) for development guidelines.
-
-### GitHub Actions Setup
-
-This repository uses GitHub Actions for CI/CD and Claude Code integration. To enable the Claude Code workflow:
-
-1. **Configure the OAuth Token Secret:**
-   - Go to your repository Settings → Secrets and variables → Actions
-   - Click "New repository secret"
-   - Name: `CLAUDE_CODE_OAUTH_TOKEN`
-   - Value: Your Claude Code OAuth token (obtain from [code.claude.com](https://code.claude.com))
-   - Click "Add secret"
-
-2. **Workflow Files:**
-   - Workflow files in `.github/workflows/` should be tracked in git (not in `.gitignore`)
-   - The linter warning about `CLAUDE_CODE_OAUTH_TOKEN` is expected and can be safely ignored
-   - Secrets are only available at runtime, so the linter cannot validate their existence
-
-3. **Using Claude Code:**
-   - Tag `@claude` in issue comments, PR comments, or issue descriptions
-   - Claude will automatically respond and help with code changes
-
 ## License
 
 **Hybrid Licensing Model**
