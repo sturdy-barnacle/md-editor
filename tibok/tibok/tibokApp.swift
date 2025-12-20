@@ -8,19 +8,27 @@
 import SwiftUI
 import AppKit
 import WebKit
+#if !DEBUG
 import Sparkle
+#endif
 
 // MARK: - App Delegate for Sparkle
 
 class AppDelegate: NSObject, NSApplicationDelegate {
+    #if DEBUG
+    // Sparkle disabled for debug builds
+    #else
     let updaterController: SPUStandardUpdaterController
+    #endif
 
     override init() {
+        #if !DEBUG
         self.updaterController = SPUStandardUpdaterController(
             startingUpdater: true,
             updaterDelegate: nil,
             userDriverDelegate: nil
         )
+        #endif
         super.init()
     }
 }
@@ -289,11 +297,13 @@ struct tibokApp: App {
 
             // Help menu with Sparkle update check
             CommandGroup(replacing: .help) {
+                #if !DEBUG
                 Button("Check for Updates...") {
                     appDelegate.updaterController.updater.checkForUpdates()
                 }
 
                 Divider()
+                #endif
 
                 Button("tibok Help") {
                     if let url = URL(string: "https://www.tibok.app/support") {

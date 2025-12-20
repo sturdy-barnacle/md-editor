@@ -17,9 +17,6 @@ let package = Package(
 
         // Syntax highlighting for code blocks
         .package(url: "https://github.com/raspu/Highlightr.git", from: "2.1.0"),
-
-        // Auto-update framework for macOS apps
-        .package(url: "https://github.com/sparkle-project/Sparkle.git", from: "2.5.0"),
     ],
     targets: [
         .executableTarget(
@@ -27,7 +24,6 @@ let package = Package(
             dependencies: [
                 .product(name: "Markdown", package: "swift-markdown"),
                 .product(name: "Highlightr", package: "Highlightr"),
-                .product(name: "Sparkle", package: "Sparkle"),
             ],
             path: "tibok",
             exclude: ["Resources/tibok.entitlements", "Resources/Info.plist", "Resources/IconLayers"],
