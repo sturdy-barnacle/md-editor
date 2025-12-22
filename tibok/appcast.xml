@@ -2,11 +2,43 @@
 <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
     <channel>
         <title>tibok Updates</title>
-        <link>https://raw.githubusercontent.com/YOURUSER/tibok/main/appcast.xml</link>
+        <link>https://raw.githubusercontent.com/sturdy-barnacle/md-editor/main/appcast.xml</link>
         <description>tibok markdown editor release notes</description>
         <language>en</language>
 
         <!-- Latest version item - update this when releasing new versions -->
+        <item>
+            <title>Version 1.0.2</title>
+            <description>
+                <![CDATA[
+                    <h2>tibok 1.0.2 - Bug Fixes and Improvements</h2>
+                    <h3>What's Fixed</h3>
+                    <ul>
+                        <li><strong>Keyboard Input Routing</strong> - Fixed issue where keyboard input was incorrectly routed to other applications instead of the editor</li>
+                        <li><strong>WordPress Selection</strong> - Fixed bug where WordPress selection would revert to Jekyll when converting between static site generators</li>
+                        <li><strong>Security</strong> - All releases now properly code-signed and notarized by Apple</li>
+                    </ul>
+                    <h3>Release Details</h3>
+                    <ul>
+                        <li>✓ Fully signed with Developer ID Application certificate</li>
+                        <li>✓ Notarized by Apple for Gatekeeper approval</li>
+                        <li>✓ No security warnings on installation</li>
+                        <li>✓ macOS 14.0 (Sonoma) or later, Apple Silicon (ARM64)</li>
+                    </ul>
+                ]]>
+            </description>
+            <pubDate>Mon, 22 Dec 2025 11:15:00 +0000</pubDate>
+            <sparkle:version>1766419913</sparkle:version>
+            <sparkle:shortVersionString>1.0.2</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <enclosure
+                url="https://github.com/sturdy-barnacle/md-editor/releases/download/v1.0.2/Tibok-1.0.2.dmg"
+                sparkle:edSignature="SIGNATURE_PLACEHOLDER"
+                length="5111726"
+                type="application/octet-stream"
+            />
+        </item>
+
         <item>
             <title>Version 1.0.0</title>
             <description>
@@ -34,33 +66,11 @@
             <sparkle:shortVersionString>1.0.0</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
             <enclosure
-                url="https://github.com/YOURUSER/tibok/releases/download/v1.0.0/tibok-1.0.0.dmg"
+                url="https://github.com/sturdy-barnacle/md-editor/releases/download/v1.0.0/Tibok-1.0.0.dmg"
                 sparkle:edSignature="SIGNATURE_PLACEHOLDER"
                 length="0"
                 type="application/octet-stream"
             />
         </item>
-
-        <!-- Example of how to add future releases (below 1.0.0):
-        <item>
-            <title>Version 1.0.1</title>
-            <description><![CDATA[
-                <h2>tibok 1.0.1 - Bug Fixes</h2>
-                <ul>
-                    <li>Fixed...</li>
-                </ul>
-            ]]></description>
-            <pubDate>Mon, 22 Dec 2025 00:00:00 +0000</pubDate>
-            <sparkle:version>2</sparkle:version>
-            <sparkle:shortVersionString>1.0.1</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <enclosure
-                url="https://github.com/YOURUSER/tibok/releases/download/v1.0.1/tibok-1.0.1.dmg"
-                sparkle:edSignature="SIGNATURE"
-                length="0"
-                type="application/octet-stream"
-            />
-        </item>
-        -->
     </channel>
 </rss>
