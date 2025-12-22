@@ -1,0 +1,50 @@
+# Build artifacts
+.build/
+.swiftpm/
+*.xcarchive
+*.app
+DerivedData/
+
+# Xcode
+*.xcodeproj/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+*.playground
+
+# IDE
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Dependencies
+Pods/
+Cartfile.resolved
+
+# Security - NEVER commit private keys
+~/.tibok_sparkle_key.pem
+*.pem
+*.key
+*.p12
+*.p8
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Runtime
+*.log
+*.tmp
+*.temp
+
+# OS files
+.DS_Store
+.AppleDouble
+.LSOverride
+*.dSYM/
+
+# App-specific
+progress/
+user_docs/builds/
