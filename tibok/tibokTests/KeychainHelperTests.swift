@@ -2,58 +2,53 @@
 //  KeychainHelperTests.swift
 //  tibokTests
 //
-//  Tests for the KeychainHelper (API key storage).
+//  Tests for the KeychainHelper (Keychain Services wrapper).
 //  Note: Keychain tests may behave differently depending on code signing.
 //
 
+import Foundation
 import Testing
 @testable import tibok
 
 @Suite("Keychain Helper Tests")
 struct KeychainHelperTests {
 
-    let testProvider = AIProviderType.claude
+    let testService = "com.tibok.test"
+    let testAccount = "test-account"
 
-    @Test("Save and retrieve API key")
-    func saveAndRetrieveAPIKey() {
-        let testKey = "test-api-key-\(UUID().uuidString)"
+    @Test("Save and retrieve value")
+    func saveAndRetrieveValue() {
+        let testValue = "test-value-\(UUID().uuidString)"
 
         // Save
-        let saveResult = KeychainHelper.shared.setAPIKey(testKey, for: testProvider)
+        KeychainHelper.save(testValue, service: testService, account: testAccount)
 
         // Clean up after test
         defer {
-            _ = KeychainHelper.shared.deleteAPIKey(for: testProvider)
+            KeychainHelper.delete(service: testService, account: testAccount)
         }
-
-        // Verify save worked
-        #expect(saveResult == true)
 
         // Retrieve
-        let retrieved = KeychainHelper.shared.getAPIKey(for: testProvider)
-        #expect(retrieved == testKey)
+        let retrieved = KeychainHelper.load(service: testService, account: testAccount)
+        #expect(retrieved == testValue)
     }
 
-    @Test("Has API key check")
-    func hasAPIKey() {
-        // Clean up first
-        _ = KeychainHelper.shared.deleteAPIKey(for: testProvider)
+    @Test("Delete removes value")
+    func deleteRemovesValue() {
+        let testValue = "test-value-\(UUID().uuidString)"
 
-        // Initially no key
-        let hasKeyBefore = KeychainHelper.shared.hasAPIKey(for: testProvider)
+        // Save a value
+        KeychainHelper.save(testValue, service: testService, account: testAccount)
 
-        // Save a key
-        _ = KeychainHelper.shared.setAPIKey("test-key-\(UUID().uuidString)", for: testProvider)
+        // Verify it was saved
+        let beforeDelete = KeychainHelper.load(service: testService, account: testAccount)
+        #expect(beforeDelete == testValue)
 
-        // Clean up after test
-        defer {
-            _ = KeychainHelper.shared.deleteAPIKey(for: testProvider)
-        }
+        // Delete
+        KeychainHelper.delete(service: testService, account: testAccount)
 
-        // Now should have key
-        let hasKeyAfter = KeychainHelper.shared.hasAPIKey(for: testProvider)
-
-        #expect(hasKeyBefore == false)
-        #expect(hasKeyAfter == true)
+        // Verify it's gone
+        let afterDelete = KeychainHelper.load(service: testService, account: testAccount)
+        #expect(afterDelete == nil)
     }
 }

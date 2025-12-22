@@ -83,11 +83,13 @@ final class LogService {
     func error(_ error: Error, context: String? = nil, file: String = #file, function: String = #function, line: Int = #line) {
         var message = "Error: \(error.localizedDescription)"
 
+        // Cast to NSError to access domain, code, and userInfo properties
+        // This cast is necessary for these NSError-specific properties
         if let nsError = error as? NSError {
             message += "\n  Domain: \(nsError.domain)"
             message += "\n  Code: \(nsError.code)"
-            if let userInfo = nsError.userInfo as? [String: Any], !userInfo.isEmpty {
-                message += "\n  UserInfo: \(userInfo)"
+            if !nsError.userInfo.isEmpty {
+                message += "\n  UserInfo: \(nsError.userInfo)"
             }
         }
 
