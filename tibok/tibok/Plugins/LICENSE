@@ -1,32 +1,107 @@
-MIT License
+# GNU General Public License v3.0
 
-Copyright (c) 2025 Kristina Quinones
+## tibok Plugin System
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+The tibok Plugin System is licensed under the GNU General Public License v3.0 to encourage community contributions and extensions.
 
 ---
 
-This license applies to the tibok plugin system, including:
-- Plugin protocol and API (TibokPlugin.swift, PluginContext.swift)
-- Plugin infrastructure (PluginManager, PluginDiscovery, etc.)
-- Plugin development tools and documentation
+## GNU GENERAL PUBLIC LICENSE
+Version 3, 29 June 2007
 
-The core tibok application is licensed separately under a proprietary
-non-commercial license (see root LICENSE file).
+Copyright (c) 2025 Kristina Quinones
 
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+### Definitions
+
+This License refers to version 3 of the GNU General Public License.
+
+"Copyright" also means copyright-like laws that apply to other kinds of works, such as semiconductor masks.
+
+"The Program" refers to any copyrightable work licensed under this License. Each licensee is addressed as "you".
+
+"Licensees" and "recipients" may be individuals or organizations.
+
+To "modify" a work means to copy from or adapt all or part of the work in a fashion requiring copyright permission, other than the making of an exact copy. The resulting work is called a "modified version" of the earlier work or a work "based on" the earlier work.
+
+A "covered work" means either the unmodified Program or a work based on the Program.
+
+To "propagate" a work means to do anything with it that, without permission, would make you directly or secondarily liable for infringement under applicable copyright law, except executing it on a computer or modifying a private copy. Propagation includes copying, distribution (with or without modification), making available to the public, and in some countries other activities as well.
+
+To "convey" a work means any kind of propagation that enables other parties to make or receive copies. Mere interaction with a user through a computer network, without transfer of a copy, is not conveying.
+
+An interactive user interface displays "Appropriate Legal Notices" to the extent that it includes a convenient and prominently visible feature that (1) displays an appropriate copyright notice, and (2) informs the user that there is no warranty for the work (except to the extent that warranties are provided), that licensees may convey the work under this License, and how to view a copy of this License. If the interface presents a list of user commands or options, such as a menu, a prominent item in the list meets this criterion.
+
+### Source Code
+
+The "source code" for a work means the preferred form of the work for making modifications to it. "Object code" means any non-source form of a work.
+
+A "Standard Interface" means an interface that either is an official standard defined by a recognized standards body, or, in the case of interfaces specified for a particular programming language, one that is widely used among developers working in that language.
+
+The "System Libraries" of an executable work include anything, other than the work as a whole, that (a) is included in the normal form of packaging a Major Component, but which is not part of that Major Component, and (b) serves only to enable use of the work with that Major Component, or to implement a Standard Interface for which an implementation is available to the public in source code form. A Major Component, in this context, means a major essential component (kernel, window system, and so on) of the specific operating system (if any) on which the executable work runs, or a compiler used to produce the work, or an object code interpreter used to run it.
+
+The "Corresponding Source" for a work in object code form means all the source code needed to generate, install, and (for an executable work) run the object code and to modify the work, including scripts to control those activities. However, it does not include the work's System Libraries, or general-purpose tools or generally available free programs which are used unmodified in performing those activities but which are not part of the work. For example, Corresponding Source includes interface definition files associated with source files for the work, and the source code for shared libraries and dynamically linked subprograms that the work is specifically designed to depend upon, such as through intimate data communication or control flow between those subprograms and other parts of the work.
+
+The Corresponding Source need not include anything that users can regenerate automatically from other parts of the Corresponding Source.
+
+The Corresponding Source for a work in source code form is that same work.
+
+### Basic Permissions
+
+All rights granted under this License are granted for the term of copyright on the Program, and are irrevocable provided the stated conditions are met. This License explicitly affirms your unlimited permission to run the unmodified Program. The output from running a covered work is covered by this License only if the output, by its content, constitutes a covered work. This License acknowledges your rights of fair use or other equivalent, as provided by copyright law.
+
+You may make, run and propagate covered works that you do not convey, without conditions so long as your license otherwise remains in force. You may convey covered works to others for the sole purpose of having them make modifications exclusively for you, or provide you with facilities for running these works, provided that you comply with the terms of this License in conveying all material for which you do not control copyright. Those thus making or running the covered works for you must do so exclusively on your behalf, under your direction and control, on terms that prohibit them from making any copies of your copyrighted material outside their relationship with you.
+
+Conveyance under any other circumstances is permitted solely under the conditions stated below. Sublicensing is not allowed; section 10 makes it unnecessary.
+
+### Copyleft
+
+Each contributor grants you a non-exclusive, worldwide, royalty-free patent license under that contributor's essential patent claims, to make, use, sell, sell for import, and otherwise transfer its contribution in source code and object code form. If you convey a covered work, knowingly relying on a patent license from a contributor included in the work, then the patent license you receive from that contributor (a) covers all the code, irrespective of terms, for which the contributor is known to have granted the patent license to generate, make or run any of its contributions included in the covered work.
+
+If you convey a covered work, you waive any legal power to forbid circumvention of technological measures to the extent such circumvention is effected by exercising rights under this License with respect to the covered work, and you disclaim any intention to limit operation or modification of the work as a means of enforcing, against the work's users, your or third parties' legal rights to forbid circumvention of technological measures.
+
+### Distribution
+
+When you convey a covered work, you grant recipients all the rights that you have. You are responsible for enforcing compliance by third parties with this License.
+
+If you convey a modified version of the program, your work based on the Program must carry prominent notices stating that you have modified it, and giving a relevant date.
+
+If you convey a covered work containing all or a portion of the Program, and you have access to the corresponding Corresponding Source of the work, including its source code, you must also give the recipients of the covered work access to the Corresponding Source on the same means through which you distribute the covered work, at no further charge, for a period of at least three years. You must make a copy of the Corresponding Source available to anyone who receives object code.
+
+### Warranty Disclaimer
+
+THERE IS NO WARRANTY FOR THE PROGRAM, TO THE EXTENT PERMITTED BY APPLICABLE LAW. EXCEPT WHEN OTHERWISE STATED IN WRITING THE COPYRIGHT HOLDERS AND/OR OTHER PARTIES PROVIDE THE PROGRAM "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE PROGRAM IS WITH YOU. SHOULD THE PROGRAM PROVE DEFECTIVE, YOU ASSUME THE COST OF ALL NECESSARY SERVICING, REPAIR OR CORRECTION.
+
+### Limitation of Liability
+
+IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING WILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MODIFIES AND/OR CONVEYS THE PROGRAM AS PERMITTED ABOVE, BE LIABLE TO YOU FOR DAMAGES, INCLUDING ANY GENERAL, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE USE OR INABILITY TO USE THE PROGRAM (INCLUDING BUT NOT LIMITED TO LOSS OF DATA OR DATA BEING RENDERED INACCURATE OR LOSSES SUSTAINED BY YOU OR THIRD PARTIES OR A FAILURE OF THE PROGRAM TO OPERATE WITH ANY OTHER PROGRAMS), EVEN IF SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+
+---
+
+## Third-Party Attribution
+
+The tibok Plugin System may use the following dependencies, which are also available under compatible open-source licenses:
+
+### swift-markdown (Apple Inc.)
+**License**: Apache License 2.0 with Runtime Library Exception
+**Repository**: https://github.com/apple/swift-markdown
+**Copyright**: Copyright (c) Apple Inc.
+
+### Highlightr
+**License**: MIT License
+**Repository**: https://github.com/raspu/Highlightr
+**Copyright**: Copyright (c) 2016 Juan Pablo Illanes <jpillaness+highlightr@gmail.com>
+
+### Highlight.js
+**License**: BSD 3-Clause License
+**Repository**: https://github.com/highlightjs/highlight.js
+**Copyright**: Copyright (c) 2006, Ivan Sagalaev. All rights reserved.
+
+---
+
+For the full text of the GNU General Public License v3.0, visit: https://www.gnu.org/licenses/gpl-3.0.en.html
