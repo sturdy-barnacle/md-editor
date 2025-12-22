@@ -65,6 +65,8 @@
 	<string>/ay6S8AYXl9889RX+1pojK/3lNKgerQ7bFP5gSLUh9E=</string>
 	<key>SUScheduledCheckInterval</key>
 	<integer>86400</integer>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.productivity</string>
 	<key>UTImportedTypeDeclarations</key>
 	<array>
 		<dict>
