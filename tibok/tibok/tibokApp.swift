@@ -136,12 +136,18 @@ struct tibokApp: App {
             // Edit menu
             CommandMenu("Edit") {
                 Button("Undo") {
-                    NSApp.sendAction(Selector("undo:"), to: nil, from: nil)
+                    // undo: is an Objective-C method from NSResponder that NSTextView inherits.
+                    // String-based selector is required; the method exists at runtime.
+                    let undoSelector = Selector("undo:")
+                    NSApp.sendAction(undoSelector, to: nil, from: nil)
                 }
                 .keyboardShortcut("z", modifiers: .command)
 
                 Button("Redo") {
-                    NSApp.sendAction(Selector("redo:"), to: nil, from: nil)
+                    // redo: is an Objective-C method from NSResponder that NSTextView inherits.
+                    // String-based selector is required; the method exists at runtime.
+                    let redoSelector = Selector("redo:")
+                    NSApp.sendAction(redoSelector, to: nil, from: nil)
                 }
                 .keyboardShortcut("z", modifiers: [.command, .shift])
 
