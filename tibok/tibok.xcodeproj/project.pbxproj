@@ -482,7 +482,7 @@
 		38ACBABC938BEB8C682FFC1B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = icon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = "tibok/Resources/tibok-dmg.entitlements";
 				COMBINE_HIDPI_IMAGES = YES;
 				EXECUTABLE_NAME = tibok;
@@ -659,7 +659,7 @@
 		BE76696B2F7A0C43F97C0916 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = icon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = "tibok/Resources/tibok-dmg.entitlements";
 				COMBINE_HIDPI_IMAGES = YES;
 				EXECUTABLE_NAME = tibok;

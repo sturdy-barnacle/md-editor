@@ -36,13 +36,15 @@ targets:
       - path: tibok/Resources/katex
         type: folder
     infoPlist:
-      path: tibok/Resources/Info.plist
+      path: tibok/Resources/Info-AppStore.plist
       useBaseLocalizationAsDefault: true
+      properties:
+        LSApplicationCategoryType: public.app-category.productivity
     entitlements:
       path: tibok/Resources/tibok-dmg.entitlements
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: app.tibok.editor
-      ASSETCATALOG_COMPILER_APPICON_NAME: icon
+      ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
       EXECUTABLE_NAME: tibok
     dependencies:
       - package: swift-markdown
