@@ -292,12 +292,75 @@ class GitService: ObservableObject {
 
     // MARK: - Commit Operations
 
+    /// Check if commit signing is enabled in git config
+    private func isCommitSigningEnabled(in repoURL: URL) -> Bool {
+        let result = runGitCommand(["config", "--get", "commit.gpgsign"], in: repoURL)
+        guard let output = result.output?.trimmingCharacters(in: .whitespacesAndNewlines) else {
+            return false
+        }
+        return output.lowercased() == "true"
+    }
+
+    /// Get the GPG format (openpgp or ssh)
+    private func getGPGFormat(in repoURL: URL) -> String {
+        let result = runGitCommand(["config", "--get", "gpg.format"], in: repoURL)
+        return result.output?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "openpgp"
+    }
+
     /// Commit staged changes with message
     func commit(message: String, in repoURL: URL) -> (success: Bool, error: String?) {
-        let result = runGitCommand(["commit", "-m", message], in: repoURL)
+        var args = ["commit", "-m", message]
+
+        // Check if signing is enabled in git config
+        let shouldSign = isCommitSigningEnabled(in: repoURL)
+        if shouldSign {
+            args.insert("-S", at: 1)  // Add -S flag for signing
+        }
+
+        // First attempt: try with signing if enabled
+        let result = runGitCommand(args, in: repoURL)
+
         if result.exitCode == 0 {
             return (true, nil)
+        } else if shouldSign {
+            // Signing failed - attempt fallback to unsigned commit
+            let gpgFormat = getGPGFormat(in: repoURL)
+            let signingError = result.error ?? "Unknown signing error"
+
+            // Check if it's a signing-related error
+            let isSigningError = signingError.lowercased().contains("gpg") ||
+                                signingError.lowercased().contains("signing") ||
+                                signingError.lowercased().contains("secret key") ||
+                                signingError.lowercased().contains("ssh")
+
+            if isSigningError {
+                // Return detailed error about signing failure with fallback option
+                let errorMessage = """
+                Commit signing failed (\(gpgFormat == "ssh" ? "SSH" : "GPG")): \(signingError)
+
+                To fix this issue:
+                • For GPG: Verify your signing key is configured (git config user.signingkey)
+                • For SSH: Ensure your SSH key is available and allowed for signing
+                • Or disable signing temporarily: git config --local commit.gpgsign false
+
+                Attempting unsigned commit as fallback...
+                """
+
+                // Try again without signing as fallback
+                let fallbackArgs = ["commit", "-m", message, "--no-gpg-sign"]
+                let fallbackResult = runGitCommand(fallbackArgs, in: repoURL)
+
+                if fallbackResult.exitCode == 0 {
+                    return (true, errorMessage + "\n\n✓ Unsigned commit succeeded.")
+                } else {
+                    return (false, errorMessage + "\n\n✗ Unsigned commit also failed: \(fallbackResult.error ?? "Unknown error")")
+                }
+            } else {
+                // Not a signing error, return original error
+                return (false, result.error ?? "Commit failed")
+            }
         } else {
+            // Signing not enabled and commit failed
             return (false, result.error ?? "Commit failed")
         }
     }

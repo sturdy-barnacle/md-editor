@@ -68,6 +68,8 @@ struct FrontmatterInspectorView: View {
     @State private var categories: String = ""
     @State private var customFields: [CustomField] = []
     @State private var isUpdating: Bool = false  // Prevent reload loop
+    @State private var showConversionAlert: Bool = false
+    @State private var pendingConversion: (from: SSGType, to: SSGType)?
 
     struct CustomField: Identifiable {
         let id = UUID()
@@ -144,6 +146,27 @@ struct FrontmatterInspectorView: View {
 
                     Spacer()
                 } else {
+                    // SSG Type picker - always visible when frontmatter exists
+                    VStack(spacing: 8) {
+                        Text("Export Type")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+
+                        Picker("Export Type", selection: $selectedSSG) {
+                            ForEach(availableSSGTypes, id: \.self) { ssg in
+                                Text(ssg.rawValue).tag(ssg)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        .labelsHidden()
+                        .onChange(of: selectedSSG) { oldValue, newValue in
+                            if oldValue != newValue {
+                                convertFrontmatterType(from: oldValue, to: newValue)
+                            }
+                        }
+                    }
+                    .padding(.bottom, 8)
                     // Frontmatter editor
                     VStack(alignment: .leading, spacing: 16) {
                         // Status section - Draft first
@@ -264,8 +287,8 @@ struct FrontmatterInspectorView: View {
                             .padding(.vertical, 4)
                         }
 
-                        // WordPress Publishing section (only shows if plugin is enabled)
-                        if PluginManager.shared.isLoaded("com.tibok.wordpress-export") {
+                        // WordPress Publishing section (only shows if WordPress is selected and plugin is enabled)
+                        if selectedSSG == .wordpress && PluginManager.shared.isLoaded("com.tibok.wordpress-export") {
                             GroupBox {
                                 VStack(alignment: .leading, spacing: 8) {
                                     HStack {
@@ -406,6 +429,25 @@ struct FrontmatterInspectorView: View {
                 loadFrontmatter()
             }
         }
+        .alert("Convert Frontmatter Type?", isPresented: $showConversionAlert) {
+            Button("Cancel", role: .cancel) {
+                // Revert to previous selection
+                if let conversion = pendingConversion {
+                    selectedSSG = conversion.from
+                }
+                pendingConversion = nil
+            }
+            Button("Convert") {
+                if let conversion = pendingConversion {
+                    performConversion(from: conversion.from, to: conversion.to)
+                }
+                pendingConversion = nil
+            }
+        } message: {
+            if let conversion = pendingConversion {
+                Text(conversionWarningMessage(from: conversion.from, to: conversion.to))
+            }
+        }
     }
 
     // MARK: - Computed Properties
@@ -484,6 +526,9 @@ struct FrontmatterInspectorView: View {
                 guard !standardKeys.contains(key) else { return nil }
                 return CustomField(key: key, value: value.stringValue ?? "")
             }
+
+            // Detect SSG type from frontmatter characteristics
+            detectSSGType(from: fm)
         } else {
             // Reset to defaults
             title = ""
@@ -497,6 +542,27 @@ struct FrontmatterInspectorView: View {
             tags = ""
             categories = ""
             customFields = []
+        }
+    }
+
+    private func detectSSGType(from fm: Frontmatter) {
+        // Detection logic:
+        // 1. TOML format -> Hugo
+        // 2. Has layout field -> likely Jekyll or Hugo (default to Jekyll)
+        // 3. No layout but has description -> possibly WordPress
+        // 4. Default to Jekyll (most common)
+
+        if fm.format == .toml {
+            selectedSSG = .hugo
+        } else if fm.layout != nil {
+            // Both Jekyll and Hugo use layout, default to Jekyll
+            selectedSSG = .jekyll
+        } else if fm.layout == nil && fm.description != nil && PluginManager.shared.isLoaded("com.tibok.wordpress-export") {
+            // No layout but has description - possibly WordPress
+            selectedSSG = .wordpress
+        } else {
+            // Default to Jekyll
+            selectedSSG = .jekyll
         }
     }
 
@@ -589,5 +655,122 @@ struct FrontmatterInspectorView: View {
     private func removeFrontmatter() {
         let (_, body) = Frontmatter.parse(from: appState.currentDocument.content)
         appState.updateActiveDocumentContent(body)
+    }
+
+    private func convertFrontmatterType(from oldType: SSGType, to newType: SSGType) {
+        // Show warning dialog
+        pendingConversion = (from: oldType, to: newType)
+        showConversionAlert = true
+    }
+
+    private func conversionWarningMessage(from oldType: SSGType, to newType: SSGType) -> String {
+        var message = "Converting from \(oldType.rawValue) to \(newType.rawValue) will transform the frontmatter.\n\n"
+
+        // Specific warnings based on conversion type
+        switch (oldType, newType) {
+        case (.jekyll, .hugo), (.hugo, .jekyll):
+            message += "• Layout field will be preserved\n"
+            message += "• All standard fields will be kept\n"
+            if newType == .hugo {
+                message += "• Format will remain YAML (use settings to change Hugo default to TOML)"
+            }
+
+        case (.jekyll, .wordpress), (.hugo, .wordpress):
+            message += "⚠️ Layout field will be removed (not used in WordPress)\n"
+            message += "• Description field will be used for post excerpt\n"
+            message += "• Categories and tags will be used for WordPress taxonomy"
+
+        case (.wordpress, .jekyll), (.wordpress, .hugo):
+            message += "• Description will be preserved\n"
+            message += "• Default layout will be added for \(newType.rawValue)\n"
+            message += "• All other fields will be kept"
+
+        default:
+            message += "Common fields (title, date, author, tags, categories) will be preserved."
+        }
+
+        return message
+    }
+
+    private func performConversion(from oldType: SSGType, to newType: SSGType) {
+        guard hasFrontmatter, var fm = frontmatter else { return }
+
+        // Transform format-specific fields
+        switch (oldType, newType) {
+        case (.jekyll, .hugo):
+            // Jekyll to Hugo: mostly compatible, keep layout
+            // Hugo prefers YAML by default unless settings say otherwise
+            if hugoDefaultFormat == "toml" {
+                fm.format = .toml
+                selectedFormat = .toml
+            }
+            // Add Hugo-specific defaults if not present
+            if fm.layout == nil && !hugoLayout.isEmpty {
+                fm.layout = hugoLayout
+            }
+
+        case (.hugo, .jekyll):
+            // Hugo to Jekyll: convert TOML to YAML if needed
+            fm.format = .yaml
+            selectedFormat = .yaml
+            // Add Jekyll-specific defaults if not present
+            if fm.layout == nil && !jekyllLayout.isEmpty {
+                fm.layout = jekyllLayout
+            }
+
+        case (.jekyll, .wordpress), (.hugo, .wordpress):
+            // To WordPress: remove layout field, ensure description exists
+            fm.layout = nil
+            layout = ""
+            if fm.description == nil && !wordpressDescription.isEmpty {
+                fm.description = wordpressDescription
+                description = wordpressDescription
+            }
+            // WordPress always uses YAML
+            fm.format = .yaml
+            selectedFormat = .yaml
+
+        case (.wordpress, .jekyll):
+            // WordPress to Jekyll: add layout field
+            if !jekyllLayout.isEmpty {
+                fm.layout = jekyllLayout
+                layout = jekyllLayout
+            }
+
+        case (.wordpress, .hugo):
+            // WordPress to Hugo: add layout field
+            if !hugoLayout.isEmpty {
+                fm.layout = hugoLayout
+                layout = hugoLayout
+            }
+            // Check if Hugo default is TOML
+            if hugoDefaultFormat == "toml" {
+                fm.format = .toml
+                selectedFormat = .toml
+            }
+
+        default:
+            break
+        }
+
+        // Apply the converted frontmatter to document
+        let newContent = fm.apply(to: appState.currentDocument.content)
+        if newContent != appState.currentDocument.content {
+            isUpdating = true
+            appState.updateActiveDocumentContent(newContent)
+
+            // Invalidate cache
+            if let fileURL = appState.currentDocument.fileURL {
+                FrontmatterCacheService.shared.invalidate(url: fileURL)
+            }
+
+            // Reload the frontmatter to update UI
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                loadFrontmatter()
+                isUpdating = false
+            }
+        }
+
+        frontmatter = fm
     }
 }
