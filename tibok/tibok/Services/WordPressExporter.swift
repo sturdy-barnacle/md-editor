@@ -669,6 +669,7 @@ final class WordPressExporter {
         if let wpError = error as? WordPressError {
             message = wpError.errorDescription ?? "Unknown WordPress error"
         } else if let nsError = error as? NSError {
+            // Cast to NSError for detailed logging (domain, code)
             // Use localized description from NSError which includes our custom messages
             message = nsError.localizedDescription
             LogService.shared.error("NSError - domain: \(nsError.domain), code: \(nsError.code)")

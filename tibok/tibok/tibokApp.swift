@@ -136,11 +136,17 @@ struct tibokApp: App {
             // Edit menu
             CommandMenu("Edit") {
                 Button("Undo") {
+                    // undo: is an Objective-C method from NSResponder that NSTextView inherits
+                    // String-based selector is required because Swift's type system doesn't expose these methods
+                    // The compiler warning can be ignored - the method exists and is called correctly through responder chain
                     NSApp.sendAction(Selector("undo:"), to: nil, from: nil)
                 }
                 .keyboardShortcut("z", modifiers: .command)
 
                 Button("Redo") {
+                    // redo: is an Objective-C method from NSResponder that NSTextView inherits
+                    // String-based selector is required because Swift's type system doesn't expose these methods
+                    // The compiler warning can be ignored - the method exists and is called correctly through responder chain
                     NSApp.sendAction(Selector("redo:"), to: nil, from: nil)
                 }
                 .keyboardShortcut("z", modifiers: [.command, .shift])
