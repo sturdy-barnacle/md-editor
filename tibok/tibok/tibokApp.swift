@@ -437,7 +437,6 @@ struct tibokApp: App {
     /// Note: undo: is an Objective-C method from NSResponder that NSTextView inherits.
     /// We use NSApplication.sendAction to invoke it through the responder chain.
     private func performUndoAction() {
-        _ = NSApp.target(forAction: NSSelectorFromString("undo:"), withSender: nil)
         NSApp.sendAction(NSSelectorFromString("undo:"), to: nil, from: nil)
     }
 
@@ -445,7 +444,6 @@ struct tibokApp: App {
     /// Note: redo: is an Objective-C method from NSResponder that NSTextView inherits.
     /// We use NSApplication.sendAction to invoke it through the responder chain.
     private func performRedoAction() {
-        _ = NSApp.target(forAction: NSSelectorFromString("redo:"), withSender: nil)
         NSApp.sendAction(NSSelectorFromString("redo:"), to: nil, from: nil)
     }
 }
