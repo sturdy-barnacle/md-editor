@@ -410,7 +410,13 @@ struct FindableTextEditor: NSViewRepresentable {
         }
 
         DispatchQueue.main.async {
+            textView.window?.makeKeyAndOrderFront(nil)
             textView.window?.makeFirstResponder(textView)
+            // Retry responder chain setup with delay
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                textView.window?.makeKey()
+                textView.window?.makeFirstResponder(textView)
+            }
         }
 
         return scrollView
@@ -1424,6 +1430,14 @@ class SlashTextView: NSTextView {
 
     // Characters that can be "skipped over" when closing
     private static let closingChars: Set<String> = [")", "]", "}", "\"", "'", "`", "*", "_", "~"]
+
+    override func mouseDown(with event: NSEvent) {
+        // Ensure window and text view get focus when clicked
+        self.window?.makeKeyAndOrderFront(nil)
+        self.window?.makeKey()
+        self.window?.makeFirstResponder(self)
+        super.mouseDown(with: event)
+    }
 
     override func keyDown(with event: NSEvent) {
         if coordinator?.handleSlashMenuKeyDown(event) == true {

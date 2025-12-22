@@ -14,6 +14,11 @@ struct tibokApp: App {
     @StateObject private var appState = AppState()
     @AppStorage("appearanceMode") private var appearanceMode: String = AppearanceMode.system.rawValue
 
+    init() {
+        // Explicitly register as regular foreground app (not accessory/background app)
+        NSApplication.shared.setActivationPolicy(.regular)
+    }
+
     private var windowTitle: String {
         // Empty state - show tagline
         if appState.currentDocument.isEmpty {
@@ -42,6 +47,13 @@ struct tibokApp: App {
                 .onAppear {
                     applyAppearance()
                     initializePlugins()
+                    // Ensure app window gets focus when launched
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        NSApplication.shared.activate(ignoringOtherApps: true)
+                        if let window = NSApplication.shared.mainWindow {
+                            window.makeKeyAndOrderFront(nil)
+                        }
+                    }
                 }
                 .onChange(of: appearanceMode) { _, _ in
                     applyAppearance()

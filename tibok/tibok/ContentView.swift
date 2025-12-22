@@ -93,6 +93,25 @@ struct ContentView: View {
         }
         .onAppear {
             registerCommands()
+            // Aggressively activate the app and make window key for keyboard input
+            NSApplication.shared.setActivationPolicy(.regular)
+            NSApplication.shared.activate(ignoringOtherApps: true)
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                if let window = NSApplication.shared.windows.first {
+                    window.makeKeyAndOrderFront(nil)
+                    window.makeKey()
+                }
+            }
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                if let window = NSApplication.shared.windows.first {
+                    window.makeKey()
+                    if let editor = window.firstResponder as? NSTextView {
+                        window.makeFirstResponder(editor)
+                    }
+                }
+            }
         }
         .sheet(isPresented: $showCommandPalette) {
             CommandPaletteSheet(isPresented: $showCommandPalette)

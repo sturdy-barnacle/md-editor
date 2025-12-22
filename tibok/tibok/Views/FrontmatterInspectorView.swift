@@ -503,7 +503,7 @@ struct FrontmatterInspectorView: View {
 
     // MARK: - Actions
 
-    private func loadFrontmatter() {
+    private func loadFrontmatter(autoDetectType: Bool = true) {
         let (parsed, _) = Frontmatter.parse(from: appState.currentDocument.content)
         frontmatter = parsed
         hasFrontmatter = parsed != nil
@@ -527,8 +527,10 @@ struct FrontmatterInspectorView: View {
                 return CustomField(key: key, value: value.stringValue ?? "")
             }
 
-            // Detect SSG type from frontmatter characteristics
-            detectSSGType(from: fm)
+            // Auto-detect SSG type from frontmatter characteristics (unless explicitly disabled)
+            if autoDetectType {
+                detectSSGType(from: fm)
+            }
         } else {
             // Reset to defaults
             title = ""
@@ -764,9 +766,9 @@ struct FrontmatterInspectorView: View {
                 FrontmatterCacheService.shared.invalidate(url: fileURL)
             }
 
-            // Reload the frontmatter to update UI
+            // Reload the frontmatter to update UI (but don't auto-detect type since user explicitly chose it)
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                loadFrontmatter()
+                loadFrontmatter(autoDetectType: false)
                 isUpdating = false
             }
         }
