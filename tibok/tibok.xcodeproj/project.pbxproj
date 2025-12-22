@@ -3,212 +3,508 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
-		APP001 /* tibokApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC001 /* tibokApp.swift */; };
-		APP002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC002 /* ContentView.swift */; };
-		APP003 /* Document.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC003 /* Document.swift */; };
-		APP004 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC004 /* AppState.swift */; };
-		APP005 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC005 /* SidebarView.swift */; };
-		APP006 /* EditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC006 /* EditorView.swift */; };
-		APP007 /* PreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC007 /* PreviewView.swift */; };
-		APP008 /* StatusBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC008 /* StatusBarView.swift */; };
-		APP009 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC009 /* SettingsView.swift */; };
-		APP010 /* MarkdownRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC010 /* MarkdownRenderer.swift */; };
-		APP011 /* SyntaxHighlighter.swift in Sources */ = {isa = PBXBuildFile; fileRef = SRC012 /* SyntaxHighlighter.swift */; };
+		01AA9649170C98A133B0D494 /* Frontmatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A45AD517F1F9959BE32288AC /* Frontmatter.swift */; };
+		119A1904C05393D6CF418195 /* GitService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03A4A20D734230B360E5F310 /* GitService.swift */; };
+		16F60EDE4CE6E295FFF23067 /* CommandService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0E5DA78D0CA3123C96C226E /* CommandService.swift */; };
+		195D049CF3EA8771778B86D5 /* GitPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04D5D249B1E0D9522DC31B13 /* GitPanelView.swift */; };
+		21564FF2A727AF1048B4CB8B /* FolderScanCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF213603A438FA52BA947AA0 /* FolderScanCache.swift */; };
+		2586D6054E824DEF6A06AC19 /* TabBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 202A124662CA36EAB065C707 /* TabBarView.swift */; };
+		30F73514E938D42C71C42ED8 /* DocumentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4FF6DD99B2BB0D5BAE645EA /* DocumentTests.swift */; };
+		3E5F8924D0A16E963F9FE607 /* FrontmatterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7476D98EC3D07B9D9F1606 /* FrontmatterTests.swift */; };
+		4258B2459F4E21EE3F496410 /* StatusBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88B2DBA7D9522CD29903334F /* StatusBarView.swift */; };
+		42BA38E1A4FEC72CB7C96843 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 094819A03A1970C5BC200C3B /* ContentView.swift */; };
+		42EDB2CEB271EDF7F062092D /* WordPressSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02CB28301D7474A6011A8E50 /* WordPressSettingsView.swift */; };
+		44C9EC0A5F1705F5DDA39DB4 /* Markdown in Frameworks */ = {isa = PBXBuildFile; productRef = 666A9D51EA6E192D8030B9F9 /* Markdown */; };
+		4736DA30C7F3F7DC0E78C8D8 /* Highlightr in Frameworks */ = {isa = PBXBuildFile; productRef = 0751CEB0515C26183F3289D1 /* Highlightr */; };
+		48F435885AFCC6DE8373453D /* ImageUploadService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41241BF1D6E79CF0AF4731CA /* ImageUploadService.swift */; };
+		49506FA17486E98DE2A853B6 /* KeychainHelperTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0156E7722ABE9C05DF1F731 /* KeychainHelperTests.swift */; };
+		4F033F419A3945A746AD085B /* PluginManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06792B6CD6215288F21345CC /* PluginManagerTests.swift */; };
+		522DEAB89E1C5F0339DC4403 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = F69D012BEAC8DF582B383B8F /* AppState.swift */; };
+		5D4AEB8909DF1B656B4A18BD /* PluginManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA184191BD7CF2351917BF09 /* PluginManager.swift */; };
+		619034E8675E067E32947C19 /* FileOperationsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A30F2CF9641BCB1CF72756B1 /* FileOperationsService.swift */; };
+		67C290F22CECCED3E496EEA4 /* PluginDiscovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18436BB6F284F81589514AD5 /* PluginDiscovery.swift */; };
+		6B0165A1CA6305A63073E566 /* FrontmatterCacheService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 257E04A65FE2964255AFD71A /* FrontmatterCacheService.swift */; };
+		6BFF2A87B0096DE223EA3755 /* TibokPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = F81F612F41D0E63505032CCA /* TibokPlugin.swift */; };
+		6E73BB1381649D2DA760564B /* WordPressExportPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA9F5C74D8D8BCE8F4833EE8 /* WordPressExportPlugin.swift */; };
+		6F7ACCFE58FD92A9EB3A5B8A /* WordPressExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF44F644D4838B28FE57CE3C /* WordPressExporter.swift */; };
+		802AE4751B1198C8386145B2 /* MarkdownRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96E6E1A7880A8366FCCB091D /* MarkdownRenderer.swift */; };
+		810235FC23A5975774ECBE68 /* WebhookSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCD5C5034F2BC8E6E35DA54E /* WebhookSettingsView.swift */; };
+		818784F45D6341054866DCF3 /* ExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0372580A357BD6A52AF35D12 /* ExportService.swift */; };
+		8392AA2E1D6582F2A41870FD /* WordPressModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79A01C4222D926E85ED44F95 /* WordPressModels.swift */; };
+		8B60E58475F31794D345CB92 /* DynamicPluginLoaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3B48441C023887F963F0B24 /* DynamicPluginLoaderTests.swift */; };
+		90495C46DE0B0A9FA4C83AF9 /* WebhookService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B474561C00E71F6745A5E2EC /* WebhookService.swift */; };
+		91E74C661594AB6B0BDF633B /* FrontmatterInspectorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 097446BFCA2A23C41B595D1D /* FrontmatterInspectorView.swift */; };
+		964ECD1CE6F64E0B80D6EFDF /* Document.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32B40D864EBAC48D07EE4F8F /* Document.swift */; };
+		989D1E0A0F8AB63E24776431 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0971E59469B05C2C91E6F602 /* SidebarView.swift */; };
+		A0C1A349130E3823E43D6E6F /* Markdown in Frameworks */ = {isa = PBXBuildFile; productRef = B6288F92F575FED62ABC517F /* Markdown */; };
+		A21A4C545D2C072E447CC36D /* GitServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4546A80E332B083FB060FBB7 /* GitServiceTests.swift */; };
+		A2FF55881873ECB3DC905BE0 /* WebhookConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B1AA243704EDDCFB8D0FD6E /* WebhookConfig.swift */; };
+		A58038DE8BF451C6DDF57759 /* PluginSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E299168D4FA7A93C215ADDA5 /* PluginSettingsView.swift */; };
+		AB6B6CF4B2B5658FBEDC30E0 /* SyntaxHighlighter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F847E52B160ADBAF688C0EF /* SyntaxHighlighter.swift */; };
+		AD0D39C5F2CB843172B2FA3E /* PreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB59E47AD0065CA436508F9B /* PreviewView.swift */; };
+		B274A9375E2968F34809AF22 /* EditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2FD193BFC908EAE01AC7309 /* EditorView.swift */; };
+		B484D880C67F87186B1A3434 /* LogService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9C91904AB2D98448618E6A0 /* LogService.swift */; };
+		B4863E8D519A805BDCDD2950 /* PluginLoadingError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E1B4A6ECE718FF5048DB9CD /* PluginLoadingError.swift */; };
+		B8A4AF9C33BE8D0F23CC04F0 /* WorkspaceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98EB81A7AE13FB33CB6E0316 /* WorkspaceService.swift */; };
+		BCC486C8BC54E924EA4EA846 /* SlashCommandRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76BB744E67609F3D510C4CDC /* SlashCommandRegistry.swift */; };
+		BD6FBFF24EED4BF58ED1B502 /* PluginManifest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C7459518357C61AA685A141 /* PluginManifest.swift */; };
+		C071307DBE45264495391C4B /* PluginInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2C55F2B525AC58C26423EBB /* PluginInstaller.swift */; };
+		C111723A48C278B80C849A4F /* Highlightr in Frameworks */ = {isa = PBXBuildFile; productRef = FB2CC699B91638269396375D /* Highlightr */; };
+		C73B9D8D04909629F936EC27 /* CoreSlashCommandsPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39E1A0E9DA203891C0FEDCF1 /* CoreSlashCommandsPlugin.swift */; };
+		CB6CC7095EB6DB9F9A2407BF /* MarkdownRendererTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34EF47F543AF2E6149641D57 /* MarkdownRendererTests.swift */; };
+		D02890E5805F258FDACD0DEE /* ServiceLayerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4D6B46740BE8D48B0AE4D44 /* ServiceLayerTests.swift */; };
+		D1274B2CBFBAB2316BCB7809 /* WordPressTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F012FDB1A5BB64EA85463925 /* WordPressTests.swift */; };
+		D4089D15A268F4762C5929AC /* FrontmatterPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F7CCD30D2519A67B2277601 /* FrontmatterPlugin.swift */; };
+		D4A679350CFC9256ABC71C23 /* KeyboardShortcutsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0858B62C5673C0F28C742492 /* KeyboardShortcutsTests.swift */; };
+		D952EAEE0FD5A9281A59826B /* DocumentManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85EE24A649BD5C78AB3264E8 /* DocumentManager.swift */; };
+		DBDDCE5AD045625C90EA6E17 /* tibokApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8702A62F19C796F171937927 /* tibokApp.swift */; };
+		DDCA4BFC2B5E2400E722098F /* KeychainHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DB01CD9B5D9989273BB00CE /* KeychainHelper.swift */; };
+		DF22E3D1605211AEE59F2C62 /* PluginContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = F598365FF18EA38A4F8F20C7 /* PluginContext.swift */; };
+		E331CEE20BD394E67178B98E /* WebhookServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E05513EFFAD45961E57663C /* WebhookServiceTests.swift */; };
+		E3E681CBCE766A158C936141 /* DynamicPluginLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFE291F9E04988BF91CCEDD5 /* DynamicPluginLoader.swift */; };
+		E500C1C45C0FFFF7B598B877 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01C4E9AE9B11934ADF3EECDF /* SettingsView.swift */; };
+		E9C43AA5E1F80A20C575D404 /* FolderScanCacheTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC14559B2BB3A58BDF5546CA /* FolderScanCacheTests.swift */; };
+		EAF5AD81F0C4684CB2A06AFF /* PluginStateManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A46F7DB71EFAD51E6F68887F /* PluginStateManager.swift */; };
+		F0F86904BEAF06BD1C727B20 /* UIStateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68A522514ED9A6050DF7AB59 /* UIStateService.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		218CE9A74DAF5B3BC2301245 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E00E83CF4A9AC309246E8E0B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 2BACD867A8B2C9D0CA47A617;
+			remoteInfo = tibok;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
-		PRD001 /* tibok.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = tibok.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		RES001 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		RES002 /* tibok.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = tibok.entitlements; sourceTree = "<group>"; };
-		SRC001 /* tibokApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = tibokApp.swift; sourceTree = "<group>"; };
-		SRC002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-		SRC003 /* Document.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Document.swift; sourceTree = "<group>"; };
-		SRC004 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
-		SRC005 /* SidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
-		SRC006 /* EditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorView.swift; sourceTree = "<group>"; };
-		SRC007 /* PreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewView.swift; sourceTree = "<group>"; };
-		SRC008 /* StatusBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBarView.swift; sourceTree = "<group>"; };
-		SRC009 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
-		SRC010 /* MarkdownRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownRenderer.swift; sourceTree = "<group>"; };
-		SRC012 /* SyntaxHighlighter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyntaxHighlighter.swift; sourceTree = "<group>"; };
+		01C4E9AE9B11934ADF3EECDF /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		02CB28301D7474A6011A8E50 /* WordPressSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordPressSettingsView.swift; sourceTree = "<group>"; };
+		0372580A357BD6A52AF35D12 /* ExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportService.swift; sourceTree = "<group>"; };
+		03A4A20D734230B360E5F310 /* GitService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitService.swift; sourceTree = "<group>"; };
+		04D5D249B1E0D9522DC31B13 /* GitPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitPanelView.swift; sourceTree = "<group>"; };
+		06792B6CD6215288F21345CC /* PluginManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginManagerTests.swift; sourceTree = "<group>"; };
+		0858B62C5673C0F28C742492 /* KeyboardShortcutsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardShortcutsTests.swift; sourceTree = "<group>"; };
+		094819A03A1970C5BC200C3B /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		0971E59469B05C2C91E6F602 /* SidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
+		097446BFCA2A23C41B595D1D /* FrontmatterInspectorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrontmatterInspectorView.swift; sourceTree = "<group>"; };
+		0E1B4A6ECE718FF5048DB9CD /* PluginLoadingError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginLoadingError.swift; sourceTree = "<group>"; };
+		0F7CCD30D2519A67B2277601 /* FrontmatterPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrontmatterPlugin.swift; sourceTree = "<group>"; };
+		18436BB6F284F81589514AD5 /* PluginDiscovery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginDiscovery.swift; sourceTree = "<group>"; };
+		202A124662CA36EAB065C707 /* TabBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabBarView.swift; sourceTree = "<group>"; };
+		257E04A65FE2964255AFD71A /* FrontmatterCacheService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrontmatterCacheService.swift; sourceTree = "<group>"; };
+		2B1AA243704EDDCFB8D0FD6E /* WebhookConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebhookConfig.swift; sourceTree = "<group>"; };
+		318943FC0A2CA8C38CCFA82F /* tibokTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = tibokTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		32B40D864EBAC48D07EE4F8F /* Document.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Document.swift; sourceTree = "<group>"; };
+		34EF47F543AF2E6149641D57 /* MarkdownRendererTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownRendererTests.swift; sourceTree = "<group>"; };
+		39E1A0E9DA203891C0FEDCF1 /* CoreSlashCommandsPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreSlashCommandsPlugin.swift; sourceTree = "<group>"; };
+		3C7459518357C61AA685A141 /* PluginManifest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginManifest.swift; sourceTree = "<group>"; };
+		3DB01CD9B5D9989273BB00CE /* KeychainHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainHelper.swift; sourceTree = "<group>"; };
+		3F847E52B160ADBAF688C0EF /* SyntaxHighlighter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyntaxHighlighter.swift; sourceTree = "<group>"; };
+		41241BF1D6E79CF0AF4731CA /* ImageUploadService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageUploadService.swift; sourceTree = "<group>"; };
+		4546A80E332B083FB060FBB7 /* GitServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitServiceTests.swift; sourceTree = "<group>"; };
+		5E05513EFFAD45961E57663C /* WebhookServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebhookServiceTests.swift; sourceTree = "<group>"; };
+		68A522514ED9A6050DF7AB59 /* UIStateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIStateService.swift; sourceTree = "<group>"; };
+		76BB744E67609F3D510C4CDC /* SlashCommandRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlashCommandRegistry.swift; sourceTree = "<group>"; };
+		79A01C4222D926E85ED44F95 /* WordPressModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordPressModels.swift; sourceTree = "<group>"; };
+		7C372C97D15D4CF705635CFB /* tibok.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = tibok.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		85EE24A649BD5C78AB3264E8 /* DocumentManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentManager.swift; sourceTree = "<group>"; };
+		8702A62F19C796F171937927 /* tibokApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = tibokApp.swift; sourceTree = "<group>"; };
+		88B2DBA7D9522CD29903334F /* StatusBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBarView.swift; sourceTree = "<group>"; };
+		96E6E1A7880A8366FCCB091D /* MarkdownRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownRenderer.swift; sourceTree = "<group>"; };
+		98EB81A7AE13FB33CB6E0316 /* WorkspaceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceService.swift; sourceTree = "<group>"; };
+		A30F2CF9641BCB1CF72756B1 /* FileOperationsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileOperationsService.swift; sourceTree = "<group>"; };
+		A45AD517F1F9959BE32288AC /* Frontmatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Frontmatter.swift; sourceTree = "<group>"; };
+		A46F7DB71EFAD51E6F68887F /* PluginStateManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginStateManager.swift; sourceTree = "<group>"; };
+		A4FF6DD99B2BB0D5BAE645EA /* DocumentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentTests.swift; sourceTree = "<group>"; };
+		AA9F5C74D8D8BCE8F4833EE8 /* WordPressExportPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordPressExportPlugin.swift; sourceTree = "<group>"; };
+		AB59E47AD0065CA436508F9B /* PreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewView.swift; sourceTree = "<group>"; };
+		AF44F644D4838B28FE57CE3C /* WordPressExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordPressExporter.swift; sourceTree = "<group>"; };
+		B0156E7722ABE9C05DF1F731 /* KeychainHelperTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainHelperTests.swift; sourceTree = "<group>"; };
+		B0E5DA78D0CA3123C96C226E /* CommandService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandService.swift; sourceTree = "<group>"; };
+		B474561C00E71F6745A5E2EC /* WebhookService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebhookService.swift; sourceTree = "<group>"; };
+		B4D6B46740BE8D48B0AE4D44 /* ServiceLayerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceLayerTests.swift; sourceTree = "<group>"; };
+		BA184191BD7CF2351917BF09 /* PluginManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginManager.swift; sourceTree = "<group>"; };
+		CA7476D98EC3D07B9D9F1606 /* FrontmatterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrontmatterTests.swift; sourceTree = "<group>"; };
+		CFE291F9E04988BF91CCEDD5 /* DynamicPluginLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicPluginLoader.swift; sourceTree = "<group>"; };
+		D2FD193BFC908EAE01AC7309 /* EditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorView.swift; sourceTree = "<group>"; };
+		D9C91904AB2D98448618E6A0 /* LogService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogService.swift; sourceTree = "<group>"; };
+		E299168D4FA7A93C215ADDA5 /* PluginSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginSettingsView.swift; sourceTree = "<group>"; };
+		E3B48441C023887F963F0B24 /* DynamicPluginLoaderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicPluginLoaderTests.swift; sourceTree = "<group>"; };
+		F012FDB1A5BB64EA85463925 /* WordPressTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordPressTests.swift; sourceTree = "<group>"; };
+		F2C55F2B525AC58C26423EBB /* PluginInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginInstaller.swift; sourceTree = "<group>"; };
+		F598365FF18EA38A4F8F20C7 /* PluginContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginContext.swift; sourceTree = "<group>"; };
+		F69D012BEAC8DF582B383B8F /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		F81F612F41D0E63505032CCA /* TibokPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TibokPlugin.swift; sourceTree = "<group>"; };
+		FC14559B2BB3A58BDF5546CA /* FolderScanCacheTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderScanCacheTests.swift; sourceTree = "<group>"; };
+		FCD5C5034F2BC8E6E35DA54E /* WebhookSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebhookSettingsView.swift; sourceTree = "<group>"; };
+		FF213603A438FA52BA947AA0 /* FolderScanCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderScanCache.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		FRM001 /* Frameworks */ = {
+		5963A3E78F11570E0414401B /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				44C9EC0A5F1705F5DDA39DB4 /* Markdown in Frameworks */,
+				C111723A48C278B80C849A4F /* Highlightr in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EE669925560891E5D511FA4D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A0C1A349130E3823E43D6E6F /* Markdown in Frameworks */,
+				4736DA30C7F3F7DC0E78C8D8 /* Highlightr in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		GRP001 = {
+		23906A9A1E28EF3606172181 /* Models */ = {
 			isa = PBXGroup;
 			children = (
-				GRP002 /* tibok */,
-				GRP006 /* Products */,
-			);
-			sourceTree = "<group>";
-		};
-		GRP002 /* tibok */ = {
-			isa = PBXGroup;
-			children = (
-				SRC001 /* tibokApp.swift */,
-				SRC002 /* ContentView.swift */,
-				GRP003 /* Models */,
-				GRP004 /* Views */,
-				GRP007 /* Services */,
-				GRP005 /* Resources */,
-			);
-			path = tibok;
-			sourceTree = "<group>";
-		};
-		GRP003 /* Models */ = {
-			isa = PBXGroup;
-			children = (
-				SRC003 /* Document.swift */,
-				SRC004 /* AppState.swift */,
+				F69D012BEAC8DF582B383B8F /* AppState.swift */,
+				32B40D864EBAC48D07EE4F8F /* Document.swift */,
+				A45AD517F1F9959BE32288AC /* Frontmatter.swift */,
+				2B1AA243704EDDCFB8D0FD6E /* WebhookConfig.swift */,
+				79A01C4222D926E85ED44F95 /* WordPressModels.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
 		};
-		GRP004 /* Views */ = {
+		288452FD25244E175FF2F816 /* tibokTests */ = {
 			isa = PBXGroup;
 			children = (
-				SRC005 /* SidebarView.swift */,
-				SRC006 /* EditorView.swift */,
-				SRC007 /* PreviewView.swift */,
-				SRC008 /* StatusBarView.swift */,
-				SRC009 /* SettingsView.swift */,
+				A4FF6DD99B2BB0D5BAE645EA /* DocumentTests.swift */,
+				E3B48441C023887F963F0B24 /* DynamicPluginLoaderTests.swift */,
+				FC14559B2BB3A58BDF5546CA /* FolderScanCacheTests.swift */,
+				CA7476D98EC3D07B9D9F1606 /* FrontmatterTests.swift */,
+				4546A80E332B083FB060FBB7 /* GitServiceTests.swift */,
+				0858B62C5673C0F28C742492 /* KeyboardShortcutsTests.swift */,
+				B0156E7722ABE9C05DF1F731 /* KeychainHelperTests.swift */,
+				34EF47F543AF2E6149641D57 /* MarkdownRendererTests.swift */,
+				06792B6CD6215288F21345CC /* PluginManagerTests.swift */,
+				B4D6B46740BE8D48B0AE4D44 /* ServiceLayerTests.swift */,
+				5E05513EFFAD45961E57663C /* WebhookServiceTests.swift */,
+				F012FDB1A5BB64EA85463925 /* WordPressTests.swift */,
+			);
+			path = tibokTests;
+			sourceTree = "<group>";
+		};
+		349D8CBC23FADDA8D1961AAC /* Helpers */ = {
+			isa = PBXGroup;
+			children = (
+				3DB01CD9B5D9989273BB00CE /* KeychainHelper.swift */,
+			);
+			path = Helpers;
+			sourceTree = "<group>";
+		};
+		594FCC01CFEF4C8A32D169C2 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				D2FD193BFC908EAE01AC7309 /* EditorView.swift */,
+				097446BFCA2A23C41B595D1D /* FrontmatterInspectorView.swift */,
+				04D5D249B1E0D9522DC31B13 /* GitPanelView.swift */,
+				E299168D4FA7A93C215ADDA5 /* PluginSettingsView.swift */,
+				AB59E47AD0065CA436508F9B /* PreviewView.swift */,
+				01C4E9AE9B11934ADF3EECDF /* SettingsView.swift */,
+				0971E59469B05C2C91E6F602 /* SidebarView.swift */,
+				88B2DBA7D9522CD29903334F /* StatusBarView.swift */,
+				202A124662CA36EAB065C707 /* TabBarView.swift */,
+				FCD5C5034F2BC8E6E35DA54E /* WebhookSettingsView.swift */,
+				02CB28301D7474A6011A8E50 /* WordPressSettingsView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
 		};
-		GRP005 /* Resources */ = {
+		94EC3CD32AA3C7DCD0DBD6E8 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				RES001 /* Info.plist */,
-				RES002 /* tibok.entitlements */,
-			);
-			path = Resources;
-			sourceTree = "<group>";
-		};
-		GRP006 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				PRD001 /* tibok.app */,
+				7C372C97D15D4CF705635CFB /* tibok.app */,
+				318943FC0A2CA8C38CCFA82F /* tibokTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		GRP007 /* Services */ = {
+		9511CD693666E8F8EACC5700 /* Services */ = {
 			isa = PBXGroup;
 			children = (
-				SRC010 /* MarkdownRenderer.swift */,
-				SRC012 /* SyntaxHighlighter.swift */,
+				B0E5DA78D0CA3123C96C226E /* CommandService.swift */,
+				85EE24A649BD5C78AB3264E8 /* DocumentManager.swift */,
+				0372580A357BD6A52AF35D12 /* ExportService.swift */,
+				A30F2CF9641BCB1CF72756B1 /* FileOperationsService.swift */,
+				FF213603A438FA52BA947AA0 /* FolderScanCache.swift */,
+				257E04A65FE2964255AFD71A /* FrontmatterCacheService.swift */,
+				03A4A20D734230B360E5F310 /* GitService.swift */,
+				41241BF1D6E79CF0AF4731CA /* ImageUploadService.swift */,
+				D9C91904AB2D98448618E6A0 /* LogService.swift */,
+				96E6E1A7880A8366FCCB091D /* MarkdownRenderer.swift */,
+				F2C55F2B525AC58C26423EBB /* PluginInstaller.swift */,
+				3F847E52B160ADBAF688C0EF /* SyntaxHighlighter.swift */,
+				68A522514ED9A6050DF7AB59 /* UIStateService.swift */,
+				B474561C00E71F6745A5E2EC /* WebhookService.swift */,
+				AF44F644D4838B28FE57CE3C /* WordPressExporter.swift */,
+				98EB81A7AE13FB33CB6E0316 /* WorkspaceService.swift */,
 			);
 			path = Services;
+			sourceTree = "<group>";
+		};
+		C6A228CFBAEBF6F88F19607A /* Builtin */ = {
+			isa = PBXGroup;
+			children = (
+				39E1A0E9DA203891C0FEDCF1 /* CoreSlashCommandsPlugin.swift */,
+				0F7CCD30D2519A67B2277601 /* FrontmatterPlugin.swift */,
+				AA9F5C74D8D8BCE8F4833EE8 /* WordPressExportPlugin.swift */,
+			);
+			path = Builtin;
+			sourceTree = "<group>";
+		};
+		D0B7EE2D9565E09F37D7E3DB /* tibok */ = {
+			isa = PBXGroup;
+			children = (
+				094819A03A1970C5BC200C3B /* ContentView.swift */,
+				8702A62F19C796F171937927 /* tibokApp.swift */,
+				349D8CBC23FADDA8D1961AAC /* Helpers */,
+				23906A9A1E28EF3606172181 /* Models */,
+				EADE2E326047656276251111 /* Plugins */,
+				9511CD693666E8F8EACC5700 /* Services */,
+				594FCC01CFEF4C8A32D169C2 /* Views */,
+			);
+			path = tibok;
+			sourceTree = "<group>";
+		};
+		DBDE6F5DC4DE3692A2C29B5B = {
+			isa = PBXGroup;
+			children = (
+				D0B7EE2D9565E09F37D7E3DB /* tibok */,
+				288452FD25244E175FF2F816 /* tibokTests */,
+				94EC3CD32AA3C7DCD0DBD6E8 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		EADE2E326047656276251111 /* Plugins */ = {
+			isa = PBXGroup;
+			children = (
+				CFE291F9E04988BF91CCEDD5 /* DynamicPluginLoader.swift */,
+				F598365FF18EA38A4F8F20C7 /* PluginContext.swift */,
+				18436BB6F284F81589514AD5 /* PluginDiscovery.swift */,
+				0E1B4A6ECE718FF5048DB9CD /* PluginLoadingError.swift */,
+				BA184191BD7CF2351917BF09 /* PluginManager.swift */,
+				3C7459518357C61AA685A141 /* PluginManifest.swift */,
+				A46F7DB71EFAD51E6F68887F /* PluginStateManager.swift */,
+				76BB744E67609F3D510C4CDC /* SlashCommandRegistry.swift */,
+				F81F612F41D0E63505032CCA /* TibokPlugin.swift */,
+				C6A228CFBAEBF6F88F19607A /* Builtin */,
+			);
+			path = Plugins;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		TGT001 /* tibok */ = {
+		2BACD867A8B2C9D0CA47A617 /* tibok */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = CFG003 /* Build configuration list for PBXNativeTarget "tibok" */;
+			buildConfigurationList = 8D4CA69445890DD012D12F0D /* Build configuration list for PBXNativeTarget "tibok" */;
 			buildPhases = (
-				SRC011 /* Sources */,
-				FRM001 /* Frameworks */,
-				RES003 /* Resources */,
+				7DF0F58276E1C0F8CE5A6B96 /* Sources */,
+				5963A3E78F11570E0414401B /* Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
 			name = tibok;
+			packageProductDependencies = (
+				666A9D51EA6E192D8030B9F9 /* Markdown */,
+				FB2CC699B91638269396375D /* Highlightr */,
+			);
 			productName = tibok;
-			productReference = PRD001 /* tibok.app */;
+			productReference = 7C372C97D15D4CF705635CFB /* tibok.app */;
 			productType = "com.apple.product-type.application";
+		};
+		6176992FA9B7C356B76FE881 /* tibokTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 52782A175F59C1DA32AEE772 /* Build configuration list for PBXNativeTarget "tibokTests" */;
+			buildPhases = (
+				A5376CB9CFC5D944CA216FC4 /* Sources */,
+				EE669925560891E5D511FA4D /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				CC6C8DF88D0A0408CE70BAB9 /* PBXTargetDependency */,
+			);
+			name = tibokTests;
+			packageProductDependencies = (
+				B6288F92F575FED62ABC517F /* Markdown */,
+				0751CEB0515C26183F3289D1 /* Highlightr */,
+			);
+			productName = tibokTests;
+			productReference = 318943FC0A2CA8C38CCFA82F /* tibokTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		PRJ001 /* Project object */ = {
+		E00E83CF4A9AC309246E8E0B /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1500;
-				LastUpgradeCheck = 2600;
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
 				TargetAttributes = {
-					TGT001 = {
-						CreatedOnToolsVersion = 15.0;
+					2BACD867A8B2C9D0CA47A617 = {
+						DevelopmentTeam = F2PFRMGC9V;
+						ProvisioningStyle = Automatic;
+					};
+					6176992FA9B7C356B76FE881 = {
+						DevelopmentTeam = F2PFRMGC9V;
+						ProvisioningStyle = Automatic;
 					};
 				};
 			};
-			buildConfigurationList = CFG001 /* Build configuration list for PBXProject "tibok" */;
+			buildConfigurationList = 1E159E7251E4EE3107EF1591 /* Build configuration list for PBXProject "tibok" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
-				en,
 				Base,
+				en,
 			);
-			mainGroup = GRP001;
-			productRefGroup = GRP006 /* Products */;
+			mainGroup = DBDE6F5DC4DE3692A2C29B5B;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				C2EBDC3020034DB9974D9D70 /* XCRemoteSwiftPackageReference "Highlightr" */,
+				212E4309329B0A2992001F4B /* XCRemoteSwiftPackageReference "swift-markdown" */,
+			);
+			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				TGT001 /* tibok */,
+				2BACD867A8B2C9D0CA47A617 /* tibok */,
+				6176992FA9B7C356B76FE881 /* tibokTests */,
 			);
 		};
 /* End PBXProject section */
 
-/* Begin PBXResourcesBuildPhase section */
-		RES003 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXResourcesBuildPhase section */
-
 /* Begin PBXSourcesBuildPhase section */
-		SRC011 /* Sources */ = {
+		7DF0F58276E1C0F8CE5A6B96 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				APP001 /* tibokApp.swift in Sources */,
-				APP002 /* ContentView.swift in Sources */,
-				APP003 /* Document.swift in Sources */,
-				APP004 /* AppState.swift in Sources */,
-				APP005 /* SidebarView.swift in Sources */,
-				APP006 /* EditorView.swift in Sources */,
-				APP007 /* PreviewView.swift in Sources */,
-				APP008 /* StatusBarView.swift in Sources */,
-				APP009 /* SettingsView.swift in Sources */,
-				APP010 /* MarkdownRenderer.swift in Sources */,
-				APP011 /* SyntaxHighlighter.swift in Sources */,
+				522DEAB89E1C5F0339DC4403 /* AppState.swift in Sources */,
+				16F60EDE4CE6E295FFF23067 /* CommandService.swift in Sources */,
+				42BA38E1A4FEC72CB7C96843 /* ContentView.swift in Sources */,
+				C73B9D8D04909629F936EC27 /* CoreSlashCommandsPlugin.swift in Sources */,
+				964ECD1CE6F64E0B80D6EFDF /* Document.swift in Sources */,
+				D952EAEE0FD5A9281A59826B /* DocumentManager.swift in Sources */,
+				E3E681CBCE766A158C936141 /* DynamicPluginLoader.swift in Sources */,
+				B274A9375E2968F34809AF22 /* EditorView.swift in Sources */,
+				818784F45D6341054866DCF3 /* ExportService.swift in Sources */,
+				619034E8675E067E32947C19 /* FileOperationsService.swift in Sources */,
+				21564FF2A727AF1048B4CB8B /* FolderScanCache.swift in Sources */,
+				01AA9649170C98A133B0D494 /* Frontmatter.swift in Sources */,
+				6B0165A1CA6305A63073E566 /* FrontmatterCacheService.swift in Sources */,
+				91E74C661594AB6B0BDF633B /* FrontmatterInspectorView.swift in Sources */,
+				D4089D15A268F4762C5929AC /* FrontmatterPlugin.swift in Sources */,
+				195D049CF3EA8771778B86D5 /* GitPanelView.swift in Sources */,
+				119A1904C05393D6CF418195 /* GitService.swift in Sources */,
+				48F435885AFCC6DE8373453D /* ImageUploadService.swift in Sources */,
+				DDCA4BFC2B5E2400E722098F /* KeychainHelper.swift in Sources */,
+				B484D880C67F87186B1A3434 /* LogService.swift in Sources */,
+				802AE4751B1198C8386145B2 /* MarkdownRenderer.swift in Sources */,
+				DF22E3D1605211AEE59F2C62 /* PluginContext.swift in Sources */,
+				67C290F22CECCED3E496EEA4 /* PluginDiscovery.swift in Sources */,
+				C071307DBE45264495391C4B /* PluginInstaller.swift in Sources */,
+				B4863E8D519A805BDCDD2950 /* PluginLoadingError.swift in Sources */,
+				5D4AEB8909DF1B656B4A18BD /* PluginManager.swift in Sources */,
+				BD6FBFF24EED4BF58ED1B502 /* PluginManifest.swift in Sources */,
+				A58038DE8BF451C6DDF57759 /* PluginSettingsView.swift in Sources */,
+				EAF5AD81F0C4684CB2A06AFF /* PluginStateManager.swift in Sources */,
+				AD0D39C5F2CB843172B2FA3E /* PreviewView.swift in Sources */,
+				E500C1C45C0FFFF7B598B877 /* SettingsView.swift in Sources */,
+				989D1E0A0F8AB63E24776431 /* SidebarView.swift in Sources */,
+				BCC486C8BC54E924EA4EA846 /* SlashCommandRegistry.swift in Sources */,
+				4258B2459F4E21EE3F496410 /* StatusBarView.swift in Sources */,
+				AB6B6CF4B2B5658FBEDC30E0 /* SyntaxHighlighter.swift in Sources */,
+				2586D6054E824DEF6A06AC19 /* TabBarView.swift in Sources */,
+				6BFF2A87B0096DE223EA3755 /* TibokPlugin.swift in Sources */,
+				F0F86904BEAF06BD1C727B20 /* UIStateService.swift in Sources */,
+				A2FF55881873ECB3DC905BE0 /* WebhookConfig.swift in Sources */,
+				90495C46DE0B0A9FA4C83AF9 /* WebhookService.swift in Sources */,
+				810235FC23A5975774ECBE68 /* WebhookSettingsView.swift in Sources */,
+				6E73BB1381649D2DA760564B /* WordPressExportPlugin.swift in Sources */,
+				6F7ACCFE58FD92A9EB3A5B8A /* WordPressExporter.swift in Sources */,
+				8392AA2E1D6582F2A41870FD /* WordPressModels.swift in Sources */,
+				42EDB2CEB271EDF7F062092D /* WordPressSettingsView.swift in Sources */,
+				B8A4AF9C33BE8D0F23CC04F0 /* WorkspaceService.swift in Sources */,
+				DBDDCE5AD045625C90EA6E17 /* tibokApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A5376CB9CFC5D944CA216FC4 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				30F73514E938D42C71C42ED8 /* DocumentTests.swift in Sources */,
+				8B60E58475F31794D345CB92 /* DynamicPluginLoaderTests.swift in Sources */,
+				E9C43AA5E1F80A20C575D404 /* FolderScanCacheTests.swift in Sources */,
+				3E5F8924D0A16E963F9FE607 /* FrontmatterTests.swift in Sources */,
+				A21A4C545D2C072E447CC36D /* GitServiceTests.swift in Sources */,
+				D4A679350CFC9256ABC71C23 /* KeyboardShortcutsTests.swift in Sources */,
+				49506FA17486E98DE2A853B6 /* KeychainHelperTests.swift in Sources */,
+				CB6CC7095EB6DB9F9A2407BF /* MarkdownRendererTests.swift in Sources */,
+				4F033F419A3945A746AD085B /* PluginManagerTests.swift in Sources */,
+				D02890E5805F258FDACD0DEE /* ServiceLayerTests.swift in Sources */,
+				E331CEE20BD394E67178B98E /* WebhookServiceTests.swift in Sources */,
+				D1274B2CBFBAB2316BCB7809 /* WordPressTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		CC6C8DF88D0A0408CE70BAB9 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 2BACD867A8B2C9D0CA47A617 /* tibok */;
+			targetProxy = 218CE9A74DAF5B3BC2301245 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
-		CFG002 /* Debug */ = {
+		38ACBABC938BEB8C682FFC1B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = icon;
+				CODE_SIGN_ENTITLEMENTS = "tibok/Resources/tibok-dmg.entitlements";
+				COMBINE_HIDPI_IMAGES = YES;
+				EXECUTABLE_NAME = tibok;
+				INFOPLIST_FILE = tibok/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.tibok.editor;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		8C8644FED39405814AF3CD3B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_ENABLE_OBJC_WEAK = YES;
@@ -234,19 +530,79 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = F2PFRMGC9V;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Release;
+		};
+		8F0EF955328CC5F5F35E0C63 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = F2PFRMGC9V;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
-					"DEBUG=1",
 					"$(inherited)",
+					"DEBUG=1",
 				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
@@ -254,163 +610,143 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.9;
 			};
 			name = Debug;
 		};
-		CFG004 /* Release */ = {
+		979F68082ED4E142D9B54778 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
-				CLANG_ANALYZER_NONNULL = YES;
-				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
-				CLANG_ENABLE_MODULES = YES;
-				CLANG_ENABLE_OBJC_ARC = YES;
-				CLANG_ENABLE_OBJC_WEAK = YES;
-				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
-				CLANG_WARN_BOOL_CONVERSION = YES;
-				CLANG_WARN_COMMA = YES;
-				CLANG_WARN_CONSTANT_CONVERSION = YES;
-				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
-				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_EMPTY_BODY = YES;
-				CLANG_WARN_ENUM_CONVERSION = YES;
-				CLANG_WARN_INFINITE_RECURSION = YES;
-				CLANG_WARN_INT_CONVERSION = YES;
-				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
-				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
-				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
-				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
-				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
-				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
-				CLANG_WARN_STRICT_PROTOTYPES = YES;
-				CLANG_WARN_SUSPICIOUS_MOVE = YES;
-				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
-				CLANG_WARN_UNREACHABLE_CODE = YES;
-				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				COPY_PHASE_STRIP = NO;
-				DEAD_CODE_STRIPPING = YES;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				ENABLE_NS_ASSERTIONS = NO;
-				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu17;
-				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
-				GCC_WARN_UNDECLARED_SELECTOR = YES;
-				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				GCC_WARN_UNUSED_FUNCTION = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MTL_ENABLE_DEBUG_INFO = NO;
-				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = app.tibok.editor.Tests;
 				SDKROOT = macosx;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SWIFT_COMPILATION_MODE = wholemodule;
-			};
-			name = Release;
-		};
-		CFG005 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
-				CODE_SIGN_ENTITLEMENTS = tibok/Resources/tibok.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
-				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
-				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = F2PFRMGC9V;
-				ENABLE_HARDENED_RUNTIME = NO;
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = tibok/Resources/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "tibok - simple text editor";
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2025 tibok.app. All rights reserved.";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-				);
-				MARKETING_VERSION = 0.1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = app.tibok.editor;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/tibok.app/Contents/MacOS/tibok";
 			};
 			name = Debug;
 		};
-		CFG006 /* Release */ = {
+		BB5EB6A884096D8FB6A1FD8C /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
-				CODE_SIGN_ENTITLEMENTS = tibok/Resources/tibok.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
+				BUNDLE_LOADER = "$(TEST_HOST)";
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
-				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = F2PFRMGC9V;
-				ENABLE_HARDENED_RUNTIME = NO;
-				GENERATE_INFOPLIST_FILE = NO;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.tibok.editor.Tests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/tibok.app/Contents/MacOS/tibok";
+			};
+			name = Release;
+		};
+		BE76696B2F7A0C43F97C0916 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = icon;
+				CODE_SIGN_ENTITLEMENTS = "tibok/Resources/tibok-dmg.entitlements";
+				COMBINE_HIDPI_IMAGES = YES;
+				EXECUTABLE_NAME = tibok;
 				INFOPLIST_FILE = tibok/Resources/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "tibok - simple text editor";
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2025 tibok.app. All rights reserved.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.1.0;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				PRODUCT_BUNDLE_IDENTIFIER = app.tibok.editor;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
+				SDKROOT = macosx;
 			};
-			name = Release;
+			name = Debug;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		CFG001 /* Build configuration list for PBXProject "tibok" */ = {
+		1E159E7251E4EE3107EF1591 /* Build configuration list for PBXProject "tibok" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				CFG002 /* Debug */,
-				CFG004 /* Release */,
+				8F0EF955328CC5F5F35E0C63 /* Debug */,
+				8C8644FED39405814AF3CD3B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
-		CFG003 /* Build configuration list for PBXNativeTarget "tibok" */ = {
+		52782A175F59C1DA32AEE772 /* Build configuration list for PBXNativeTarget "tibokTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				CFG005 /* Debug */,
-				CFG006 /* Release */,
+				979F68082ED4E142D9B54778 /* Debug */,
+				BB5EB6A884096D8FB6A1FD8C /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
+		};
+		8D4CA69445890DD012D12F0D /* Build configuration list for PBXNativeTarget "tibok" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BE76696B2F7A0C43F97C0916 /* Debug */,
+				38ACBABC938BEB8C682FFC1B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		212E4309329B0A2992001F4B /* XCRemoteSwiftPackageReference "swift-markdown" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-markdown.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.3.0;
+			};
+		};
+		C2EBDC3020034DB9974D9D70 /* XCRemoteSwiftPackageReference "Highlightr" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/raspu/Highlightr.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.1.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		0751CEB0515C26183F3289D1 /* Highlightr */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C2EBDC3020034DB9974D9D70 /* XCRemoteSwiftPackageReference "Highlightr" */;
+			productName = Highlightr;
+		};
+		666A9D51EA6E192D8030B9F9 /* Markdown */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 212E4309329B0A2992001F4B /* XCRemoteSwiftPackageReference "swift-markdown" */;
+			productName = Markdown;
+		};
+		B6288F92F575FED62ABC517F /* Markdown */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 212E4309329B0A2992001F4B /* XCRemoteSwiftPackageReference "swift-markdown" */;
+			productName = Markdown;
+		};
+		FB2CC699B91638269396375D /* Highlightr */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C2EBDC3020034DB9974D9D70 /* XCRemoteSwiftPackageReference "Highlightr" */;
+			productName = Highlightr;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
-	rootObject = PRJ001 /* Project object */;
+	rootObject = E00E83CF4A9AC309246E8E0B /* Project object */;
 }
