@@ -136,18 +136,12 @@ struct tibokApp: App {
             // Edit menu
             CommandMenu("Edit") {
                 Button("Undo") {
-                    // undo: is an Objective-C method from NSResponder that NSTextView inherits.
-                    // String-based selector is required; the method exists at runtime.
-                    let undoSelector = Selector("undo:")
-                    NSApp.sendAction(undoSelector, to: nil, from: nil)
+                    performUndoAction()
                 }
                 .keyboardShortcut("z", modifiers: .command)
 
                 Button("Redo") {
-                    // redo: is an Objective-C method from NSResponder that NSTextView inherits.
-                    // String-based selector is required; the method exists at runtime.
-                    let redoSelector = Selector("redo:")
-                    NSApp.sendAction(redoSelector, to: nil, from: nil)
+                    performRedoAction()
                 }
                 .keyboardShortcut("z", modifiers: [.command, .shift])
 
@@ -435,6 +429,24 @@ struct tibokApp: App {
             object: nil,
             userInfo: ["type": type]
         )
+    }
+
+    // MARK: - Objective-C Responder Chain Actions
+
+    /// Perform undo action via responder chain
+    /// Note: undo: is an Objective-C method from NSResponder that NSTextView inherits.
+    /// We use NSApplication.sendAction to invoke it through the responder chain.
+    private func performUndoAction() {
+        _ = NSApp.target(forAction: NSSelectorFromString("undo:"), withSender: nil)
+        NSApp.sendAction(NSSelectorFromString("undo:"), to: nil, from: nil)
+    }
+
+    /// Perform redo action via responder chain
+    /// Note: redo: is an Objective-C method from NSResponder that NSTextView inherits.
+    /// We use NSApplication.sendAction to invoke it through the responder chain.
+    private func performRedoAction() {
+        _ = NSApp.target(forAction: NSSelectorFromString("redo:"), withSender: nil)
+        NSApp.sendAction(NSSelectorFromString("redo:"), to: nil, from: nil)
     }
 }
 
