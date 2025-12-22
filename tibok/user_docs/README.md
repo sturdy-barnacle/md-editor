@@ -68,4 +68,20 @@ If you can't find an answer in these docs:
 
 ## Version
 
-This documentation covers tibok Beta v0.6-0.7 (features in active development).
+This documentation covers **tibok v1.0.2** - the current stable release.
+
+### Release Notes
+
+**v1.0.2** (2025-12-22) - Bug fixes and security improvements:
+- Fixed keyboard input routing bug
+- Fixed WordPress selection reverting to Jekyll
+- Implemented EdDSA signature verification for secure auto-updates
+- All releases now code-signed and notarized
+
+For detailed changelog, see [CHANGELOG.md](../CHANGELOG.md)
+
+### System Requirements
+
+- **macOS 14.0 (Sonoma)** or later
+- **Apple Silicon (ARM64)** processor
+- **Internet connection** for auto-updates (Sparkle)
