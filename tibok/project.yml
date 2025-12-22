@@ -38,8 +38,6 @@ targets:
     infoPlist:
       path: tibok/Resources/Info-AppStore.plist
       useBaseLocalizationAsDefault: true
-      properties:
-        LSApplicationCategoryType: public.app-category.productivity
     entitlements:
       path: tibok/Resources/tibok-dmg.entitlements
     settings:
