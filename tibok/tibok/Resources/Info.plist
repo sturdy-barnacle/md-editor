@@ -44,13 +44,13 @@
 	<key>CFBundleShortVersionString</key>
 	<string>1.0.2</string>
 	<key>CFBundleVersion</key>
-	<string>1766290519</string>
+	<string>1766419913</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>14.0</string>
 	<key>NSHighResolutionCapable</key>
 	<true/>
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright © 2025 tibok.app (developed by Kristina Quinones). All rights reserved.</string>
+	<string>© 2025 Kristina Quinones. All rights reserved.</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 	<key>NSSupportsAutomaticTermination</key>
@@ -60,7 +60,7 @@
 	<key>SUEnableAutomaticChecks</key>
 	<true/>
 	<key>SUFeedURL</key>
-	<string>https://raw.githubusercontent.com/YOURUSER/tibok/main/appcast.xml</string>
+	<string>https://raw.githubusercontent.com/sturdy-barnacle/md-editor/main/appcast.xml</string>
 	<key>SUPublicEDKey</key>
 	<string>/ay6S8AYXl9889RX+1pojK/3lNKgerQ7bFP5gSLUh9E=</string>
 	<key>SUScheduledCheckInterval</key>
