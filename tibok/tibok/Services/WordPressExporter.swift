@@ -668,16 +668,14 @@ final class WordPressExporter {
         let message: String
         if let wpError = error as? WordPressError {
             message = wpError.errorDescription ?? "Unknown WordPress error"
-        } else if let nsError = error as? NSError {
-            // Cast to NSError for detailed logging (domain, code)
-            // Use localized description from NSError which includes our custom messages
-            message = nsError.localizedDescription
-            LogService.shared.error("NSError - domain: \(nsError.domain), code: \(nsError.code)")
         } else if let decodingError = error as? DecodingError {
             LogService.shared.error(decodingError, context: "WordPress JSON Decoding Error")
             message = "WordPress returned unexpected data format. Check logs at ~/Library/Logs/tibok/tibok.log"
         } else {
-            message = error.localizedDescription
+            // All Error types are NSError in Swift
+            let nsError = error as NSError
+            message = nsError.localizedDescription
+            LogService.shared.error("NSError - domain: \(nsError.domain), code: \(nsError.code)")
         }
 
         LogService.shared.error("Showing error toast: \(message)")

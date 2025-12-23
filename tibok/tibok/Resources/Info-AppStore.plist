@@ -32,7 +32,7 @@
 	<key>CFBundleIconFile</key>
 	<string>icon</string>
 	<key>CFBundleIconName</key>
-	<string>icon</string>
+	<string>AppIcon</string>
 	<key>CFBundleIdentifier</key>
 	<string>app.tibok.editor</string>
 	<key>CFBundleInfoDictionaryVersion</key>
@@ -44,7 +44,9 @@
 	<key>CFBundleShortVersionString</key>
 	<string>1.0.2</string>
 	<key>CFBundleVersion</key>
-	<string>1766419913</string>
+	<string>9</string>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.productivity</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>14.0</string>
 	<key>NSHighResolutionCapable</key>
@@ -57,16 +59,6 @@
 	<true/>
 	<key>NSSupportsSuddenTermination</key>
 	<false/>
-	<key>SUEnableAutomaticChecks</key>
-	<true/>
-	<key>SUFeedURL</key>
-	<string>https://raw.githubusercontent.com/sturdy-barnacle/md-editor/main/appcast.xml</string>
-	<key>SUPublicEDKey</key>
-	<string>/ay6S8AYXl9889RX+1pojK/3lNKgerQ7bFP5gSLUh9E=</string>
-	<key>SUScheduledCheckInterval</key>
-	<integer>86400</integer>
-	<key>LSApplicationCategoryType</key>
-	<string>public.app-category.productivity</string>
 	<key>UTImportedTypeDeclarations</key>
 	<array>
 		<dict>

@@ -2,15 +2,11 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<!-- Hardened Runtime: Enabled with library validation disabled -->
-	<!-- This allows loading external plugins (Swift frameworks from ThirdParty folder) -->
-	<!-- Required for plugin system to function -->
-	<key>com.apple.security.cs.disable-library-validation</key>
+	<key>com.apple.security.app-sandbox</key>
 	<true/>
-
-	<!-- NO APP SANDBOX -->
-	<!-- Absence of com.apple.security.app-sandbox key means NO sandbox -->
-	<!-- This DMG variant has full file system access (within user permissions) -->
-	<!-- This allows external plugin loading from ~/Library/Application Support/tibok/Plugins/ThirdParty/ -->
+	<key>com.apple.security.files.user-selected.read-write</key>
+	<true/>
+	<key>com.apple.security.network.client</key>
+	<true/>
 </dict>
 </plist>
