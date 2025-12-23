@@ -28,9 +28,10 @@ targets:
         excludes:
           - Resources/tibok.entitlements
           - Resources/IconLayers
-    resources:
       - path: tibok/Resources/Assets.xcassets
         type: file
+        buildPhase: resources
+    resources:
       - path: tibok/Resources/AppIcon.icns
         type: file
       - path: tibok/Resources/katex

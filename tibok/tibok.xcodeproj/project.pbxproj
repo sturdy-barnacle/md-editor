@@ -15,6 +15,7 @@
 		2586D6054E824DEF6A06AC19 /* TabBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 202A124662CA36EAB065C707 /* TabBarView.swift */; };
 		30F73514E938D42C71C42ED8 /* DocumentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4FF6DD99B2BB0D5BAE645EA /* DocumentTests.swift */; };
 		3E5F8924D0A16E963F9FE607 /* FrontmatterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7476D98EC3D07B9D9F1606 /* FrontmatterTests.swift */; };
+		4023395F79A02BA2CCB8B90F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E8CBC6EBE9EE37E4E032D61B /* Assets.xcassets */; };
 		4258B2459F4E21EE3F496410 /* StatusBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88B2DBA7D9522CD29903334F /* StatusBarView.swift */; };
 		42BA38E1A4FEC72CB7C96843 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 094819A03A1970C5BC200C3B /* ContentView.swift */; };
 		42EDB2CEB271EDF7F062092D /* WordPressSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02CB28301D7474A6011A8E50 /* WordPressSettingsView.swift */; };
@@ -136,6 +137,7 @@
 		D9C91904AB2D98448618E6A0 /* LogService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogService.swift; sourceTree = "<group>"; };
 		E299168D4FA7A93C215ADDA5 /* PluginSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginSettingsView.swift; sourceTree = "<group>"; };
 		E3B48441C023887F963F0B24 /* DynamicPluginLoaderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicPluginLoaderTests.swift; sourceTree = "<group>"; };
+		E8CBC6EBE9EE37E4E032D61B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		F012FDB1A5BB64EA85463925 /* WordPressTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordPressTests.swift; sourceTree = "<group>"; };
 		F2C55F2B525AC58C26423EBB /* PluginInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginInstaller.swift; sourceTree = "<group>"; };
 		F598365FF18EA38A4F8F20C7 /* PluginContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginContext.swift; sourceTree = "<group>"; };
@@ -225,6 +227,15 @@
 			path = Views;
 			sourceTree = "<group>";
 		};
+		5A2F59E66F6F5ED82B9BD1E9 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				E8CBC6EBE9EE37E4E032D61B /* Assets.xcassets */,
+			);
+			name = Resources;
+			path = tibok/Resources;
+			sourceTree = "<group>";
+		};
 		94EC3CD32AA3C7DCD0DBD6E8 /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -284,6 +295,7 @@
 		DBDE6F5DC4DE3692A2C29B5B = {
 			isa = PBXGroup;
 			children = (
+				5A2F59E66F6F5ED82B9BD1E9 /* Resources */,
 				D0B7EE2D9565E09F37D7E3DB /* tibok */,
 				288452FD25244E175FF2F816 /* tibokTests */,
 				94EC3CD32AA3C7DCD0DBD6E8 /* Products */,
@@ -315,6 +327,7 @@
 			buildConfigurationList = 8D4CA69445890DD012D12F0D /* Build configuration list for PBXNativeTarget "tibok" */;
 			buildPhases = (
 				7DF0F58276E1C0F8CE5A6B96 /* Sources */,
+				EDAF4B93B9306BF8881545E0 /* Resources */,
 				5963A3E78F11570E0414401B /* Frameworks */,
 			);
 			buildRules = (
@@ -393,6 +406,17 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		EDAF4B93B9306BF8881545E0 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4023395F79A02BA2CCB8B90F /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		7DF0F58276E1C0F8CE5A6B96 /* Sources */ = {
