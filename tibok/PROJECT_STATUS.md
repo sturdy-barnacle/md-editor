@@ -104,6 +104,13 @@ tibok is a feature-complete, production-ready native macOS markdown editor. The 
   - Troubleshooting
   - Key management
 
+- **App Store Submission Guides** - Complete documentation for App Store builds
+  - **[APP_STORE_BUILD_GUIDE.md](APP_STORE_BUILD_GUIDE.md)** - Definitive reference (650+ lines)
+  - **[APP_STORE_QUICK_REFERENCE.md](APP_STORE_QUICK_REFERENCE.md)** - Quick checklist for every build
+  - **[ITMS-90546_FIX_DOCUMENTATION.md](ITMS-90546_FIX_DOCUMENTATION.md)** - Technical deep dive
+  - **[v1.0.2_BUILD_SUMMARY.md](v1.0.2_BUILD_SUMMARY.md)** - Build pipeline overview
+  - **[APP_STORE_DOCUMENTATION_INDEX.md](APP_STORE_DOCUMENTATION_INDEX.md)** - Navigation & issue resolution
+
 ### Project Configuration
 - **[.gitignore](.gitignore)** - Security-focused ignore patterns
 - **[tibok/Resources/Info.plist](tibok/Resources/Info.plist)** - App metadata and version
@@ -141,6 +148,9 @@ tibok is a feature-complete, production-ready native macOS markdown editor. The 
 - ✅ WordPress selection bug fix
 - ✅ EdDSA signature verification
 - ✅ Comprehensive documentation
+- ✅ ITMS-90546 fix (asset catalog compilation)
+- ✅ Build #11 submitted to App Store Connect
+- ✅ App Store build documentation (5 comprehensive guides, 1,959 lines)
 
 ### Future Considerations (Post v1.0.2)
 - [ ] Intel Mac support (x86_64)
