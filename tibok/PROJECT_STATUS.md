@@ -125,6 +125,35 @@ tibok is a feature-complete, production-ready native macOS markdown editor. The 
   - ✅ Git operations
   - ✅ Application launching
 
+### Compiler Warnings (v1.0.2)
+
+**Status**: ✅ Resolved and documented
+
+**What was fixed**:
+1. **LogService.swift:89** - Removed redundant `[String: Any]` cast
+   - `userInfo` is already `[String: Any]`, no need for conditional cast
+   - Fixed: Changed to direct property access
+
+2. **LogService.swift:86** - Added documentation comment
+   - Cast to NSError is necessary for domain, code, userInfo properties
+   - Added comment explaining why cast is needed (false positive warning)
+
+3. **WordPressExporter.swift:671** - Added documentation comment
+   - Cast to NSError needed for detailed error logging (domain, code)
+   - Added comment explaining purpose of cast
+
+4. **tibokApp.swift:139 & 144** - Documented Objective-C method limitations
+   - `undo:` and `redo:` are Objective-C methods from NSResponder
+   - Swift's type system doesn't expose these methods directly
+   - String-based selectors required; warnings are unavoidable but documented
+   - Functionality verified: undo/redo work correctly through responder chain
+
+**Impact on App Store**: ✅ Zero impact
+- All warnings were cosmetic code quality issues
+- None block compilation or app functionality
+- Build completes successfully
+- All functionality tested and working
+
 ### Known Issues
 - None reported
 
@@ -151,6 +180,7 @@ tibok is a feature-complete, production-ready native macOS markdown editor. The 
 - ✅ ITMS-90546 fix (asset catalog compilation)
 - ✅ Build #11 submitted to App Store Connect
 - ✅ App Store build documentation (5 comprehensive guides, 1,959 lines)
+- ✅ Compiler warnings cleanup (redundant casts and documentation comments)
 
 ### Future Considerations (Post v1.0.2)
 - [ ] Intel Mac support (x86_64)
