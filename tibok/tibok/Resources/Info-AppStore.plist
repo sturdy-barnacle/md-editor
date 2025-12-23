@@ -32,7 +32,7 @@
 	<key>CFBundleIconFile</key>
 	<string>icon</string>
 	<key>CFBundleIconName</key>
-	<string>icon</string>
+	<string>AppIcon</string>
 	<key>CFBundleIdentifier</key>
 	<string>app.tibok.editor</string>
 	<key>CFBundleInfoDictionaryVersion</key>

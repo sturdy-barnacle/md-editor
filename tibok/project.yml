@@ -30,7 +30,7 @@ targets:
           - Resources/IconLayers
     resources:
       - path: tibok/Resources/Assets.xcassets
-        type: folder
+        type: file
       - path: tibok/Resources/AppIcon.icns
         type: file
       - path: tibok/Resources/katex
