@@ -330,8 +330,10 @@ If empty/missing, restore it from the template above.
 ```bash
 git add -A
 git commit -m "Fix ITMS-90546 description..."
-git push origin development
+git push origin apple-store-distro
 ```
+
+**Note**: Push to `apple-store-distro` branch to trigger Xcode Cloud builds for App Store submission.
 
 ### 5. Monitor Xcode Cloud Build
 

@@ -47,23 +47,6 @@ struct MarkdownRenderer {
             }
         }
 
-        // Inline math: $...$ (not preceded/followed by $)
-        let inlineMathPattern = "(?<!\\$)\\$(?!\\$)([^$\\n]+?)(?<!\\$)\\$(?!\\$)"
-        if let regex = try? NSRegularExpression(pattern: inlineMathPattern, options: []) {
-            var inlineIndex = 0
-            let matches = regex.matches(in: html, options: [], range: NSRange(html.startIndex..., in: html)).reversed()
-            for match in matches {
-                if let fullRange = Range(match.range, in: html),
-                   let mathRange = Range(match.range(at: 1), in: html) {
-                    let math = String(html[mathRange])
-                    let placeholder = "<!--MATHINLINE\(inlineIndex)-->"
-                    mathBlocks[placeholder] = "<span class=\"math-inline\">$\(math)$</span>"
-                    html.replaceSubrange(fullRange, with: placeholder)
-                    inlineIndex += 1
-                }
-            }
-        }
-
         // Protect raw HTML blocks (details, summary, div, etc.)
         var htmlBlocks: [String: String] = [:]
         let htmlBlockPattern = "(<(?:details|summary|div|section|aside|nav|header|footer|article)[^>]*>[\\s\\S]*?</(?:details|summary|div|section|aside|nav|header|footer|article)>)"
