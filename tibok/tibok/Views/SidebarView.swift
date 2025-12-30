@@ -50,6 +50,9 @@ struct SidebarView: View {
     @State private var searchText = ""
     @State private var showNewFileSheet = false
     @State private var newFileName = ""
+    @State private var showFolderNewFileSheet = false
+    @State private var newFolderFileName = ""
+    @State private var selectedFolderURL: URL?
     @State private var contentSearchResults: [ContentSearchResult] = []
     @State private var isSearching = false
     @State private var searchTask: Task<Void, Never>?
@@ -230,7 +233,10 @@ struct SidebarView: View {
 
                             // File tree
                             ForEach(filteredWorkspaceFiles) { item in
-                                FileTreeRow(item: item)
+                                FileTreeRow(item: item) { folderURL in
+                                    selectedFolderURL = folderURL
+                                    showFolderNewFileSheet = true
+                                }
                             }
                         }
                     } header: {
@@ -327,6 +333,16 @@ struct SidebarView: View {
                     newFileName = ""
                 }
                 showNewFileSheet = false
+            }
+        }
+        .sheet(isPresented: $showFolderNewFileSheet) {
+            NewFileSheet(fileName: $newFolderFileName) {
+                defer {
+                    showFolderNewFileSheet = false
+                    newFolderFileName = ""
+                }
+                guard !newFolderFileName.isEmpty, let folderURL = selectedFolderURL else { return }
+                appState.createFileInFolder(folderURL: folderURL, name: newFolderFileName)
             }
         }
     }
@@ -684,16 +700,16 @@ struct FileTreeRow: View {
     @EnvironmentObject var appState: AppState
     let item: FileItem
     let depth: Int
+    var onNewFileInFolder: ((URL) -> Void)?
     @State private var isExpanded = false
     @State private var loadedChildren: [FileItem]?
     @State private var hasFrontmatter: Bool = false
     @State private var isScanning: Bool = false
-    @State private var showNewFileSheet = false
-    @State private var newFileName = ""
 
-    init(item: FileItem, depth: Int = 0) {
+    init(item: FileItem, depth: Int = 0, onNewFileInFolder: ((URL) -> Void)? = nil) {
         self.item = item
         self.depth = depth
+        self.onNewFileInFolder = onNewFileInFolder
         // Initialize with existing children if already loaded
         _loadedChildren = State(initialValue: item.children)
     }
@@ -714,7 +730,7 @@ struct FileTreeRow: View {
                 }
 
                 ForEach(loadedChildren ?? []) { child in
-                    FileTreeRow(item: child, depth: depth + 1)
+                    FileTreeRow(item: child, depth: depth + 1, onNewFileInFolder: onNewFileInFolder)
                 }
             } label: {
                 HStack {
@@ -742,7 +758,7 @@ struct FileTreeRow: View {
             }
             .contextMenu {
                 Button("New File...") {
-                    showNewFileSheet = true
+                    onNewFileInFolder?(item.url)
                 }
                 Divider()
                 if appState.isFavorite(item.url) {
@@ -760,16 +776,6 @@ struct FileTreeRow: View {
                 }
                 Button("Copy Path") {
                     appState.copyPathToClipboard(item.url)
-                }
-            }
-            .sheet(isPresented: $showNewFileSheet) {
-                NewFileSheet(fileName: $newFileName) {
-                    defer {
-                        showNewFileSheet = false
-                        newFileName = ""
-                    }
-                    guard !newFileName.isEmpty else { return }
-                    appState.createFileInFolder(folderURL: item.url, name: newFileName)
                 }
             }
             .onChange(of: isExpanded) { _, expanded in
