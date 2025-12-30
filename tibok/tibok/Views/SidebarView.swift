@@ -683,13 +683,15 @@ struct FavoriteFileRow: View {
 struct FileTreeRow: View {
     @EnvironmentObject var appState: AppState
     let item: FileItem
+    let depth: Int
     @State private var isExpanded = false
     @State private var loadedChildren: [FileItem]?
     @State private var hasFrontmatter: Bool = false
     @State private var isScanning: Bool = false
 
-    init(item: FileItem) {
+    init(item: FileItem, depth: Int = 0) {
         self.item = item
+        self.depth = depth
         // Initialize with existing children if already loaded
         _loadedChildren = State(initialValue: item.children)
     }
@@ -710,7 +712,7 @@ struct FileTreeRow: View {
                 }
 
                 ForEach(loadedChildren ?? []) { child in
-                    FileTreeRow(item: child)
+                    FileTreeRow(item: child, depth: depth + 1)
                 }
             } label: {
                 HStack {
@@ -725,6 +727,7 @@ struct FileTreeRow: View {
                             .padding(.leading, 4)
                     }
                 }
+                .padding(.leading, CGFloat(depth * 16))
             }
             .contextMenu {
                 Button("Reveal in Finder") {
@@ -807,6 +810,7 @@ struct FileTreeRow: View {
                             .frame(width: 6, height: 6)
                     }
                 }
+                .padding(.leading, CGFloat(depth * 16))
             }
             .buttonStyle(.animatedIcon)
             .onAppear {
