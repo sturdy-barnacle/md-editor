@@ -762,6 +762,29 @@ class AppState: ObservableObject {
         }
     }
 
+    /// Delete multiple files
+    func deleteFiles(_ urls: [URL]) {
+        var successCount = 0
+        var failCount = 0
+
+        for url in urls {
+            do {
+                try FileManager.default.trashItem(at: url, resultingItemURL: nil)
+                successCount += 1
+            } catch {
+                failCount += 1
+            }
+        }
+
+        refreshWorkspaceFiles()
+
+        if failCount == 0 {
+            showToast("Moved \(successCount) file\(successCount == 1 ? "" : "s") to trash", icon: "trash")
+        } else {
+            showToast("Deleted \(successCount), failed \(failCount)", icon: "exclamationmark.triangle.fill")
+        }
+    }
+
     /// Move a file from one location to another
     /// Uses git mv for tracked files to preserve history
     func moveFile(from sourceURL: URL, to destinationFolder: URL) -> Bool {

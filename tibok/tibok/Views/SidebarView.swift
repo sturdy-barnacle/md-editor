@@ -60,6 +60,10 @@ struct SidebarView: View {
     @State private var selectedFolderForRename: URL?
     @State private var folderToDelete: URL?
     @State private var showDeleteFolderAlert = false
+
+    // Multi-select state
+    @State private var selectedFileURLs: Set<URL> = []
+    @State private var lastSelectedURL: URL?
     @State private var contentSearchResults: [ContentSearchResult] = []
     @State private var isSearching = false
     @State private var searchTask: Task<Void, Never>?
@@ -238,6 +242,53 @@ struct SidebarView: View {
                                 }
                             }
 
+                            // Selection toolbar (appears when files are selected)
+                            if !selectedFileURLs.isEmpty {
+                                HStack(spacing: 8) {
+                                    Text("\(selectedFileURLs.count) selected")
+                                        .font(.system(size: 11, weight: .medium))
+                                        .foregroundColor(.white)
+
+                                    Spacer()
+
+                                    Button("Clear") {
+                                        selectedFileURLs.removeAll()
+                                        lastSelectedURL = nil
+                                    }
+                                    .font(.system(size: 10, weight: .medium))
+                                    .foregroundColor(.white)
+                                    .buttonStyle(.plain)
+
+                                    if appState.isGitRepository {
+                                        Button("Stage") {
+                                            guard appState.workspaceURL != nil else { return }
+                                            for url in selectedFileURLs {
+                                                appState.stageFile(url)
+                                            }
+                                            selectedFileURLs.removeAll()
+                                        }
+                                        .font(.system(size: 10, weight: .medium))
+                                        .foregroundColor(.white)
+                                        .buttonStyle(.plain)
+                                    }
+
+                                    Button("Delete") {
+                                        appState.deleteFiles(Array(selectedFileURLs))
+                                        selectedFileURLs.removeAll()
+                                        lastSelectedURL = nil
+                                    }
+                                    .font(.system(size: 10, weight: .medium))
+                                    .foregroundColor(.white)
+                                    .buttonStyle(.plain)
+                                }
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(Color.accentColor)
+                                .cornerRadius(6)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                            }
+
                             // File tree
                             ForEach(filteredWorkspaceFiles) { item in
                                 FileTreeRow(item: item,
@@ -257,7 +308,9 @@ struct SidebarView: View {
                                     onDeleteFolder: { folderURL in
                                         folderToDelete = folderURL
                                         showDeleteFolderAlert = true
-                                    }
+                                    },
+                                    selectedFileURLs: $selectedFileURLs,
+                                    onFileClick: handleFileSelection
                                 )
                             }
                         }
@@ -527,6 +580,57 @@ struct SidebarView: View {
             }
         }
     }
+
+    // MARK: - Multi-Select Helper Methods
+
+    /// Handle file selection with modifier keys
+    private func handleFileSelection(_ url: URL, modifiers: NSEvent.ModifierFlags) {
+        if modifiers.contains(.command) {
+            // Command-click: toggle selection
+            if selectedFileURLs.contains(url) {
+                selectedFileURLs.remove(url)
+            } else {
+                selectedFileURLs.insert(url)
+            }
+            lastSelectedURL = url
+        } else if modifiers.contains(.shift), let lastURL = lastSelectedURL {
+            // Shift-click: range selection
+            selectRange(from: lastURL, to: url)
+        } else {
+            // Normal click: clear selection and open file
+            selectedFileURLs.removeAll()
+            lastSelectedURL = nil
+            appState.loadDocument(from: url)
+        }
+    }
+
+    /// Select all files in range from one URL to another
+    private func selectRange(from startURL: URL, to endURL: URL) {
+        let allFiles = flattenFileTree(appState.workspaceFiles)
+        guard let startIndex = allFiles.firstIndex(of: startURL),
+              let endIndex = allFiles.firstIndex(of: endURL) else {
+            return
+        }
+
+        let range = min(startIndex, endIndex)...max(startIndex, endIndex)
+        for index in range {
+            selectedFileURLs.insert(allFiles[index])
+        }
+    }
+
+    /// Flatten file tree into ordered list of file URLs
+    private func flattenFileTree(_ items: [FileItem]) -> [URL] {
+        var urls: [URL] = []
+        for item in items {
+            if !item.isDirectory {
+                urls.append(item.url)
+            }
+            if let children = item.children {
+                urls.append(contentsOf: flattenFileTree(children))
+            }
+        }
+        return urls
+    }
 }
 
 // MARK: - Collapsible Section Header
@@ -786,18 +890,22 @@ struct FileTreeRow: View {
     var onNewFolderInFolder: ((URL) -> Void)?
     var onRenameFolder: ((URL, String) -> Void)?
     var onDeleteFolder: ((URL) -> Void)?
+    var selectedFileURLs: Binding<Set<URL>>?
+    var onFileClick: ((URL, NSEvent.ModifierFlags) -> Void)?
     @State private var isExpanded = false
     @State private var loadedChildren: [FileItem]?
     @State private var hasFrontmatter: Bool = false
     @State private var isScanning: Bool = false
 
-    init(item: FileItem, depth: Int = 0, onNewFileInFolder: ((URL) -> Void)? = nil, onNewFolderInFolder: ((URL) -> Void)? = nil, onRenameFolder: ((URL, String) -> Void)? = nil, onDeleteFolder: ((URL) -> Void)? = nil) {
+    init(item: FileItem, depth: Int = 0, onNewFileInFolder: ((URL) -> Void)? = nil, onNewFolderInFolder: ((URL) -> Void)? = nil, onRenameFolder: ((URL, String) -> Void)? = nil, onDeleteFolder: ((URL) -> Void)? = nil, selectedFileURLs: Binding<Set<URL>>? = nil, onFileClick: ((URL, NSEvent.ModifierFlags) -> Void)? = nil) {
         self.item = item
         self.depth = depth
         self.onNewFileInFolder = onNewFileInFolder
         self.onNewFolderInFolder = onNewFolderInFolder
         self.onRenameFolder = onRenameFolder
         self.onDeleteFolder = onDeleteFolder
+        self.selectedFileURLs = selectedFileURLs
+        self.onFileClick = onFileClick
         // Initialize with existing children if already loaded
         _loadedChildren = State(initialValue: item.children)
     }
@@ -818,7 +926,7 @@ struct FileTreeRow: View {
                 }
 
                 ForEach(loadedChildren ?? []) { child in
-                    FileTreeRow(item: child, depth: depth + 1, onNewFileInFolder: onNewFileInFolder, onNewFolderInFolder: onNewFolderInFolder, onRenameFolder: onRenameFolder, onDeleteFolder: onDeleteFolder)
+                    FileTreeRow(item: child, depth: depth + 1, onNewFileInFolder: onNewFileInFolder, onNewFolderInFolder: onNewFolderInFolder, onRenameFolder: onRenameFolder, onDeleteFolder: onDeleteFolder, selectedFileURLs: selectedFileURLs, onFileClick: onFileClick)
                 }
             } label: {
                 HStack {
@@ -934,36 +1042,50 @@ struct FileTreeRow: View {
                 }
             }
         } else {
-            Button {
-                appState.loadDocument(from: item.url)
-            } label: {
-                HStack {
-                    Image(systemName: fileIcon(for: item))
-                        .foregroundColor(fileColor(for: item))
-                    Text(item.name)
-                    Spacer()
-                    // Show frontmatter indicator
-                    if hasFrontmatter {
-                        Image(systemName: "doc.badge.gearshape")
-                            .font(.system(size: 9))
-                            .foregroundColor(.purple.opacity(0.6))
-                    }
-                    // Show heart if favorited
-                    if appState.isFavorite(item.url) {
-                        Image(systemName: "heart.fill")
-                            .font(.system(size: 9))
-                            .foregroundColor(.pink)
-                    }
-                    // Show indicator if modified in open tabs
-                    if appState.documents.first(where: { $0.fileURL == item.url })?.isModified == true {
-                        Circle()
-                            .fill(Color.primary.opacity(0.5))
-                            .frame(width: 6, height: 6)
-                    }
+            HStack {
+                Image(systemName: fileIcon(for: item))
+                    .foregroundColor(fileColor(for: item))
+                Text(item.name)
+                Spacer()
+                // Show frontmatter indicator
+                if hasFrontmatter {
+                    Image(systemName: "doc.badge.gearshape")
+                        .font(.system(size: 9))
+                        .foregroundColor(.purple.opacity(0.6))
                 }
-                .padding(.leading, CGFloat(depth * 16))
+                // Show heart if favorited
+                if appState.isFavorite(item.url) {
+                    Image(systemName: "heart.fill")
+                        .font(.system(size: 9))
+                        .foregroundColor(.pink)
+                }
+                // Show indicator if modified in open tabs
+                if appState.documents.first(where: { $0.fileURL == item.url })?.isModified == true {
+                    Circle()
+                        .fill(Color.primary.opacity(0.5))
+                        .frame(width: 6, height: 6)
+                }
             }
-            .buttonStyle(.animatedIcon)
+            .padding(.leading, CGFloat(depth * 16))
+            .padding(.vertical, 3)
+            .padding(.horizontal, 8)
+            .background(
+                // Selection highlight
+                (selectedFileURLs?.wrappedValue.contains(item.url) ?? false)
+                    ? Color.accentColor.opacity(0.2)
+                    : Color.clear
+            )
+            .cornerRadius(4)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                // Handle clicks with modifier detection
+                let modifiers = NSEvent.modifierFlags
+                if let onFileClick = onFileClick {
+                    onFileClick(item.url, modifiers)
+                } else {
+                    appState.loadDocument(from: item.url)
+                }
+            }
             .onAppear {
                 if !item.isDirectory {
                     hasFrontmatter = FrontmatterCacheService.shared.hasFrontmatter(url: item.url)
