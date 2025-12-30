@@ -60,6 +60,8 @@ struct SidebarView: View {
     @State private var selectedFolderForRename: URL?
     @State private var folderToDelete: URL?
     @State private var showDeleteFolderAlert = false
+    @State private var fileToDelete: URL?
+    @State private var showDeleteFileAlert = false
 
     // Multi-select state
     @State private var selectedFileURLs: Set<URL> = []
@@ -308,6 +310,10 @@ struct SidebarView: View {
                                         folderToDelete = folderURL
                                         showDeleteFolderAlert = true
                                     },
+                                    onDeleteFile: { fileURL in
+                                        fileToDelete = fileURL
+                                        showDeleteFileAlert = true
+                                    },
                                     selectedFileURLs: $selectedFileURLs,
                                     onFileClick: handleFileSelection
                                 )
@@ -382,6 +388,7 @@ struct SidebarView: View {
                 // MARK: - 4. Git Section (collapsed by default)
                 if appState.isGitRepository {
                     GitPanelView()
+                        .environmentObject(appState)
                 }
             }
             .listStyle(.sidebar)
@@ -476,6 +483,21 @@ struct SidebarView: View {
             }
         } message: {
             if let url = folderToDelete {
+                Text("Are you sure you want to move '\(url.lastPathComponent)' to the trash?")
+            }
+        }
+        .alert("Delete File", isPresented: $showDeleteFileAlert) {
+            Button("Cancel", role: .cancel) {
+                fileToDelete = nil
+            }
+            Button("Delete", role: .destructive) {
+                if let url = fileToDelete {
+                    appState.deleteFile(at: url)
+                    fileToDelete = nil
+                }
+            }
+        } message: {
+            if let url = fileToDelete {
                 Text("Are you sure you want to move '\(url.lastPathComponent)' to the trash?")
             }
         }
@@ -889,6 +911,7 @@ struct FileTreeRow: View {
     var onNewFolderInFolder: ((URL) -> Void)?
     var onRenameFolder: ((URL, String) -> Void)?
     var onDeleteFolder: ((URL) -> Void)?
+    var onDeleteFile: ((URL) -> Void)?
     var selectedFileURLs: Binding<Set<URL>>?
     var onFileClick: ((URL, NSEvent.ModifierFlags) -> Void)?
     @State private var isExpanded = false
@@ -896,13 +919,14 @@ struct FileTreeRow: View {
     @State private var hasFrontmatter: Bool = false
     @State private var isScanning: Bool = false
 
-    init(item: FileItem, depth: Int = 0, onNewFileInFolder: ((URL) -> Void)? = nil, onNewFolderInFolder: ((URL) -> Void)? = nil, onRenameFolder: ((URL, String) -> Void)? = nil, onDeleteFolder: ((URL) -> Void)? = nil, selectedFileURLs: Binding<Set<URL>>? = nil, onFileClick: ((URL, NSEvent.ModifierFlags) -> Void)? = nil) {
+    init(item: FileItem, depth: Int = 0, onNewFileInFolder: ((URL) -> Void)? = nil, onNewFolderInFolder: ((URL) -> Void)? = nil, onRenameFolder: ((URL, String) -> Void)? = nil, onDeleteFolder: ((URL) -> Void)? = nil, onDeleteFile: ((URL) -> Void)? = nil, selectedFileURLs: Binding<Set<URL>>? = nil, onFileClick: ((URL, NSEvent.ModifierFlags) -> Void)? = nil) {
         self.item = item
         self.depth = depth
         self.onNewFileInFolder = onNewFileInFolder
         self.onNewFolderInFolder = onNewFolderInFolder
         self.onRenameFolder = onRenameFolder
         self.onDeleteFolder = onDeleteFolder
+        self.onDeleteFile = onDeleteFile
         self.selectedFileURLs = selectedFileURLs
         self.onFileClick = onFileClick
         // Initialize with existing children if already loaded
@@ -925,7 +949,7 @@ struct FileTreeRow: View {
                 }
 
                 ForEach(loadedChildren ?? []) { child in
-                    FileTreeRow(item: child, depth: depth + 1, onNewFileInFolder: onNewFileInFolder, onNewFolderInFolder: onNewFolderInFolder, onRenameFolder: onRenameFolder, onDeleteFolder: onDeleteFolder, selectedFileURLs: selectedFileURLs, onFileClick: onFileClick)
+                    FileTreeRow(item: child, depth: depth + 1, onNewFileInFolder: onNewFileInFolder, onNewFolderInFolder: onNewFolderInFolder, onRenameFolder: onRenameFolder, onDeleteFolder: onDeleteFolder, onDeleteFile: onDeleteFile, selectedFileURLs: selectedFileURLs, onFileClick: onFileClick)
                 }
             } label: {
                 HStack {
@@ -1115,6 +1139,10 @@ struct FileTreeRow: View {
                 }
                 Button("Copy Path") {
                     appState.copyPathToClipboard(item.url)
+                }
+                Divider()
+                Button("Delete File", role: .destructive) {
+                    onDeleteFile?(item.url)
                 }
             }
             .draggable(item.url)

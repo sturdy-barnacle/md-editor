@@ -153,10 +153,20 @@ class GitService: ObservableObject {
 
     /// Switch to a branch with error reporting
     func switchBranch(to branchName: String, in repoURL: URL) -> (success: Bool, error: String?) {
+        print("🔀 [GitService] Switching to branch: \(branchName)")
+        print("   Repository: \(repoURL.path)")
+
         let result = runGitCommand(["checkout", branchName], in: repoURL)
+
         if result.exitCode == 0 {
+            print("✅ [GitService] Successfully switched to branch: \(branchName)")
             return (true, nil)
         } else {
+            print("❌ [GitService] Branch switch failed:")
+            print("   Exit code: \(result.exitCode)")
+            if let error = result.error {
+                print("   Error: \(error)")
+            }
             return (false, result.error ?? "Failed to switch branch")
         }
     }
@@ -178,6 +188,66 @@ class GitService: ObservableObject {
         }
 
         return (true, nil)
+    }
+
+    // MARK: - Remote Operations (URL)
+
+    /// Get the remote URL for the repository
+    /// Returns both the raw URL and whether it's SSH format
+    func getRemoteURL(for repoURL: URL) -> (url: String?, isSSH: Bool) {
+        // First try 'origin' remote
+        let result = runGitCommand(["config", "--get", "remote.origin.url"], in: repoURL)
+
+        guard let remoteURL = result.output?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !remoteURL.isEmpty,
+              result.exitCode == 0 else {
+            return (nil, false)
+        }
+
+        let isSSH = remoteURL.hasPrefix("git@")
+        return (remoteURL, isSSH)
+    }
+
+    /// Convert git remote URL to web URL
+    /// Handles SSH (git@github.com:user/repo.git) and HTTPS formats
+    func convertToWebURL(_ remoteURL: String, branch: String?) -> String? {
+        var webURL = remoteURL
+
+        // Handle SSH format: git@github.com:user/repo.git -> https://github.com/user/repo
+        if remoteURL.hasPrefix("git@") {
+            // Extract host and path
+            // Format: git@HOST:PATH
+            let withoutGit = remoteURL.replacingOccurrences(of: "git@", with: "")
+            let parts = withoutGit.split(separator: ":", maxSplits: 1)
+
+            guard parts.count == 2 else { return nil }
+
+            let host = String(parts[0])
+            let path = String(parts[1])
+            webURL = "https://\(host)/\(path)"
+        }
+
+        // Remove .git suffix if present
+        if webURL.hasSuffix(".git") {
+            webURL = String(webURL.dropLast(4))
+        }
+
+        // Add branch path if provided
+        if let branch = branch {
+            // Try to detect host for branch URL format
+            if webURL.contains("github.com") {
+                webURL = "\(webURL)/tree/\(branch)"
+            } else if webURL.contains("gitlab.com") {
+                webURL = "\(webURL)/-/tree/\(branch)"
+            } else if webURL.contains("bitbucket.org") {
+                webURL = "\(webURL)/src/\(branch)"
+            } else {
+                // Generic fallback - just append branch
+                webURL = "\(webURL)/tree/\(branch)"
+            }
+        }
+
+        return webURL
     }
 
     // MARK: - Status Operations
@@ -418,6 +488,7 @@ class GitService: ObservableObject {
 
     /// Push to remote
     func push(in repoURL: URL) -> (success: Bool, error: String?, alreadyUpToDate: Bool) {
+        // First attempt: normal push
         let result = runGitCommand(["push"], in: repoURL)
 
         // Check for "already up to date" in stderr (git sends info messages to stderr)
@@ -426,13 +497,92 @@ class GitService: ObservableObject {
 
         if result.exitCode == 0 {
             return (true, nil, isUpToDate)
+        }
+
+        // Check for "no upstream branch" error - attempt auto-publish
+        if isNoUpstreamError(stderr) {
+            print("🔄 [GitService] No upstream branch detected, attempting auto-publish...")
+
+            // Get current branch name
+            guard let branch = getCurrentBranch(for: repoURL) else {
+                print("❌ [GitService] Failed to determine current branch for auto-publish")
+                return (false, "Failed to determine current branch. Cannot auto-publish.", false)
+            }
+
+            print("📤 [GitService] Auto-publishing branch '\(branch)' to origin...")
+
+            // Retry with upstream tracking
+            let retryResult = runGitCommand(["push", "-u", "origin", branch], in: repoURL)
+
+            if retryResult.exitCode == 0 {
+                print("✅ [GitService] Auto-publish successful for branch '\(branch)'")
+                return (true, nil, false)  // Success via auto-publish
+            } else {
+                print("❌ [GitService] Auto-publish failed:")
+                print("   Exit code: \(retryResult.exitCode)")
+                if let error = retryResult.error {
+                    print("   Error: \(error)")
+                }
+                // Auto-publish failed - return formatted error with helpful message
+                let errorMsg = formatAutoPublishError(retryResult, branch: branch)
+                return (false, errorMsg, false)
+            }
+        }
+
+        // Other errors - return as-is
+        let errorMsg = [result.error, result.output]
+            .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+            .joined(separator: " ")
+        return (false, errorMsg.isEmpty ? "Push failed (exit code \(result.exitCode))" : errorMsg, false)
+    }
+
+    /// Check if error indicates missing upstream branch
+    private func isNoUpstreamError(_ error: String) -> Bool {
+        let lowercased = error.lowercased()
+        return lowercased.contains("no upstream") ||
+               lowercased.contains("has no upstream branch")
+    }
+
+    /// Format detailed error message for auto-publish failures
+    private func formatAutoPublishError(_ result: GitResult, branch: String) -> String {
+        let baseError = result.error ?? "Unknown error"
+        let lowercased = baseError.lowercased()
+
+        if lowercased.contains("remote origin does not exist") ||
+           lowercased.contains("does not appear to be a git repository") {
+            return """
+            Failed to publish branch '\(branch)': No remote named 'origin' is configured.
+
+            To fix:
+            • Add remote: git remote add origin <url>
+            • Or push to different remote: git push -u <remote> \(branch)
+            """
+        } else if lowercased.contains("permission denied") ||
+                  lowercased.contains("authentication failed") {
+            return """
+            Failed to publish branch '\(branch)': Permission denied.
+
+            To fix:
+            • Verify SSH/HTTPS credentials are configured
+            • Check repository access permissions
+            • Try: git config credential.helper store
+            """
+        } else if lowercased.contains("could not resolve host") ||
+                  lowercased.contains("network is unreachable") {
+            return """
+            Failed to publish branch '\(branch)': Network error.
+
+            \(baseError)
+
+            Check your internet connection and try again.
+            """
         } else {
-            // Include both stdout and stderr in error message for debugging
-            let errorMsg = [result.error, result.output]
-                .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
-                .filter { !$0.isEmpty }
-                .joined(separator: " ")
-            return (false, errorMsg.isEmpty ? "Push failed (exit code \(result.exitCode))" : errorMsg, false)
+            return """
+            Failed to publish new branch '\(branch)' to origin:
+
+            \(baseError)
+            """
         }
     }
 
@@ -478,6 +628,12 @@ class GitService: ObservableObject {
     /// Get diff for a file
     func getDiff(for fileURL: URL, in repoURL: URL, staged: Bool = false) -> String? {
         let relativePath = fileURL.path.replacingOccurrences(of: repoURL.path + "/", with: "")
+
+        guard !relativePath.isEmpty else {
+            print("GitService.getDiff: Invalid relative path")
+            return nil
+        }
+
         var args = ["diff"]
         if staged {
             args.append("--cached")
@@ -485,6 +641,14 @@ class GitService: ObservableObject {
         args.append(relativePath)
 
         let result = runGitCommand(args, in: repoURL)
+
+        if result.exitCode != 0 {
+            print("GitService.getDiff: git diff failed with exit code \(result.exitCode)")
+            if let error = result.error, !error.isEmpty {
+                print("GitService.getDiff: \(error)")
+            }
+        }
+
         return result.output
     }
 

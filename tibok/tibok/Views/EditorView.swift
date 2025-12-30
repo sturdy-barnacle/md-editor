@@ -36,7 +36,7 @@ struct EditorView: View {
                     emojiState: $emojiState,
                     documentURL: { appState.activeDocument?.fileURL },
                     showToast: { message, icon, duration in
-                        appState.showToast(message, icon: icon, duration: duration)
+                        UIStateService.shared.showToast(message, icon: icon, duration: duration)
                     }
                 )
                 .id(doc.id) // Force recreate when document changes

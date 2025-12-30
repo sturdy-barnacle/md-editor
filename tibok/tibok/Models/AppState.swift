@@ -642,21 +642,33 @@ class AppState: ObservableObject {
 
     /// Switch to a different git branch
     func switchBranch(to branchName: String) -> (success: Bool, error: String?) {
+        print("🔀 [AppState] Attempting to switch to branch: \(branchName)")
+
         guard let repoRoot = getGitRepoRoot() else {
+            print("❌ [AppState] No git repository found")
             return (false, "No workspace open")
         }
 
         // Check for uncommitted changes
         if !stagedFiles.isEmpty || !unstagedFiles.isEmpty {
+            let count = stagedFiles.count + unstagedFiles.count
+            print("⚠️ [AppState] Cannot switch: \(count) uncommitted change(s)")
+            print("   Staged: \(stagedFiles.count), Unstaged: \(unstagedFiles.count)")
             return (false, "You have uncommitted changes. Please commit or stash them before switching branches.")
         }
 
+        print("✅ [AppState] No uncommitted changes, proceeding with switch")
         let result = GitService.shared.switchBranch(to: branchName, in: repoRoot)
+
         if result.success {
+            print("✅ [AppState] Branch switch successful, refreshing state")
             refreshGitStatus()
             refreshWorkspaceFiles()
             showToast("Switched to \(branchName)", icon: "arrow.triangle.branch")
+        } else {
+            print("❌ [AppState] Branch switch failed: \(result.error ?? "unknown")")
         }
+
         return result
     }
 
