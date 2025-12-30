@@ -427,7 +427,12 @@ struct ContentView: View {
                         UIStateService.shared.showToast("Push successful", icon: "checkmark.circle.fill", duration: 2.0)
                     }
                 } else {
-                    showGitError("Push Failed", result.error)
+                    let errorMessage = result.error ?? "Unknown error occurred during push"
+                    UIStateService.shared.showToast(
+                        "Push failed: \(errorMessage)",
+                        icon: "xmark.circle",
+                        duration: 3.0
+                    )
                 }
             },
 
@@ -441,7 +446,12 @@ struct ContentView: View {
                 if result.success {
                     UIStateService.shared.showToast("Pull successful", icon: "checkmark.circle.fill", duration: 2.0)
                 } else {
-                    showGitError("Pull Failed", result.error)
+                    let errorMessage = result.error ?? "Unknown error occurred during pull"
+                    UIStateService.shared.showToast(
+                        "Pull failed: \(errorMessage)",
+                        icon: "xmark.circle",
+                        duration: 3.0
+                    )
                 }
             },
 
