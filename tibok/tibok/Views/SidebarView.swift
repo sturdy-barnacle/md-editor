@@ -72,8 +72,7 @@ struct SidebarView: View {
     @AppStorage("sidebar.showWorkspace") private var persistShowWorkspace = true
     @AppStorage("sidebar.showRecent") private var persistShowRecent = true
     @AppStorage("sidebar.showFavorites") private var persistShowFavorites = true
-    // Default collapsed for distraction-free experience (brand alignment)
-    @AppStorage("sidebar.showGit") private var persistShowGit = false
+    // Note: persistShowGit is defined in GitPanelView.swift, not here
     @AppStorage("sidebar.showAI") private var persistShowAI = false
 
     var body: some View {

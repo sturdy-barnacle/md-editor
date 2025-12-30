@@ -276,10 +276,22 @@ struct tibokApp: App {
 
                 Divider()
 
-                Button("Refresh Status") {
-                    appState.refreshGitStatus()
+                Button("Refresh Git Status") {
+                    Task {
+                        await appState.refreshGitStatus()
+                        // Small delay to allow git detection to complete
+                        try? await Task.sleep(nanoseconds: 200_000_000) // 200ms
+                        await MainActor.run {
+                            if appState.isGitRepository {
+                                UIStateService.shared.showToast("Git status refreshed", icon: "checkmark.circle.fill", duration: 2.0)
+                            } else {
+                                UIStateService.shared.showToast("Git repository not found in workspace", icon: "exclamationmark.triangle.fill", duration: 3.0)
+                            }
+                        }
+                    }
                 }
-                .disabled(!appState.isGitRepository)
+                .keyboardShortcut("r", modifiers: [.command, .shift])
+                // Always enabled so users can trigger git detection even when not detected
             }
 
             // Help menu
