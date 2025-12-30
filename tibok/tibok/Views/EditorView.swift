@@ -511,6 +511,7 @@ struct FindableTextEditor: NSViewRepresentable {
         var focusModeEnabled = false
         var highlightWorkItem: DispatchWorkItem?
         var focusWorkItem: DispatchWorkItem?
+        var undoGroupingWorkItem: DispatchWorkItem?
         var slashMenuWindow: NSWindow?
         var slashMenuController: SlashMenuController?
         var pendingSelection: NSRange? = nil
@@ -555,6 +556,9 @@ struct FindableTextEditor: NSViewRepresentable {
             guard let textView = notification.object as? NSTextView else { return }
             parent.text = textView.string
 
+            // Break undo coalescing after typing pauses (better undo granularity)
+            breakUndoCoalescingAfterPause(for: textView)
+
             // Check for slash command trigger
             checkForSlashCommand(in: textView)
 
@@ -569,6 +573,13 @@ struct FindableTextEditor: NSViewRepresentable {
 
         private func applyHighlightingDebounced(to textView: NSTextView) {
             guard syntaxHighlightingEnabled else { return }
+
+            // Don't highlight if undo/redo is in progress
+            if let undoManager = textView.undoManager,
+               undoManager.isUndoing || undoManager.isRedoing {
+                return
+            }
+
             guard let textStorage = textView.textStorage else { return }
 
             // Cancel any pending highlight work
@@ -586,15 +597,11 @@ struct FindableTextEditor: NSViewRepresentable {
             let workItem = DispatchWorkItem { [weak self, weak textStorage, weak textView] in
                 guard let storage = textStorage, let tv = textView else { return }
 
-                // Temporarily disable undo grouping during highlighting
-                tv.undoManager?.disableUndoRegistration()
-
+                // No undo disabling needed - SyntaxHighlighter uses beginEditing()/endEditing()
                 SyntaxHighlighter.highlight(storage, baseFont: font, paragraphStyle: paragraphStyle)
 
                 // Restore cursor position
                 tv.selectedRanges = selectedRanges
-
-                tv.undoManager?.enableUndoRegistration()
 
                 // Re-apply focus mode if enabled (syntax highlighting resets colors)
                 if let coordinator = self, coordinator.focusModeEnabled {
@@ -613,6 +620,20 @@ struct FindableTextEditor: NSViewRepresentable {
 
             // Longer delay so highlighting only happens when user pauses (300ms)
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, execute: workItem)
+        }
+
+        private func breakUndoCoalescingAfterPause(for textView: NSTextView) {
+            // Cancel any pending undo grouping work
+            undoGroupingWorkItem?.cancel()
+
+            // Break undo coalescing after 1 second of no typing
+            let workItem = DispatchWorkItem { [weak textView] in
+                textView?.breakUndoCoalescing()
+            }
+            undoGroupingWorkItem = workItem
+
+            // 1 second pause breaks undo into separate groups
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0, execute: workItem)
         }
 
         // MARK: - Focus Mode
