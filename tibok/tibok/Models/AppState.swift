@@ -105,6 +105,7 @@ class AppState: ObservableObject {
     // Git state
     @Published var isGitRepository: Bool = false
     @Published var currentBranch: String?
+    @Published var availableBranches: [String] = []
     @Published var gitFileStatuses: [URL: GitFileStatus] = [:]
     @Published var stagedFiles: [GitChangedFile] = []
     @Published var unstagedFiles: [GitChangedFile] = []
@@ -523,6 +524,7 @@ class AppState: ObservableObject {
 
             // Get branch and file statuses using the repo root
             let branch = gitService.getCurrentBranch(for: repoRoot)
+            let branches = gitService.getBranches(for: repoRoot)
             let changedFiles = gitService.getChangedFiles(for: repoRoot)
             let statuses = gitService.getFileStatuses(for: repoRoot)
 
@@ -531,6 +533,7 @@ class AppState: ObservableObject {
 
             await MainActor.run {
                 self.currentBranch = branch
+                self.availableBranches = branches
                 self.gitFileStatuses = statuses
                 self.stagedFiles = staged
                 self.unstagedFiles = unstaged
@@ -541,6 +544,7 @@ class AppState: ObservableObject {
     private func clearGitState() {
         isGitRepository = false
         currentBranch = nil
+        availableBranches = []
         gitFileStatuses = [:]
         stagedFiles = []
         unstagedFiles = []
@@ -622,6 +626,51 @@ class AppState: ObservableObject {
         if result.success {
             refreshGitStatus()
             refreshWorkspaceFiles()
+        }
+        return result
+    }
+
+    // MARK: - Git Branch Operations
+
+    /// Switch to a different git branch
+    func switchBranch(to branchName: String) -> (success: Bool, error: String?) {
+        guard let repoRoot = getGitRepoRoot() else {
+            return (false, "No workspace open")
+        }
+
+        // Check for uncommitted changes
+        if !stagedFiles.isEmpty || !unstagedFiles.isEmpty {
+            return (false, "You have uncommitted changes. Please commit or stash them before switching branches.")
+        }
+
+        let result = GitService.shared.switchBranch(to: branchName, in: repoRoot)
+        if result.success {
+            refreshGitStatus()
+            refreshWorkspaceFiles()
+            showToast("Switched to \(branchName)", icon: "arrow.triangle.branch")
+        }
+        return result
+    }
+
+    /// Create a new git branch
+    func createBranch(name: String, switchTo: Bool = true) -> (success: Bool, error: String?) {
+        guard let repoRoot = getGitRepoRoot() else {
+            return (false, "No workspace open")
+        }
+
+        // Check if branch already exists
+        if availableBranches.contains(name) {
+            return (false, "Branch '\(name)' already exists")
+        }
+
+        let result = GitService.shared.createBranch(name: name, switchTo: switchTo, in: repoRoot)
+        if result.success {
+            refreshGitStatus()
+            if switchTo {
+                showToast("Created and switched to \(name)", icon: "arrow.triangle.branch")
+            } else {
+                showToast("Created branch \(name)", icon: "arrow.triangle.branch")
+            }
         }
         return result
     }

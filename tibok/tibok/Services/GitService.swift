@@ -131,6 +131,35 @@ class GitService: ObservableObject {
         return result.exitCode == 0
     }
 
+    /// Switch to a branch with error reporting
+    func switchBranch(to branchName: String, in repoURL: URL) -> (success: Bool, error: String?) {
+        let result = runGitCommand(["checkout", branchName], in: repoURL)
+        if result.exitCode == 0 {
+            return (true, nil)
+        } else {
+            return (false, result.error ?? "Failed to switch branch")
+        }
+    }
+
+    /// Create a new branch
+    func createBranch(name: String, switchTo: Bool, in repoURL: URL) -> (success: Bool, error: String?) {
+        // Create the branch
+        let createResult = runGitCommand(["branch", name], in: repoURL)
+        if createResult.exitCode != 0 {
+            return (false, createResult.error ?? "Failed to create branch")
+        }
+
+        // Switch to it if requested
+        if switchTo {
+            let checkoutResult = runGitCommand(["checkout", name], in: repoURL)
+            if checkoutResult.exitCode != 0 {
+                return (false, checkoutResult.error ?? "Created branch but failed to switch to it")
+            }
+        }
+
+        return (true, nil)
+    }
+
     // MARK: - Status Operations
 
     /// Get status for all changed files in the repository
