@@ -42,9 +42,11 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.0.2</string>
+	<string>1.0.3</string>
 	<key>CFBundleVersion</key>
-	<string>1766419913</string>
+	<string>1767039691</string>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.productivity</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>14.0</string>
 	<key>NSHighResolutionCapable</key>
@@ -65,8 +67,6 @@
 	<string>/ay6S8AYXl9889RX+1pojK/3lNKgerQ7bFP5gSLUh9E=</string>
 	<key>SUScheduledCheckInterval</key>
 	<integer>86400</integer>
-	<key>LSApplicationCategoryType</key>
-	<string>public.app-category.productivity</string>
 	<key>UTImportedTypeDeclarations</key>
 	<array>
 		<dict>

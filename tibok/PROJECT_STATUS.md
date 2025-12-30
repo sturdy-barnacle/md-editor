@@ -1,8 +1,8 @@
 # Project Status Report
 
 **Project**: tibok - Native macOS Markdown Editor
-**Current Version**: 1.0.2
-**Last Updated**: 2025-12-22
+**Current Version**: 1.0.3
+**Last Updated**: 2025-12-29
 **Status**: ✅ Production Ready
 
 ---
@@ -88,6 +88,25 @@ tibok is a feature-complete, production-ready native macOS markdown editor. The 
 
 **Status**: ✅ Fixed and verified
 
+### 3. Undo/Redo Character Loss ✅
+
+**Issue**: Entire undo steps were lost when typing fast then using undo/redo. Users would lose characters completely when attempting to undo changes.
+
+**Root Cause**: Syntax highlighting was disabling undo registration globally via `disableUndoRegistration()` / `enableUndoRegistration()` calls. This created a race condition where user edits during the 300ms syntax highlighting window weren't registered in the undo stack.
+
+**Solution**:
+- Removed redundant `disableUndoRegistration()` and `enableUndoRegistration()` calls from `applyHighlightingDebounced()`
+- `NSTextStorage.beginEditing()` / `endEditing()` already prevents attribute-only changes from registering undo
+- Added safety check to skip highlighting if undo/redo is in progress
+- Implemented intelligent undo grouping based on 1-second typing pauses for better UX
+
+**Impact**:
+- Undo/redo now works reliably without losing any characters
+- Better undo granularity - typing broken into reasonable chunks instead of one giant undo group
+- No performance impact, all existing functionality preserved
+
+**Status**: ✅ Fixed and verified (2025-12-29)
+
 ## Documentation
 
 ### For Users
@@ -104,6 +123,13 @@ tibok is a feature-complete, production-ready native macOS markdown editor. The 
   - Troubleshooting
   - Key management
 
+- **App Store Submission Guides** - Complete documentation for App Store builds
+  - **[APP_STORE_BUILD_GUIDE.md](APP_STORE_BUILD_GUIDE.md)** - Definitive reference (650+ lines)
+  - **[APP_STORE_QUICK_REFERENCE.md](APP_STORE_QUICK_REFERENCE.md)** - Quick checklist for every build
+  - **[ITMS-90546_FIX_DOCUMENTATION.md](ITMS-90546_FIX_DOCUMENTATION.md)** - Technical deep dive
+  - **[v1.0.2_BUILD_SUMMARY.md](v1.0.2_BUILD_SUMMARY.md)** - Build pipeline overview
+  - **[APP_STORE_DOCUMENTATION_INDEX.md](APP_STORE_DOCUMENTATION_INDEX.md)** - Navigation & issue resolution
+
 ### Project Configuration
 - **[.gitignore](.gitignore)** - Security-focused ignore patterns
 - **[tibok/Resources/Info.plist](tibok/Resources/Info.plist)** - App metadata and version
@@ -118,8 +144,37 @@ tibok is a feature-complete, production-ready native macOS markdown editor. The 
   - ✅ Git operations
   - ✅ Application launching
 
+### Compiler Warnings (v1.0.2)
+
+**Status**: ✅ Resolved and documented
+
+**What was fixed**:
+1. **LogService.swift:89** - Removed redundant `[String: Any]` cast
+   - `userInfo` is already `[String: Any]`, no need for conditional cast
+   - Fixed: Changed to direct property access
+
+2. **LogService.swift:86** - Added documentation comment
+   - Cast to NSError is necessary for domain, code, userInfo properties
+   - Added comment explaining why cast is needed (false positive warning)
+
+3. **WordPressExporter.swift:671** - Added documentation comment
+   - Cast to NSError needed for detailed error logging (domain, code)
+   - Added comment explaining purpose of cast
+
+4. **tibokApp.swift:139 & 144** - Documented Objective-C method limitations
+   - `undo:` and `redo:` are Objective-C methods from NSResponder
+   - Swift's type system doesn't expose these methods directly
+   - String-based selectors required; warnings are unavoidable but documented
+   - Functionality verified: undo/redo work correctly through responder chain
+
+**Impact on App Store**: ✅ Zero impact
+- All warnings were cosmetic code quality issues
+- None block compilation or app functionality
+- Build completes successfully
+- All functionality tested and working
+
 ### Known Issues
-- None reported
+- None reported (undo/redo bug fixed in v1.0.3)
 
 ## Performance
 
@@ -141,8 +196,16 @@ tibok is a feature-complete, production-ready native macOS markdown editor. The 
 - ✅ WordPress selection bug fix
 - ✅ EdDSA signature verification
 - ✅ Comprehensive documentation
+- ✅ ITMS-90546 fix (asset catalog compilation)
+- ✅ Build #11 submitted to App Store Connect
+- ✅ App Store build documentation (5 comprehensive guides, 1,959 lines)
+- ✅ Compiler warnings cleanup (redundant casts and documentation comments)
 
-### Future Considerations (Post v1.0.2)
+### Completed (v1.0.3)
+- ✅ Undo/redo character loss bug fix
+- ✅ Improved undo granularity with intelligent grouping
+
+### Future Considerations (Post v1.0.3)
 - [ ] Intel Mac support (x86_64)
 - [ ] Additional code-hosting integrations (GitLab, Gitea)
 - [ ] Enhanced export formats
@@ -204,5 +267,5 @@ For issues or feedback:
 
 ---
 
-**Last Verified**: 2025-12-22
-**Next Review**: Before next release
+**Last Verified**: 2025-12-29
+**Next Review**: Before v1.0.3 release

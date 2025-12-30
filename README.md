@@ -24,7 +24,7 @@ A native macOS markdown editor built with SwiftUI for Apple Silicon. Fast, local
 
 ## Installation
 
-Coming soon to the Mac App Store.
+Coming soon to the App Store.
 
 ### Download the latest release here on GitHub
 
