@@ -20,6 +20,7 @@ struct GitPanelView: View {
     @State private var showDiffSheet = false
     @State private var selectedDiffFile: GitChangedFile?
     @State private var isDiffStaged = false
+    @State private var showHistorySheet = false
     @AppStorage("sidebar.showGit") private var persistShowGit = true
 
     let uiState = UIStateService.shared
@@ -149,6 +150,16 @@ struct GitPanelView: View {
                         .buttonStyle(.animatedIcon)
                         .help("Unstage All")
                     }
+
+                    // History button
+                    Button {
+                        showHistorySheet = true
+                    } label: {
+                        Image(systemName: "clock.arrow.circlepath")
+                            .font(.system(size: 12))
+                    }
+                    .buttonStyle(.animatedIcon)
+                    .help("Commit History")
 
                     Spacer()
 
@@ -285,6 +296,11 @@ struct GitPanelView: View {
         .sheet(isPresented: $showDiffSheet) {
             if let file = selectedDiffFile, let repoURL = appState.workspaceURL {
                 GitDiffView(fileURL: file.url, repoURL: repoURL, isStaged: isDiffStaged)
+            }
+        }
+        .sheet(isPresented: $showHistorySheet) {
+            if let repoURL = appState.workspaceURL {
+                GitHistoryView(repoURL: repoURL)
             }
         }
         .alert("Commit Failed", isPresented: $showError) {

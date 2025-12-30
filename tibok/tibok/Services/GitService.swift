@@ -484,6 +484,63 @@ class GitService: ObservableObject {
         return result.exitCode == 0
     }
 
+    // MARK: - Commit History Operations
+
+    /// Get commit log with pagination
+    func getCommitLog(for repoURL: URL, limit: Int = 100, offset: Int = 0) -> [GitCommit] {
+        // Format: hash|short_hash|author|email|timestamp|subject
+        let format = "%H|%h|%an|%ae|%at|%s"
+        let args = ["log", "--format=\(format)", "--skip=\(offset)", "-n", "\(limit)"]
+
+        let result = runGitCommand(args, in: repoURL)
+        guard let output = result.output, result.exitCode == 0 else {
+            return []
+        }
+
+        var commits: [GitCommit] = []
+        let lines = output.components(separatedBy: .newlines).filter { !$0.isEmpty }
+
+        for line in lines {
+            let components = line.components(separatedBy: "|")
+            guard components.count >= 6 else { continue }
+
+            let hash = components[0]
+            let shortHash = components[1]
+            let author = components[2]
+            let email = components[3]
+            let timestamp = TimeInterval(components[4]) ?? 0
+            let message = components[5...].joined(separator: "|") // Handle messages with |
+
+            let commit = GitCommit(
+                hash: hash,
+                shortHash: shortHash,
+                author: author,
+                email: email,
+                date: Date(timeIntervalSince1970: timestamp),
+                message: message
+            )
+            commits.append(commit)
+        }
+
+        return commits
+    }
+
+    /// Get diff for a specific commit
+    func getCommitDiff(hash: String, in repoURL: URL) -> String? {
+        let result = runGitCommand(["show", hash], in: repoURL)
+        return result.output
+    }
+
+    /// Get list of files changed in a commit
+    func getCommitFiles(hash: String, in repoURL: URL) -> [String] {
+        let result = runGitCommand(["diff-tree", "--no-commit-id", "--name-only", "-r", hash], in: repoURL)
+        guard let output = result.output, result.exitCode == 0 else {
+            return []
+        }
+        return output.components(separatedBy: .newlines)
+            .filter { !$0.isEmpty }
+    }
+
     // MARK: - Git Command Execution
 
     private struct GitResult {
