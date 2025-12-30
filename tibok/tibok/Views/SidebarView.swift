@@ -719,8 +719,10 @@ struct FileTreeRow: View {
             } label: {
                 HStack {
                     Image(systemName: isExpanded ? "folder.fill" : "folder")
-                        .foregroundColor(.blue)
+                        .foregroundColor(depth == 0 ? .blue : .blue.opacity(0.7))
+                        .font(.system(size: depth == 0 ? 14 : 13))
                     Text(item.name)
+                        .fontWeight(depth == 0 ? .semibold : .regular)
 
                     // Show heart if favorited
                     if appState.isFavorite(item.url) {
