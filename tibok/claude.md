@@ -126,6 +126,7 @@ tibok/
 │   ├── Models/                # Data models (AppState, GitModels, etc.)
 │   ├── Views/                 # SwiftUI views (EditorView, GitPanelView, etc.)
 │   ├── Services/              # Business logic (GitService, WorkspaceMonitor)
+│   ├── Helpers/               # Helper classes (GitPanelManager for NSPanel modals)
 │   ├── Extensions/            # Extension methods (KeyboardShortcuts)
 │   └── Resources/             # Assets, icons, Info.plist, entitlements
 ├── scripts/                   # Build automation scripts
@@ -163,6 +164,98 @@ tibok/
 3. **Keyboard Shortcuts**: Update `user_docs/features/keyboard-shortcuts.md`
 4. **Changelog**: Update `APP_STORE_RELEASE.md` with feature description
 5. **Testing**: Build and test locally before committing
+
+### UI Patterns
+
+#### NSPanel for Modals (Preferred)
+
+For modals that need instant show/dismiss without animation flash, use NSPanel instead of SwiftUI sheets:
+
+**When to use NSPanel:**
+- Git operations (commit, branch, diff, history) ✅ Implemented Dec 30, 2025
+- Any modal where sheet dismissal causes visual flash
+- Modals that need precise control over appearance/dismissal
+
+**Pattern** (see `GitPanelManager.swift` for reference):
+```swift
+@MainActor
+class PanelManager: ObservableObject {
+    private var panel: NSPanel?
+
+    func showPanel(onDismiss: @escaping () -> Void) {
+        dismissPanel()
+
+        let panel = NSPanel(
+            contentRect: NSRect(x: 0, y: 0, width: 400, height: 300),
+            styleMask: [.titled, .closable],  // ESC key support
+            backing: .buffered,
+            defer: false
+        )
+        panel.title = "Panel Title"
+        panel.isFloatingPanel = true
+        panel.level = .floating
+        panel.becomesKeyOnlyIfNeeded = true
+
+        let hostingView = NSHostingView(rootView: YourSwiftUIView(onDismiss: onDismiss))
+        panel.contentView = hostingView
+        panel.center()
+
+        self.panel = panel
+        panel.makeKeyAndOrderFront(nil)  // Instant show
+    }
+
+    func dismissPanel() {
+        panel?.close()  // Instant dismiss
+        panel = nil
+    }
+}
+```
+
+**Key benefits:**
+- `makeKeyAndOrderFront(nil)` = instant show, no animation
+- `close()` = instant dismiss, zero flash
+- ESC key works via `.closable` style mask
+- Pattern proven in EditorView (slash menu, date picker, emoji picker)
+
+#### Atomic State for Complex UI
+
+When multiple state variables control a single UI interaction, use atomic state struct to prevent race conditions:
+
+**Problem** (race condition):
+```swift
+@State private var selectedFile: File?
+@State private var isStaged: Bool = false
+@State private var showModal: Bool = false
+
+// THREE SEPARATE UPDATES - can execute out of order!
+selectedFile = file
+isStaged = false
+showModal = true
+```
+
+**Solution** (atomic state):
+```swift
+struct PresentationState: Equatable {
+    let file: File
+    let isStaged: Bool
+}
+
+@State private var presentationState: PresentationState?
+
+// SINGLE ATOMIC UPDATE
+presentationState = PresentationState(file: file, isStaged: false)
+
+// onChange fires only with complete valid state
+.onChange(of: presentationState) { old, new in
+    if let state = new {
+        showPanel(file: state.file, staged: state.isStaged)
+        presentationState = nil
+    }
+}
+```
+
+**Implemented in:**
+- `GitPanelView.swift` - DiffPresentationState (Dec 30, 2025)
 
 ### Xcode Project Management
 

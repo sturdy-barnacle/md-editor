@@ -112,6 +112,12 @@ markdown,editor,git,version control,writing,developer,text editor,documentation,
 - **Error Handling**: Better error messages and user feedback
 - **App Sandbox Compliance**: Full Mac App Store sandboxing support
 
+#### Bug Fixes (December 30, 2025)
+- **Git Modal Flash Eliminated**: Migrated all git modals (commit, branch, diff, history) from SwiftUI sheets to NSPanel for instant, flash-free dismissal
+- **Diff Preview Race Condition Fixed**: Implemented atomic state management to prevent diff previews from failing to load on first click
+- **Untracked File Diff Button Hidden**: Removed misleading "View Changes" button from untracked files that would open empty modals
+- **Enhanced Error Logging**: Added diagnostic logging to git operations for easier debugging
+
 #### Developer Features
 - **Swift Package Manager**: Full SPM support for dependencies
 - **Code Signing**: Automatic signing for App Store distribution
