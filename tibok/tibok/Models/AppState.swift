@@ -493,7 +493,10 @@ class AppState: ObservableObject {
     // MARK: - Git Operations
 
     func refreshGitStatus() {
+        print("🔍 [AppState] Starting git status refresh...")
+
         guard let url = workspaceURL else {
+            print("❌ [AppState] No workspace URL set")
             clearGitState()
             return
         }
@@ -505,19 +508,24 @@ class AppState: ObservableObject {
             // Small delay to debounce rapid refreshes
             try? await Task.sleep(nanoseconds: 100_000_000) // 100ms
 
-            guard !Task.isCancelled else { return }
+            guard !Task.isCancelled else {
+                print("⚠️ [AppState] Git status refresh was cancelled")
+                return
+            }
 
             let gitService = GitService.shared
 
             // Check if workspace is a git repo and get the actual repo root
             guard let repoRoot = gitService.getRepositoryRoot(for: url) else {
                 await MainActor.run {
+                    print("❌ [AppState] Git repository not found in workspace")
                     self.isGitRepository = false
                     self.clearGitState()
                 }
                 return
             }
 
+            print("✅ [AppState] Git repository detected, loading status...")
             await MainActor.run {
                 self.isGitRepository = true
             }
@@ -634,21 +642,33 @@ class AppState: ObservableObject {
 
     /// Switch to a different git branch
     func switchBranch(to branchName: String) -> (success: Bool, error: String?) {
+        print("🔀 [AppState] Attempting to switch to branch: \(branchName)")
+
         guard let repoRoot = getGitRepoRoot() else {
+            print("❌ [AppState] No git repository found")
             return (false, "No workspace open")
         }
 
         // Check for uncommitted changes
         if !stagedFiles.isEmpty || !unstagedFiles.isEmpty {
+            let count = stagedFiles.count + unstagedFiles.count
+            print("⚠️ [AppState] Cannot switch: \(count) uncommitted change(s)")
+            print("   Staged: \(stagedFiles.count), Unstaged: \(unstagedFiles.count)")
             return (false, "You have uncommitted changes. Please commit or stash them before switching branches.")
         }
 
+        print("✅ [AppState] No uncommitted changes, proceeding with switch")
         let result = GitService.shared.switchBranch(to: branchName, in: repoRoot)
+
         if result.success {
+            print("✅ [AppState] Branch switch successful, refreshing state")
             refreshGitStatus()
             refreshWorkspaceFiles()
             showToast("Switched to \(branchName)", icon: "arrow.triangle.branch")
+        } else {
+            print("❌ [AppState] Branch switch failed: \(result.error ?? "unknown")")
         }
+
         return result
     }
 

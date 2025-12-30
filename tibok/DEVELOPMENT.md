@@ -220,8 +220,85 @@ The Team ID doesn't match any Developer ID Application certificate in your Keych
 
 ## Release History
 
+- **v1.0.3** (In Development) - Git UI improvements, NSPanel migration - December 30, 2025
 - **v1.0.2** - Bug fixes (keyboard input, WordPress selection) - Code-signed and distributed via DMG
 - **v1.0.1** - Previous release
 - **v1.0.0** - Initial release
 
 All releases from v1.0.0 onwards are code-signed with Developer ID certificates.
+
+## Development Progress Notes
+
+### December 30, 2025 - Git UI Improvements
+
+**Issues Identified:**
+1. Modal flash on all git sheets (commit, branch, diff, history) - content briefly reappears during dismissal
+2. Diff preview race condition - sometimes fails to load on first click, requires retry
+3. Untracked files showing misleading "View Changes" button that opens empty modal
+
+**Root Causes:**
+1. **Modal Flash**: SwiftUI sheet dismissal re-evaluates content during animation - a framework limitation
+2. **Race Condition**: Three separate @State updates (selectedDiffFile, isDiffStaged, showDiffSheet) execute out of order due to async batching
+3. **Untracked Files**: Diff button shown unconditionally without checking file.status
+
+**Solution Implemented:**
+- Migrated all 4 git modals from SwiftUI sheets to AppKit NSPanel
+- NSPanel provides instant show/dismiss with zero animation flash
+- Pattern based on proven EditorView implementation (slash menu, date picker, emoji picker)
+
+**Files Changed:**
+1. **Created**: `tibok/Helpers/GitPanelManager.swift` (213 lines)
+   - Centralized NSPanel manager for all 4 git modals
+   - Each panel method: show/dismiss with SwiftUI content via NSHostingView
+   - Registered in Xcode project via xcodegen
+
+2. **Modified**: `tibok/Views/GitPanelView.swift`
+   - Added DiffPresentationState struct for atomic state management
+   - Replaced 12 @State variables with panelManager and diffState
+   - Updated 4 button handlers to call panelManager methods
+   - Removed 70 lines of sheet modifiers
+   - Added onChange handler for diff presentation
+
+3. **Modified**: `tibok/Views/GitDiffView.swift`
+   - Added onDismiss callback parameter
+   - Removed Environment.dismiss dependency
+   - Added error logging to loadDiff()
+
+4. **Modified**: `tibok/Views/GitHistoryView.swift`
+   - Added onDismiss callback parameter
+   - Removed Environment.dismiss dependency
+   - Added error logging to loadCommits()
+
+5. **Modified**: `tibok/Services/GitService.swift`
+   - Added error logging to getDiff() method
+   - Guards for invalid relative paths
+
+**Technical Details:**
+- NSPanel pattern: `.makeKeyAndOrderFront(nil)` for instant show, `.close()` for instant dismiss
+- Style masks: `[.titled, .closable]` for modal, `[.titled, .closable, .resizable]` for resizable panels
+- Atomic state: Single struct instead of 3 separate @State variables prevents race condition
+- Error logging: Diagnostic prints for debugging git operations
+
+**Build Status:**
+- ✅ Build successful (4.16s)
+- ✅ All files compiled without errors
+- ✅ Only pre-existing warnings (unrelated to changes)
+
+**Testing Checklist:**
+- [ ] Commit panel: No flash on open/close
+- [ ] Branch panel: No flash on open/close
+- [ ] Diff panel: No flash, no race condition, loads on first click
+- [ ] History panel: No flash on open/close
+- [ ] ESC key dismisses all panels
+- [ ] All git workflows functional
+
+**Documentation Updated:**
+- ✅ APP_STORE_RELEASE.md - Added bug fixes to changelog
+- ✅ CLAUDE.md - Documented NSPanel pattern and atomic state pattern
+- ✅ CLAUDE.md - Updated project structure to include Helpers/
+- ✅ DEVELOPMENT.md - Added progress notes
+
+**Next Steps:**
+- User testing to verify modal flash elimination
+- User testing to verify diff preview reliability
+- Consider applying NSPanel pattern to other modals if needed

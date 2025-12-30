@@ -6,21 +6,26 @@
 //
 
 import SwiftUI
+import AppKit
+
+/// Atomic state for diff preview to prevent race condition
+struct DiffPresentationState: Equatable {
+    let file: GitChangedFile
+    let isStaged: Bool
+
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.file.id == rhs.file.id && lhs.isStaged == rhs.isStaged
+    }
+}
 
 struct GitPanelView: View {
     @EnvironmentObject var appState: AppState
-    @State private var commitMessage = ""
-    @State private var sheetMessage = ""  // Separate state for sheet to isolate bindings
-    @State private var showCommitSheet = false
+    @StateObject private var panelManager = GitPanelManager()
+    @State private var diffState: DiffPresentationState?
     @State private var commitError: String?
     @State private var showError = false
-    @State private var committingStagedCount = 0
-    @State private var showNewBranchSheet = false
-    @State private var newBranchName = ""
-    @State private var showDiffSheet = false
-    @State private var selectedDiffFile: GitChangedFile?
-    @State private var isDiffStaged = false
-    @State private var showHistorySheet = false
+    @State private var pushError: String?
+    @State private var showPushErrorAlert = false
     @AppStorage("sidebar.showGit") private var persistShowGit = true
 
     let uiState = UIStateService.shared
@@ -35,7 +40,7 @@ struct GitPanelView: View {
                             Button {
                                 let result = appState.switchBranch(to: branch)
                                 if !result.success, let error = result.error {
-                                    appState.showToast(error, icon: "exclamationmark.triangle.fill")
+                                    uiState.showToast(error, icon: "exclamationmark.triangle.fill", duration: 4.0)
                                 }
                             } label: {
                                 HStack {
@@ -48,7 +53,12 @@ struct GitPanelView: View {
                         }
                         Divider()
                         Button("New Branch...") {
-                            showNewBranchSheet = true
+                            panelManager.showBranchPanel { branchName in
+                                let result = appState.createBranch(name: branchName, switchTo: true)
+                                if !result.success, let error = result.error {
+                                    uiState.showToast(error, icon: "exclamationmark.triangle.fill")
+                                }
+                            }
                         }
                     } label: {
                         HStack {
@@ -76,9 +86,7 @@ struct GitPanelView: View {
                     DisclosureGroup {
                         ForEach(appState.stagedFiles, id: \.id) { file in
                             GitFileRow(file: file, isStaged: true) {
-                                selectedDiffFile = file
-                                isDiffStaged = true
-                                showDiffSheet = true
+                                diffState = DiffPresentationState(file: file, isStaged: true)
                             }
                         }
                     } label: {
@@ -99,9 +107,7 @@ struct GitPanelView: View {
                     DisclosureGroup {
                         ForEach(appState.unstagedFiles, id: \.id) { file in
                             GitFileRow(file: file, isStaged: false) {
-                                selectedDiffFile = file
-                                isDiffStaged = false
-                                showDiffSheet = true
+                                diffState = DiffPresentationState(file: file, isStaged: false)
                             }
                         }
                     } label: {
@@ -153,13 +159,25 @@ struct GitPanelView: View {
 
                     // History button
                     Button {
-                        showHistorySheet = true
+                        if let repoURL = appState.workspaceURL {
+                            panelManager.showHistoryPanel(repoURL: repoURL)
+                        }
                     } label: {
                         Image(systemName: "clock.arrow.circlepath")
                             .font(.system(size: 12))
                     }
                     .buttonStyle(.animatedIcon)
                     .help("Commit History")
+
+                    // Open Remote button
+                    Button {
+                        openRemoteRepository()
+                    } label: {
+                        Image(systemName: "link")
+                            .font(.system(size: 12))
+                    }
+                    .buttonStyle(.animatedIcon)
+                    .help("Open Remote Repository")
 
                     Spacer()
 
@@ -170,10 +188,20 @@ struct GitPanelView: View {
                             if !appState.unstagedFiles.isEmpty {
                                 appState.stageAll()
                             }
-                            // Capture count AFTER staging
-                            committingStagedCount = appState.stagedFiles.count
-                            sheetMessage = ""  // Reset sheet message
-                            showCommitSheet = true
+
+                            panelManager.showCommitPanel(
+                                stagedCount: appState.stagedFiles.count,
+                                onCommit: { message in
+                                    let result = appState.commitChanges(message: message)
+                                    if result.success {
+                                        appState.refreshGitStatus()
+                                    } else {
+                                        commitError = result.error
+                                        showError = true
+                                    }
+                                },
+                                onCancel: { }
+                            )
                         } label: {
                             HStack(spacing: 4) {
                                 Image(systemName: "checkmark.circle")
@@ -208,7 +236,9 @@ struct GitPanelView: View {
                                 uiState.showToast("Push successful", icon: "checkmark.circle.fill", duration: 2.0)
                             }
                         } else {
-                            uiState.showToast("Push failed: \(result.error ?? "unknown")", icon: "xmark.circle", duration: 2.0)
+                            // Show detailed error alert instead of brief toast
+                            pushError = result.error ?? "Unknown error occurred during push"
+                            showPushErrorAlert = true
                         }
                     } label: {
                         Image(systemName: "arrow.up.circle")
@@ -241,66 +271,14 @@ struct GitPanelView: View {
                 isExpanded: $persistShowGit
             )
         }
-        .sheet(isPresented: $showCommitSheet) {
-            GitCommitSheet(
-                message: $sheetMessage,
-                stagedCount: committingStagedCount,
-                onCommit: {
-                    // Capture message before clearing
-                    let messageToCommit = sheetMessage
-
-                    // Close sheet immediately without any state changes
-                    withTransaction(Transaction(animation: nil)) {
-                        showCommitSheet = false
-                    }
-
-                    // Commit and refresh after sheet fully dismisses (1.2+ seconds)
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
-                        let result = appState.commitChanges(message: messageToCommit, deferRefresh: true)
-                        if result.success {
-                            // Refresh after commit
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                                appState.refreshGitStatus()
-                            }
-                            // Clear both message vars after everything completes
-                            sheetMessage = ""
-                            commitMessage = ""
-                        } else {
-                            commitError = result.error
-                            showError = true
-                        }
-                    }
-                },
-                onCancel: {
-                    showCommitSheet = false
-                }
-            )
-        }
-        .sheet(isPresented: $showNewBranchSheet) {
-            NewBranchSheet(
-                branchName: $newBranchName,
-                onCreate: {
-                    guard !newBranchName.isEmpty else {
-                        showNewBranchSheet = false
-                        return
-                    }
-                    let result = appState.createBranch(name: newBranchName, switchTo: true)
-                    if !result.success, let error = result.error {
-                        appState.showToast(error, icon: "exclamationmark.triangle.fill")
-                    }
-                    newBranchName = ""
-                    showNewBranchSheet = false
-                }
-            )
-        }
-        .sheet(isPresented: $showDiffSheet) {
-            if let file = selectedDiffFile, let repoURL = appState.workspaceURL {
-                GitDiffView(fileURL: file.url, repoURL: repoURL, isStaged: isDiffStaged)
-            }
-        }
-        .sheet(isPresented: $showHistorySheet) {
-            if let repoURL = appState.workspaceURL {
-                GitHistoryView(repoURL: repoURL)
+        .onChange(of: diffState) { oldValue, newValue in
+            if let state = newValue, let repoURL = appState.workspaceURL {
+                panelManager.showDiffPanel(
+                    fileURL: state.file.url,
+                    repoURL: repoURL,
+                    isStaged: state.isStaged
+                )
+                diffState = nil
             }
         }
         .alert("Commit Failed", isPresented: $showError) {
@@ -309,6 +287,58 @@ struct GitPanelView: View {
             }
         } message: {
             Text(commitError ?? "Unknown error")
+        }
+        .alert("Push Failed", isPresented: $showPushErrorAlert) {
+            Button("OK") {
+                showPushErrorAlert = false
+                pushError = nil
+            }
+            Button("Copy Error") {
+                if let error = pushError {
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(error, forType: .string)
+                }
+                showPushErrorAlert = false
+                pushError = nil
+            }
+        } message: {
+            if let error = pushError {
+                Text(error)
+            } else {
+                Text("An unknown error occurred during push")
+            }
+        }
+    }
+
+    // MARK: - Helper Methods
+
+    private func openRemoteRepository() {
+        guard let repoURL = appState.workspaceURL else {
+            uiState.showToast("No workspace open", icon: "exclamationmark.triangle.fill")
+            return
+        }
+
+        // Get remote URL from git config
+        let gitService = GitService.shared
+        let (remoteURL, _) = gitService.getRemoteURL(for: repoURL)
+
+        guard let remoteURL = remoteURL else {
+            uiState.showToast("No remote repository configured", icon: "exclamationmark.triangle.fill", duration: 2.5)
+            return
+        }
+
+        // Convert to web URL with current branch
+        guard let webURL = gitService.convertToWebURL(remoteURL, branch: appState.currentBranch) else {
+            uiState.showToast("Invalid remote URL format", icon: "exclamationmark.triangle.fill")
+            return
+        }
+
+        // Open in default browser
+        if let url = URL(string: webURL) {
+            NSWorkspace.shared.open(url)
+            uiState.showToast("Opening repository...", icon: "link", duration: 1.5)
+        } else {
+            uiState.showToast("Failed to open URL", icon: "exclamationmark.triangle.fill")
         }
     }
 }
@@ -328,24 +358,33 @@ struct GitFileRow: View {
                 .fill(statusColor)
                 .frame(width: 6, height: 6)
 
-            // Filename
-            Text(file.filename)
-                .font(.system(size: 11))
-                .lineLimit(1)
-                .truncationMode(.middle)
+            // Filename - clickable to open file
+            Button {
+                appState.loadDocument(from: file.url)
+            } label: {
+                Text(file.filename)
+                    .font(.system(size: 11))
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                    .foregroundColor(.primary)
+            }
+            .buttonStyle(.plain)
+            .help("Open File")
 
             Spacer()
 
-            // Diff button
-            Button {
-                onShowDiff?()
-            } label: {
-                Image(systemName: "doc.text.magnifyingglass")
-                    .font(.system(size: 9, weight: .bold))
-                    .foregroundColor(.secondary)
+            // Diff button - only show for tracked files
+            if file.status != .untracked {
+                Button {
+                    onShowDiff?()
+                } label: {
+                    Image(systemName: "doc.text.magnifyingglass")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.blue)
+                }
+                .buttonStyle(.animatedIcon)
+                .help("View Diff")
             }
-            .buttonStyle(.animatedIcon)
-            .help("View Diff")
 
             // Action buttons
             if isStaged {
@@ -383,8 +422,13 @@ struct GitFileRow: View {
             }
         }
         .padding(.vertical, 1)
-        .contentShape(Rectangle())
         .contextMenu {
+            if file.status != .untracked {
+                Button("View Diff") {
+                    onShowDiff?()
+                }
+                Divider()
+            }
             Button("Open File") {
                 appState.loadDocument(from: file.url)
             }

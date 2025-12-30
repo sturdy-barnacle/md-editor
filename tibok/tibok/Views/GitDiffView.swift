@@ -12,10 +12,10 @@ struct GitDiffView: View {
     let fileURL: URL
     let repoURL: URL
     let isStaged: Bool
+    let onDismiss: () -> Void
 
     @State private var diffContent: String = ""
     @State private var isLoading = true
-    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         VStack(spacing: 0) {
@@ -32,7 +32,7 @@ struct GitDiffView: View {
                 Spacer()
 
                 Button("Close") {
-                    dismiss()
+                    onDismiss()
                 }
                 .keyboardShortcut(.cancelAction)
             }
@@ -85,8 +85,14 @@ struct GitDiffView: View {
     private func loadDiff() {
         Task {
             let diff = GitService.shared.getDiff(for: fileURL, in: repoURL, staged: isStaged)
+
             await MainActor.run {
-                diffContent = diff ?? ""
+                if let diff = diff {
+                    diffContent = diff
+                } else {
+                    print("GitDiffView: Failed to load diff for \(fileURL.lastPathComponent)")
+                    diffContent = ""
+                }
                 isLoading = false
             }
         }

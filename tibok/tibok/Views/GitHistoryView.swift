@@ -10,11 +10,11 @@ import SwiftUI
 struct GitHistoryView: View {
     @EnvironmentObject var appState: AppState
     let repoURL: URL
+    let onDismiss: () -> Void
 
     @State private var commits: [GitCommit] = []
     @State private var selectedCommit: GitCommit?
     @State private var isLoading = true
-    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         NavigationSplitView {
@@ -26,7 +26,7 @@ struct GitHistoryView: View {
                         .font(.headline)
                     Spacer()
                     Button("Close") {
-                        dismiss()
+                        onDismiss()
                     }
                     .keyboardShortcut(.cancelAction)
                 }
@@ -93,10 +93,13 @@ struct GitHistoryView: View {
     private func loadCommits() {
         Task {
             let commitList = GitService.shared.getCommitLog(for: repoURL, limit: 100)
+
             await MainActor.run {
+                if commitList.isEmpty {
+                    print("GitHistoryView: No commits found")
+                }
                 commits = commitList
                 isLoading = false
-                // Auto-select first commit
                 if !commits.isEmpty {
                     selectedCommit = commits[0]
                 }
