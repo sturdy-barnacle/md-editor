@@ -99,6 +99,9 @@ class AppState: ObservableObject {
     @Published var expandedFolders: Set<String> = []  // Stores relative paths of expanded folders
     @AppStorage("workspace.smartFiltering") var smartFilteringEnabled = true
 
+    // Workspace monitoring
+    private let workspaceMonitor = WorkspaceMonitor()
+
     // Git state
     @Published var isGitRepository: Bool = false
     @Published var currentBranch: String?
@@ -322,9 +325,17 @@ class AppState: ObservableObject {
         workspaceURL = url
         saveWorkspaceState()
         refreshWorkspaceFiles()
+
+        // Start monitoring workspace for external changes
+        workspaceMonitor.startMonitoring(url: url) { [weak self] in
+            Task { @MainActor in
+                self?.refreshWorkspaceFiles()
+            }
+        }
     }
 
     func closeWorkspace() {
+        workspaceMonitor.stopMonitoring()
         saveWorkspaceState()  // Save before closing
         workspaceURL = nil
         workspaceFiles = []
@@ -383,6 +394,9 @@ class AppState: ObservableObject {
             return
         }
 
+        // Save currently expanded folder paths before refresh
+        let previouslyExpanded = expandedFolders
+
         var root = FileItem(url: url)
 
         if smartFilteringEnabled {
@@ -396,12 +410,16 @@ class AppState: ObservableObject {
                     var updatedRoot = root
                     updatedRoot.children = filteredChildren
                     self.workspaceFiles = updatedRoot.children ?? []
+                    // Restore expansion states after refresh
+                    self.expandedFolders = previouslyExpanded
                 }
             }
         } else {
             // Load all files immediately (no filtering)
             root.loadChildren()
             workspaceFiles = root.children ?? []
+            // Restore expansion states after refresh
+            self.expandedFolders = previouslyExpanded
         }
 
         // Refresh git status after loading files
