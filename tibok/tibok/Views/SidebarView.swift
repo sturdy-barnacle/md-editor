@@ -722,6 +722,13 @@ struct FileTreeRow: View {
                         .foregroundColor(.blue)
                     Text(item.name)
 
+                    // Show heart if favorited
+                    if appState.isFavorite(item.url) {
+                        Image(systemName: "heart.fill")
+                            .font(.system(size: 9))
+                            .foregroundColor(.pink)
+                    }
+
                     // Show small spinner if scanning
                     if isScanning && !isExpanded {
                         ProgressView()
@@ -734,6 +741,16 @@ struct FileTreeRow: View {
             .contextMenu {
                 Button("New File...") {
                     showNewFileSheet = true
+                }
+                Divider()
+                if appState.isFavorite(item.url) {
+                    Button("Remove from Favorites") {
+                        appState.removeFromFavorites(item.url)
+                    }
+                } else {
+                    Button("Add to Favorites") {
+                        appState.addToFavorites(item.url)
+                    }
                 }
                 Divider()
                 Button("Reveal in Finder") {
