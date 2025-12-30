@@ -877,6 +877,11 @@ struct FileTreeRow: View {
                     onDeleteFolder?(item.url)
                 }
             }
+            .dropDestination(for: URL.self) { droppedURLs, _ in
+                // Handle file drop on folder
+                guard let fileURL = droppedURLs.first else { return false }
+                return appState.moveFile(from: fileURL, to: item.url)
+            }
             .onChange(of: isExpanded) { _, expanded in
                 // Save expansion state to AppState
                 appState.toggleFolderExpansion(item.url.path)
@@ -968,6 +973,11 @@ struct FileTreeRow: View {
                 Button("Open") {
                     appState.loadDocument(from: item.url)
                 }
+                Button("Duplicate") {
+                    // Duplicate in same folder
+                    let parentFolder = item.url.deletingLastPathComponent()
+                    _ = appState.copyFile(from: item.url, to: parentFolder)
+                }
                 Divider()
                 if appState.isFavorite(item.url) {
                     Button("Remove from Favorites") {
@@ -986,6 +996,7 @@ struct FileTreeRow: View {
                     appState.copyPathToClipboard(item.url)
                 }
             }
+            .draggable(item.url)
         }
     }
 

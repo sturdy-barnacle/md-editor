@@ -762,6 +762,133 @@ class AppState: ObservableObject {
         }
     }
 
+    /// Move a file from one location to another
+    /// Uses git mv for tracked files to preserve history
+    func moveFile(from sourceURL: URL, to destinationFolder: URL) -> Bool {
+        // Validate source and destination
+        guard sourceURL.deletingLastPathComponent() != destinationFolder else {
+            showToast("File is already in this folder", icon: "exclamationmark.triangle.fill")
+            return false
+        }
+
+        let fileName = sourceURL.lastPathComponent
+        let destinationURL = destinationFolder.appendingPathComponent(fileName)
+
+        // Check if destination already exists
+        if FileManager.default.fileExists(atPath: destinationURL.path) {
+            showToast("A file named '\(fileName)' already exists", icon: "exclamationmark.triangle.fill")
+            return false
+        }
+
+        // Check if file is git tracked
+        guard let workspaceURL = workspaceURL else {
+            return moveFileFileSystem(from: sourceURL, to: destinationURL)
+        }
+
+        let isGitTracked = GitService.shared.isFileTracked(sourceURL, in: workspaceURL)
+
+        if isGitTracked {
+            // Use git mv for tracked files
+            if GitService.shared.moveFile(from: sourceURL, to: destinationURL, in: workspaceURL) {
+                updateFileReferences(from: sourceURL, to: destinationURL)
+                refreshWorkspaceFiles()
+                showToast("File moved", icon: "arrow.right")
+                return true
+            } else {
+                showToast("Failed to move file", icon: "exclamationmark.triangle.fill")
+                return false
+            }
+        } else {
+            // Use filesystem move for untracked files
+            return moveFileFileSystem(from: sourceURL, to: destinationURL)
+        }
+    }
+
+    /// Move file using filesystem operations
+    private func moveFileFileSystem(from sourceURL: URL, to destinationURL: URL) -> Bool {
+        do {
+            try FileManager.default.moveItem(at: sourceURL, to: destinationURL)
+            updateFileReferences(from: sourceURL, to: destinationURL)
+            refreshWorkspaceFiles()
+            showToast("File moved", icon: "arrow.right")
+            return true
+        } catch {
+            showToast("Failed to move file", icon: "exclamationmark.triangle.fill")
+            return false
+        }
+    }
+
+    /// Copy a file with automatic renaming if conflict exists
+    func copyFile(from sourceURL: URL, to destinationFolder: URL) -> Bool {
+        let fileName = sourceURL.lastPathComponent
+        let fileExtension = sourceURL.pathExtension
+        let baseName = fileName.replacingOccurrences(of: ".\(fileExtension)", with: "")
+
+        var destinationURL = destinationFolder.appendingPathComponent(fileName)
+        var counter = 1
+
+        // Auto-rename if file exists
+        while FileManager.default.fileExists(atPath: destinationURL.path) {
+            let newName = fileExtension.isEmpty
+                ? "\(baseName) copy \(counter)"
+                : "\(baseName) copy \(counter).\(fileExtension)"
+            destinationURL = destinationFolder.appendingPathComponent(newName)
+            counter += 1
+        }
+
+        do {
+            try FileManager.default.copyItem(at: sourceURL, to: destinationURL)
+            refreshWorkspaceFiles()
+            showToast("File duplicated", icon: "doc.on.doc")
+            return true
+        } catch {
+            showToast("Failed to duplicate file", icon: "exclamationmark.triangle.fill")
+            return false
+        }
+    }
+
+    /// Move multiple files to a destination folder
+    func moveFiles(_ sourceURLs: [URL], to destinationFolder: URL) -> Bool {
+        var successCount = 0
+        var failCount = 0
+
+        for sourceURL in sourceURLs {
+            if moveFile(from: sourceURL, to: destinationFolder) {
+                successCount += 1
+            } else {
+                failCount += 1
+            }
+        }
+
+        if failCount == 0 {
+            showToast("Moved \(successCount) file\(successCount == 1 ? "" : "s")", icon: "arrow.right")
+        } else {
+            showToast("Moved \(successCount), failed \(failCount)", icon: "exclamationmark.triangle.fill")
+        }
+
+        return failCount == 0
+    }
+
+    /// Update all references when a file is moved
+    private func updateFileReferences(from oldURL: URL, to newURL: URL) {
+        // Update currently open document
+        if currentDocument.fileURL == oldURL {
+            currentDocument.fileURL = newURL
+        }
+
+        // Update recent files
+        if let index = recentFiles.firstIndex(of: oldURL) {
+            recentFiles[index] = newURL
+            saveRecentFiles()
+        }
+
+        // Update favorites
+        if let index = favoriteFiles.firstIndex(of: oldURL) {
+            favoriteFiles[index] = newURL
+            saveFavorites()
+        }
+    }
+
     func renameFile(at url: URL, to newName: String) {
         let newURL = url.deletingLastPathComponent().appendingPathComponent(newName)
 

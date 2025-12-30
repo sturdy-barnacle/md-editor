@@ -439,6 +439,22 @@ class GitService: ObservableObject {
         return result.output
     }
 
+    /// Check if a file is tracked by git
+    func isFileTracked(_ fileURL: URL, in repoURL: URL) -> Bool {
+        let relativePath = fileURL.path.replacingOccurrences(of: repoURL.path + "/", with: "")
+        let result = runGitCommand(["ls-files", relativePath], in: repoURL)
+        return !(result.output?.isEmpty ?? true)
+    }
+
+    /// Move a file using git mv (preserves history)
+    func moveFile(from sourceURL: URL, to destinationURL: URL, in repoURL: URL) -> Bool {
+        let sourcePath = sourceURL.path.replacingOccurrences(of: repoURL.path + "/", with: "")
+        let destPath = destinationURL.path.replacingOccurrences(of: repoURL.path + "/", with: "")
+
+        let result = runGitCommand(["mv", sourcePath, destPath], in: repoURL)
+        return result.exitCode == 0
+    }
+
     // MARK: - Git Command Execution
 
     private struct GitResult {
