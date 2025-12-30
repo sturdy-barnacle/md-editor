@@ -41,8 +41,10 @@ EOF
 ```bash
 git add -A
 git commit -m "Feature/fix description"
-git push origin development
+git push origin apple-store-distro
 ```
+
+**Important**: The `apple-store-distro` branch triggers Xcode Cloud builds for App Store submission. Do NOT push to `development` for App Store builds.
 
 ## Xcode Cloud Monitoring (5-10 min)
 
@@ -116,7 +118,7 @@ ls -la ci_scripts/ci_post_clone.sh
 → Solution: Check all sizes exist before building
 
 ❌ Forgetting to push to trigger Xcode Cloud
-→ Solution: Always `git push origin development` after changes
+→ Solution: Always `git push origin apple-store-distro` after changes
 
 ## Documentation Reference
 
