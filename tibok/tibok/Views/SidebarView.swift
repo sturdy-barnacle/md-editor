@@ -328,21 +328,32 @@ struct SidebarView: View {
         .background(VisualEffectBackground(material: .sidebar))
         .sheet(isPresented: $showNewFileSheet) {
             NewFileSheet(fileName: $newFileName) {
-                if !newFileName.isEmpty {
-                    appState.createFileInWorkspace(name: newFileName)
+                guard !newFileName.isEmpty else {
+                    showNewFileSheet = false
+                    newFileName = ""
+                    return
+                }
+
+                // Only close sheet if file creation succeeds
+                if appState.createFileInWorkspace(name: newFileName) {
+                    showNewFileSheet = false
                     newFileName = ""
                 }
-                showNewFileSheet = false
             }
         }
         .sheet(isPresented: $showFolderNewFileSheet) {
             NewFileSheet(fileName: $newFolderFileName) {
-                defer {
+                guard !newFolderFileName.isEmpty, let folderURL = selectedFolderURL else {
+                    showFolderNewFileSheet = false
+                    newFolderFileName = ""
+                    return
+                }
+
+                // Only close sheet if file creation succeeds
+                if appState.createFileInFolder(folderURL: folderURL, name: newFolderFileName) {
                     showFolderNewFileSheet = false
                     newFolderFileName = ""
                 }
-                guard !newFolderFileName.isEmpty, let folderURL = selectedFolderURL else { return }
-                appState.createFileInFolder(folderURL: folderURL, name: newFolderFileName)
             }
         }
     }

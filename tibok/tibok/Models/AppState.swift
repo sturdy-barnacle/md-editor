@@ -409,6 +409,8 @@ class AppState: ObservableObject {
                 await MainActor.run {
                     var updatedRoot = root
                     updatedRoot.children = filteredChildren
+                    // Recursively load children for expanded folders
+                    updatedRoot.children = self.loadExpandedFolderChildren(updatedRoot.children ?? [], expandedPaths: previouslyExpanded)
                     self.workspaceFiles = updatedRoot.children ?? []
                     // Restore expansion states after refresh
                     self.expandedFolders = previouslyExpanded
@@ -417,6 +419,8 @@ class AppState: ObservableObject {
         } else {
             // Load all files immediately (no filtering)
             root.loadChildren()
+            // Recursively load children for expanded folders
+            root.children = loadExpandedFolderChildren(root.children ?? [], expandedPaths: previouslyExpanded)
             workspaceFiles = root.children ?? []
             // Restore expansion states after refresh
             self.expandedFolders = previouslyExpanded
@@ -424,6 +428,22 @@ class AppState: ObservableObject {
 
         // Refresh git status after loading files
         refreshGitStatus()
+    }
+
+    /// Recursively loads children for folders that are currently expanded
+    private func loadExpandedFolderChildren(_ items: [FileItem], expandedPaths: Set<String>) -> [FileItem] {
+        return items.map { item in
+            var mutableItem = item
+            if mutableItem.isDirectory && expandedPaths.contains(mutableItem.url.path) {
+                // Load this folder's children
+                mutableItem.loadChildren()
+                // Recursively load nested expanded folders
+                if let children = mutableItem.children {
+                    mutableItem.children = loadExpandedFolderChildren(children, expandedPaths: expandedPaths)
+                }
+            }
+            return mutableItem
+        }
     }
 
     /// Filter children based on whether folders contain markdown files
@@ -606,29 +626,37 @@ class AppState: ObservableObject {
         return result
     }
 
-    func createFileInWorkspace(name: String) {
-        guard let workspaceURL = workspaceURL else { return }
+    func createFileInWorkspace(name: String) -> Bool {
+        guard let workspaceURL = workspaceURL else { return false }
 
         let filename = name.hasSuffix(".md") ? name : "\(name).md"
         let fileURL = workspaceURL.appendingPathComponent(filename)
+
+        // Check for file conflict
+        if FileManager.default.fileExists(atPath: fileURL.path) {
+            showToast("File '\(filename)' already exists", icon: "exclamationmark.triangle.fill")
+            return false
+        }
 
         do {
             try "".write(to: fileURL, atomically: true, encoding: .utf8)
             refreshWorkspaceFiles()
             loadDocument(from: fileURL)
+            return true
         } catch {
             showToast("Failed to create file", icon: "exclamationmark.triangle.fill")
+            return false
         }
     }
 
-    func createFileInFolder(folderURL: URL, name: String) {
+    func createFileInFolder(folderURL: URL, name: String) -> Bool {
         let filename = name.hasSuffix(".md") ? name : "\(name).md"
         let fileURL = folderURL.appendingPathComponent(filename)
 
         // Check for file conflict
         if FileManager.default.fileExists(atPath: fileURL.path) {
             showToast("File '\(filename)' already exists", icon: "exclamationmark.triangle.fill")
-            return
+            return false
         }
 
         do {
@@ -642,8 +670,10 @@ class AppState: ObservableObject {
             // Refresh workspace to show new file (no delay needed, sheet is in stable parent now)
             refreshWorkspaceFiles()
             loadDocument(from: fileURL)
+            return true
         } catch {
             showToast("Failed to create file", icon: "exclamationmark.triangle.fill")
+            return false
         }
     }
 
