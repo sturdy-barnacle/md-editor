@@ -59,6 +59,7 @@ struct SidebarView: View {
     @State private var renameFolderName = ""
     @State private var selectedFolderForRename: URL?
     @State private var folderToDelete: URL?
+    @State private var showDeleteFolderAlert = false
     @State private var contentSearchResults: [ContentSearchResult] = []
     @State private var isSearching = false
     @State private var searchTask: Task<Void, Never>?
@@ -255,6 +256,7 @@ struct SidebarView: View {
                                     },
                                     onDeleteFolder: { folderURL in
                                         folderToDelete = folderURL
+                                        showDeleteFolderAlert = true
                                     }
                                 )
                             }
@@ -410,7 +412,7 @@ struct SidebarView: View {
                 renameFolderName = ""
             }
         }
-        .alert("Delete Folder", isPresented: .constant(folderToDelete != nil)) {
+        .alert("Delete Folder", isPresented: $showDeleteFolderAlert) {
             Button("Cancel", role: .cancel) {
                 folderToDelete = nil
             }
