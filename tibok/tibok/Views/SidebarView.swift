@@ -53,6 +53,12 @@ struct SidebarView: View {
     @State private var showFolderNewFileSheet = false
     @State private var newFolderFileName = ""
     @State private var selectedFolderURL: URL?
+    @State private var showNewFolderSheet = false
+    @State private var newFolderName = ""
+    @State private var showRenameFolderSheet = false
+    @State private var renameFolderName = ""
+    @State private var selectedFolderForRename: URL?
+    @State private var folderToDelete: URL?
     @State private var contentSearchResults: [ContentSearchResult] = []
     @State private var isSearching = false
     @State private var searchTask: Task<Void, Never>?
@@ -233,10 +239,24 @@ struct SidebarView: View {
 
                             // File tree
                             ForEach(filteredWorkspaceFiles) { item in
-                                FileTreeRow(item: item) { folderURL in
-                                    selectedFolderURL = folderURL
-                                    showFolderNewFileSheet = true
-                                }
+                                FileTreeRow(item: item,
+                                    onNewFileInFolder: { folderURL in
+                                        selectedFolderURL = folderURL
+                                        showFolderNewFileSheet = true
+                                    },
+                                    onNewFolderInFolder: { folderURL in
+                                        selectedFolderURL = folderURL
+                                        showNewFolderSheet = true
+                                    },
+                                    onRenameFolder: { folderURL, currentName in
+                                        selectedFolderForRename = folderURL
+                                        renameFolderName = currentName
+                                        showRenameFolderSheet = true
+                                    },
+                                    onDeleteFolder: { folderURL in
+                                        folderToDelete = folderURL
+                                    }
+                                )
                             }
                         }
                     } header: {
@@ -354,6 +374,55 @@ struct SidebarView: View {
                     showFolderNewFileSheet = false
                     newFolderFileName = ""
                 }
+            }
+        }
+        .sheet(isPresented: $showNewFolderSheet) {
+            NewFolderSheet(folderName: $newFolderName) {
+                guard !newFolderName.isEmpty else {
+                    showNewFolderSheet = false
+                    newFolderName = ""
+                    return
+                }
+
+                // Create in selected folder or workspace root
+                let success = if let folderURL = selectedFolderURL {
+                    appState.createFolderInFolder(parentURL: folderURL, name: newFolderName)
+                } else {
+                    appState.createFolderInWorkspace(name: newFolderName)
+                }
+
+                if success {
+                    showNewFolderSheet = false
+                    newFolderName = ""
+                }
+            }
+        }
+        .sheet(isPresented: $showRenameFolderSheet) {
+            RenameFolderSheet(folderName: $renameFolderName) {
+                guard !renameFolderName.isEmpty, let folderURL = selectedFolderForRename else {
+                    showRenameFolderSheet = false
+                    renameFolderName = ""
+                    return
+                }
+
+                appState.renameFolder(at: folderURL, to: renameFolderName)
+                showRenameFolderSheet = false
+                renameFolderName = ""
+            }
+        }
+        .alert("Delete Folder", isPresented: .constant(folderToDelete != nil)) {
+            Button("Cancel", role: .cancel) {
+                folderToDelete = nil
+            }
+            Button("Delete", role: .destructive) {
+                if let url = folderToDelete {
+                    appState.deleteFolder(at: url)
+                    folderToDelete = nil
+                }
+            }
+        } message: {
+            if let url = folderToDelete {
+                Text("Are you sure you want to move '\(url.lastPathComponent)' to the trash?")
             }
         }
     }
@@ -712,15 +781,21 @@ struct FileTreeRow: View {
     let item: FileItem
     let depth: Int
     var onNewFileInFolder: ((URL) -> Void)?
+    var onNewFolderInFolder: ((URL) -> Void)?
+    var onRenameFolder: ((URL, String) -> Void)?
+    var onDeleteFolder: ((URL) -> Void)?
     @State private var isExpanded = false
     @State private var loadedChildren: [FileItem]?
     @State private var hasFrontmatter: Bool = false
     @State private var isScanning: Bool = false
 
-    init(item: FileItem, depth: Int = 0, onNewFileInFolder: ((URL) -> Void)? = nil) {
+    init(item: FileItem, depth: Int = 0, onNewFileInFolder: ((URL) -> Void)? = nil, onNewFolderInFolder: ((URL) -> Void)? = nil, onRenameFolder: ((URL, String) -> Void)? = nil, onDeleteFolder: ((URL) -> Void)? = nil) {
         self.item = item
         self.depth = depth
         self.onNewFileInFolder = onNewFileInFolder
+        self.onNewFolderInFolder = onNewFolderInFolder
+        self.onRenameFolder = onRenameFolder
+        self.onDeleteFolder = onDeleteFolder
         // Initialize with existing children if already loaded
         _loadedChildren = State(initialValue: item.children)
     }
@@ -741,7 +816,7 @@ struct FileTreeRow: View {
                 }
 
                 ForEach(loadedChildren ?? []) { child in
-                    FileTreeRow(item: child, depth: depth + 1, onNewFileInFolder: onNewFileInFolder)
+                    FileTreeRow(item: child, depth: depth + 1, onNewFileInFolder: onNewFileInFolder, onNewFolderInFolder: onNewFolderInFolder, onRenameFolder: onRenameFolder, onDeleteFolder: onDeleteFolder)
                 }
             } label: {
                 HStack {
@@ -771,6 +846,13 @@ struct FileTreeRow: View {
                 Button("New File...") {
                     onNewFileInFolder?(item.url)
                 }
+                Button("New Folder...") {
+                    onNewFolderInFolder?(item.url)
+                }
+                Divider()
+                Button("Rename...") {
+                    onRenameFolder?(item.url, item.name)
+                }
                 Divider()
                 if appState.isFavorite(item.url) {
                     Button("Remove from Favorites") {
@@ -787,6 +869,10 @@ struct FileTreeRow: View {
                 }
                 Button("Copy Path") {
                     appState.copyPathToClipboard(item.url)
+                }
+                Divider()
+                Button("Delete Folder", role: .destructive) {
+                    onDeleteFolder?(item.url)
                 }
             }
             .onChange(of: isExpanded) { _, expanded in
@@ -998,6 +1084,95 @@ struct NewFileSheet: View {
                 }
                 .keyboardShortcut(.defaultAction)
                 .disabled(fileName.isEmpty)
+            }
+        }
+        .padding(20)
+        .frame(width: 300)
+        .onAppear {
+            isFocused = true
+        }
+    }
+}
+
+// MARK: - New Folder Sheet
+
+struct NewFolderSheet: View {
+    @Binding var folderName: String
+    var onCreate: () -> Void
+    @FocusState private var isFocused: Bool
+
+    var body: some View {
+        VStack(spacing: 16) {
+            Text("New Folder")
+                .font(.headline)
+
+            TextField("Folder Name", text: $folderName)
+                .textFieldStyle(.roundedBorder)
+                .focused($isFocused)
+                .onSubmit {
+                    if !folderName.isEmpty {
+                        onCreate()
+                    }
+                }
+
+            HStack {
+                Button("Cancel") {
+                    folderName = ""
+                    onCreate()
+                }
+                .keyboardShortcut(.cancelAction)
+
+                Spacer()
+
+                Button("Create") {
+                    onCreate()
+                }
+                .keyboardShortcut(.defaultAction)
+                .disabled(folderName.isEmpty)
+            }
+        }
+        .padding(20)
+        .frame(width: 300)
+        .onAppear {
+            isFocused = true
+        }
+    }
+}
+
+// MARK: - Rename Folder Sheet
+
+struct RenameFolderSheet: View {
+    @Binding var folderName: String
+    var onRename: () -> Void
+    @FocusState private var isFocused: Bool
+
+    var body: some View {
+        VStack(spacing: 16) {
+            Text("Rename Folder")
+                .font(.headline)
+
+            TextField("Folder Name", text: $folderName)
+                .textFieldStyle(.roundedBorder)
+                .focused($isFocused)
+                .onSubmit {
+                    if !folderName.isEmpty {
+                        onRename()
+                    }
+                }
+
+            HStack {
+                Button("Cancel") {
+                    onRename()
+                }
+                .keyboardShortcut(.cancelAction)
+
+                Spacer()
+
+                Button("Rename") {
+                    onRename()
+                }
+                .keyboardShortcut(.defaultAction)
+                .disabled(folderName.isEmpty)
             }
         }
         .padding(20)

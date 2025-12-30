@@ -677,6 +677,82 @@ class AppState: ObservableObject {
         }
     }
 
+    // MARK: - Folder Operations
+
+    func createFolderInWorkspace(name: String) -> Bool {
+        guard let workspaceURL = workspaceURL else { return false }
+        let folderURL = workspaceURL.appendingPathComponent(name)
+
+        if FileManager.default.fileExists(atPath: folderURL.path) {
+            showToast("Folder '\(name)' already exists", icon: "exclamationmark.triangle.fill")
+            return false
+        }
+
+        do {
+            try FileManager.default.createDirectory(at: folderURL, withIntermediateDirectories: false)
+            if !isFolderExpanded(workspaceURL.path) {
+                toggleFolderExpansion(workspaceURL.path)
+            }
+            refreshWorkspaceFiles()
+            showToast("Folder created", icon: "folder")
+            return true
+        } catch {
+            showToast("Failed to create folder", icon: "exclamationmark.triangle.fill")
+            return false
+        }
+    }
+
+    func createFolderInFolder(parentURL: URL, name: String) -> Bool {
+        let folderURL = parentURL.appendingPathComponent(name)
+
+        if FileManager.default.fileExists(atPath: folderURL.path) {
+            showToast("Folder '\(name)' already exists", icon: "exclamationmark.triangle.fill")
+            return false
+        }
+
+        do {
+            try FileManager.default.createDirectory(at: folderURL, withIntermediateDirectories: false)
+            if !isFolderExpanded(parentURL.path) {
+                toggleFolderExpansion(parentURL.path)
+            }
+            refreshWorkspaceFiles()
+            showToast("Folder created", icon: "folder")
+            return true
+        } catch {
+            showToast("Failed to create folder", icon: "exclamationmark.triangle.fill")
+            return false
+        }
+    }
+
+    func deleteFolder(at url: URL) {
+        do {
+            try FileManager.default.trashItem(at: url, resultingItemURL: nil)
+            refreshWorkspaceFiles()
+            showToast("Folder moved to trash", icon: "trash")
+        } catch {
+            showToast("Failed to delete folder", icon: "exclamationmark.triangle.fill")
+        }
+    }
+
+    func renameFolder(at url: URL, to newName: String) {
+        let newURL = url.deletingLastPathComponent().appendingPathComponent(newName)
+
+        if FileManager.default.fileExists(atPath: newURL.path) {
+            showToast("A folder named '\(newName)' already exists", icon: "exclamationmark.triangle.fill")
+            return
+        }
+
+        do {
+            try FileManager.default.moveItem(at: url, to: newURL)
+            refreshWorkspaceFiles()
+            showToast("Folder renamed", icon: "folder")
+        } catch {
+            showToast("Failed to rename folder", icon: "exclamationmark.triangle.fill")
+        }
+    }
+
+    // MARK: - File Operations
+
     func deleteFile(at url: URL) {
         do {
             try FileManager.default.trashItem(at: url, resultingItemURL: nil)
