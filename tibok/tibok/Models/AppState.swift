@@ -621,6 +621,19 @@ class AppState: ObservableObject {
         }
     }
 
+    func createFileInFolder(folderURL: URL, name: String) {
+        let filename = name.hasSuffix(".md") ? name : "\(name).md"
+        let fileURL = folderURL.appendingPathComponent(filename)
+
+        do {
+            try "".write(to: fileURL, atomically: true, encoding: .utf8)
+            refreshWorkspaceFiles()
+            loadDocument(from: fileURL)
+        } catch {
+            showToast("Failed to create file", icon: "exclamationmark.triangle.fill")
+        }
+    }
+
     func deleteFile(at url: URL) {
         do {
             try FileManager.default.trashItem(at: url, resultingItemURL: nil)

@@ -688,6 +688,8 @@ struct FileTreeRow: View {
     @State private var loadedChildren: [FileItem]?
     @State private var hasFrontmatter: Bool = false
     @State private var isScanning: Bool = false
+    @State private var showNewFileSheet = false
+    @State private var newFileName = ""
 
     init(item: FileItem, depth: Int = 0) {
         self.item = item
@@ -730,11 +732,24 @@ struct FileTreeRow: View {
                 .padding(.leading, CGFloat(depth * 16))
             }
             .contextMenu {
+                Button("New File...") {
+                    showNewFileSheet = true
+                }
+                Divider()
                 Button("Reveal in Finder") {
                     appState.revealInFinder(item.url)
                 }
                 Button("Copy Path") {
                     appState.copyPathToClipboard(item.url)
+                }
+            }
+            .sheet(isPresented: $showNewFileSheet) {
+                NewFileSheet(fileName: $newFileName) {
+                    if !newFileName.isEmpty {
+                        appState.createFileInFolder(folderURL: item.url, name: newFileName)
+                        newFileName = ""
+                    }
+                    showNewFileSheet = false
                 }
             }
             .onChange(of: isExpanded) { _, expanded in
