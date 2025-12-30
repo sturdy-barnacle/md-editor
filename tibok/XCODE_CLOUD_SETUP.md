@@ -2,11 +2,38 @@
 
 Xcode Cloud automates building, testing, and distributing your app to the App Store.
 
-## What I've Created
+## Existing CI/CD Setup
 
-✅ **Xcode Cloud Workflow** (`.xcode-ci.yml`)
-- **App Store Release workflow**: Triggers on version tags (v1.0.3, v1.0.4, etc.)
-- **Development workflow**: Triggers on pushes to development branch
+✅ **You already have Xcode Cloud configured!**
+
+Your existing setup:
+- **App Store builds** trigger when you push to the `apple-store-distro` branch
+- **Development builds** trigger when you push to the `development` branch
+- Automatic code signing is already configured
+- TestFlight distribution is enabled
+
+## Quick Start: Trigger an App Store Build
+
+**TL;DR - To release to the App Store:**
+
+```bash
+# Merge your changes to apple-store-distro
+git checkout apple-store-distro
+git pull origin apple-store-distro
+git merge main  # or development
+git push origin apple-store-distro
+
+# Xcode Cloud will automatically build, sign, and upload to TestFlight
+# Check App Store Connect for build status
+```
+
+That's it! The rest of this document explains the details.
+
+## Xcode Cloud Workflow (`.xcode-ci.yml`)
+
+Updated to match your existing setup:
+- **App Store Release workflow**: Triggers on pushes to `apple-store-distro` branch
+- **Development workflow**: Triggers on pushes to `development` branch
 - Automatic code signing
 - TestFlight distribution
 - App Store submission
@@ -118,29 +145,34 @@ git push origin development
 git push origin main
 ```
 
-### Step 7: Trigger a Build
+### Step 7: Trigger an App Store Build
 
-**Method 1: Create a Version Tag**
+**To trigger an App Store build, merge your changes to the `apple-store-distro` branch:**
 
 ```bash
-# Create and push a version tag
-git tag -a v1.0.3 -m "Release version 1.0.3 - Workspace & Git Enhancements"
-git push origin v1.0.3
+# Make sure you're on the branch with your changes (e.g., development or main)
+git checkout main  # or development
+
+# Merge to apple-store-distro
+git checkout apple-store-distro
+git pull origin apple-store-distro  # Get latest
+git merge main  # Merge your changes
+git push origin apple-store-distro  # Push to trigger build
 ```
 
 Xcode Cloud will automatically:
-1. Detect the tag
+1. Detect the push to `apple-store-distro`
 2. Start a build
 3. Archive the app
 4. Sign with App Store certificate
 5. Upload to TestFlight
 6. Send notification when complete
 
-**Method 2: Manual Trigger**
+**Alternative: Manual Trigger**
 
 1. Go to App Store Connect → Xcode Cloud
 2. Click **Start Build**
-3. Select branch: **main**
+3. Select branch: **apple-store-distro**
 4. Click **Start**
 
 ### Step 8: Monitor Build Progress
@@ -176,7 +208,7 @@ Once build completes and uploads to TestFlight:
 
 ### App Store Release Workflow
 
-Triggered by: Tags matching `v*.*.*` (e.g., `v1.0.3`, `v2.0.0`)
+Triggered by: Pushes to `apple-store-distro` branch
 
 Steps:
 1. ✅ Clean build
@@ -266,9 +298,33 @@ Steps:
 | **Time** | ~30 minutes | ~15 minutes |
 | **Reproducibility** | Depends on local env | Guaranteed |
 
+## Quick Reference: Common Commands
+
+### Trigger App Store Build
+
+```bash
+git checkout apple-store-distro
+git pull origin apple-store-distro
+git merge main  # Merge your latest changes
+git push origin apple-store-distro  # Triggers build
+```
+
+### Check Build Status
+
+- **App Store Connect**: https://appstoreconnect.apple.com → Xcode Cloud → Builds
+- **Email**: You'll receive notifications for success/failure
+
+### Submit to App Store (After Build Completes)
+
+1. Go to App Store Connect → Your App → App Store tab
+2. Click **[+]** next to macOS version
+3. Select build from TestFlight
+4. Fill in "What's New" and metadata
+5. Click **Submit for Review**
+
 ## Next Steps After Setup
 
-1. **Create version tag**: `git tag v1.0.3 && git push origin v1.0.3`
+1. **Merge to apple-store-distro**: Follow Quick Reference above
 2. **Monitor build**: Check App Store Connect
 3. **Test on TestFlight**: Download from TestFlight and verify
 4. **Submit for review**: When ready, submit from App Store Connect
