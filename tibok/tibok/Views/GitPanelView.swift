@@ -17,6 +17,9 @@ struct GitPanelView: View {
     @State private var committingStagedCount = 0
     @State private var showNewBranchSheet = false
     @State private var newBranchName = ""
+    @State private var showDiffSheet = false
+    @State private var selectedDiffFile: GitChangedFile?
+    @State private var isDiffStaged = false
     @AppStorage("sidebar.showGit") private var persistShowGit = true
 
     let uiState = UIStateService.shared
@@ -71,7 +74,11 @@ struct GitPanelView: View {
                 if !appState.stagedFiles.isEmpty {
                     DisclosureGroup {
                         ForEach(appState.stagedFiles, id: \.id) { file in
-                            GitFileRow(file: file, isStaged: true)
+                            GitFileRow(file: file, isStaged: true) {
+                                selectedDiffFile = file
+                                isDiffStaged = true
+                                showDiffSheet = true
+                            }
                         }
                     } label: {
                         HStack {
@@ -90,7 +97,11 @@ struct GitPanelView: View {
                 if !appState.unstagedFiles.isEmpty {
                     DisclosureGroup {
                         ForEach(appState.unstagedFiles, id: \.id) { file in
-                            GitFileRow(file: file, isStaged: false)
+                            GitFileRow(file: file, isStaged: false) {
+                                selectedDiffFile = file
+                                isDiffStaged = false
+                                showDiffSheet = true
+                            }
                         }
                     } label: {
                         HStack {
@@ -271,6 +282,11 @@ struct GitPanelView: View {
                 }
             )
         }
+        .sheet(isPresented: $showDiffSheet) {
+            if let file = selectedDiffFile, let repoURL = appState.workspaceURL {
+                GitDiffView(fileURL: file.url, repoURL: repoURL, isStaged: isDiffStaged)
+            }
+        }
         .alert("Commit Failed", isPresented: $showError) {
             Button("OK") {
                 showError = false
@@ -287,6 +303,7 @@ struct GitFileRow: View {
     @EnvironmentObject var appState: AppState
     let file: GitChangedFile
     let isStaged: Bool
+    var onShowDiff: (() -> Void)?
 
     var body: some View {
         HStack(spacing: 4) {
@@ -302,6 +319,17 @@ struct GitFileRow: View {
                 .truncationMode(.middle)
 
             Spacer()
+
+            // Diff button
+            Button {
+                onShowDiff?()
+            } label: {
+                Image(systemName: "doc.text.magnifyingglass")
+                    .font(.system(size: 9, weight: .bold))
+                    .foregroundColor(.secondary)
+            }
+            .buttonStyle(.animatedIcon)
+            .help("View Diff")
 
             // Action buttons
             if isStaged {
