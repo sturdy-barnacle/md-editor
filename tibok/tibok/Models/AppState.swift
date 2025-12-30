@@ -99,9 +99,13 @@ class AppState: ObservableObject {
     @Published var expandedFolders: Set<String> = []  // Stores relative paths of expanded folders
     @AppStorage("workspace.smartFiltering") var smartFilteringEnabled = true
 
+    // Workspace monitoring
+    private let workspaceMonitor = WorkspaceMonitor()
+
     // Git state
     @Published var isGitRepository: Bool = false
     @Published var currentBranch: String?
+    @Published var availableBranches: [String] = []
     @Published var gitFileStatuses: [URL: GitFileStatus] = [:]
     @Published var stagedFiles: [GitChangedFile] = []
     @Published var unstagedFiles: [GitChangedFile] = []
@@ -322,9 +326,17 @@ class AppState: ObservableObject {
         workspaceURL = url
         saveWorkspaceState()
         refreshWorkspaceFiles()
+
+        // Start monitoring workspace for external changes
+        workspaceMonitor.startMonitoring(url: url) { [weak self] in
+            Task { @MainActor in
+                self?.refreshWorkspaceFiles()
+            }
+        }
     }
 
     func closeWorkspace() {
+        workspaceMonitor.stopMonitoring()
         saveWorkspaceState()  // Save before closing
         workspaceURL = nil
         workspaceFiles = []
@@ -383,6 +395,9 @@ class AppState: ObservableObject {
             return
         }
 
+        // Save currently expanded folder paths before refresh
+        let previouslyExpanded = expandedFolders
+
         var root = FileItem(url: url)
 
         if smartFilteringEnabled {
@@ -395,17 +410,41 @@ class AppState: ObservableObject {
                 await MainActor.run {
                     var updatedRoot = root
                     updatedRoot.children = filteredChildren
+                    // Recursively load children for expanded folders
+                    updatedRoot.children = self.loadExpandedFolderChildren(updatedRoot.children ?? [], expandedPaths: previouslyExpanded)
                     self.workspaceFiles = updatedRoot.children ?? []
+                    // Restore expansion states after refresh
+                    self.expandedFolders = previouslyExpanded
                 }
             }
         } else {
             // Load all files immediately (no filtering)
             root.loadChildren()
+            // Recursively load children for expanded folders
+            root.children = loadExpandedFolderChildren(root.children ?? [], expandedPaths: previouslyExpanded)
             workspaceFiles = root.children ?? []
+            // Restore expansion states after refresh
+            self.expandedFolders = previouslyExpanded
         }
 
         // Refresh git status after loading files
         refreshGitStatus()
+    }
+
+    /// Recursively loads children for folders that are currently expanded
+    private func loadExpandedFolderChildren(_ items: [FileItem], expandedPaths: Set<String>) -> [FileItem] {
+        return items.map { item in
+            var mutableItem = item
+            if mutableItem.isDirectory && expandedPaths.contains(mutableItem.url.path) {
+                // Load this folder's children
+                mutableItem.loadChildren()
+                // Recursively load nested expanded folders
+                if let children = mutableItem.children {
+                    mutableItem.children = loadExpandedFolderChildren(children, expandedPaths: expandedPaths)
+                }
+            }
+            return mutableItem
+        }
     }
 
     /// Filter children based on whether folders contain markdown files
@@ -485,6 +524,7 @@ class AppState: ObservableObject {
 
             // Get branch and file statuses using the repo root
             let branch = gitService.getCurrentBranch(for: repoRoot)
+            let branches = gitService.getBranches(for: repoRoot)
             let changedFiles = gitService.getChangedFiles(for: repoRoot)
             let statuses = gitService.getFileStatuses(for: repoRoot)
 
@@ -493,6 +533,7 @@ class AppState: ObservableObject {
 
             await MainActor.run {
                 self.currentBranch = branch
+                self.availableBranches = branches
                 self.gitFileStatuses = statuses
                 self.stagedFiles = staged
                 self.unstagedFiles = unstaged
@@ -503,6 +544,7 @@ class AppState: ObservableObject {
     private func clearGitState() {
         isGitRepository = false
         currentBranch = nil
+        availableBranches = []
         gitFileStatuses = [:]
         stagedFiles = []
         unstagedFiles = []
@@ -588,20 +630,177 @@ class AppState: ObservableObject {
         return result
     }
 
-    func createFileInWorkspace(name: String) {
-        guard let workspaceURL = workspaceURL else { return }
+    // MARK: - Git Branch Operations
+
+    /// Switch to a different git branch
+    func switchBranch(to branchName: String) -> (success: Bool, error: String?) {
+        guard let repoRoot = getGitRepoRoot() else {
+            return (false, "No workspace open")
+        }
+
+        // Check for uncommitted changes
+        if !stagedFiles.isEmpty || !unstagedFiles.isEmpty {
+            return (false, "You have uncommitted changes. Please commit or stash them before switching branches.")
+        }
+
+        let result = GitService.shared.switchBranch(to: branchName, in: repoRoot)
+        if result.success {
+            refreshGitStatus()
+            refreshWorkspaceFiles()
+            showToast("Switched to \(branchName)", icon: "arrow.triangle.branch")
+        }
+        return result
+    }
+
+    /// Create a new git branch
+    func createBranch(name: String, switchTo: Bool = true) -> (success: Bool, error: String?) {
+        guard let repoRoot = getGitRepoRoot() else {
+            return (false, "No workspace open")
+        }
+
+        // Check if branch already exists
+        if availableBranches.contains(name) {
+            return (false, "Branch '\(name)' already exists")
+        }
+
+        let result = GitService.shared.createBranch(name: name, switchTo: switchTo, in: repoRoot)
+        if result.success {
+            refreshGitStatus()
+            if switchTo {
+                showToast("Created and switched to \(name)", icon: "arrow.triangle.branch")
+            } else {
+                showToast("Created branch \(name)", icon: "arrow.triangle.branch")
+            }
+        }
+        return result
+    }
+
+    func createFileInWorkspace(name: String) -> Bool {
+        guard let workspaceURL = workspaceURL else { return false }
 
         let filename = name.hasSuffix(".md") ? name : "\(name).md"
         let fileURL = workspaceURL.appendingPathComponent(filename)
+
+        // Check for file conflict
+        if FileManager.default.fileExists(atPath: fileURL.path) {
+            showToast("File '\(filename)' already exists", icon: "exclamationmark.triangle.fill")
+            return false
+        }
 
         do {
             try "".write(to: fileURL, atomically: true, encoding: .utf8)
             refreshWorkspaceFiles()
             loadDocument(from: fileURL)
+            return true
         } catch {
             showToast("Failed to create file", icon: "exclamationmark.triangle.fill")
+            return false
         }
     }
+
+    func createFileInFolder(folderURL: URL, name: String) -> Bool {
+        let filename = name.hasSuffix(".md") ? name : "\(name).md"
+        let fileURL = folderURL.appendingPathComponent(filename)
+
+        // Check for file conflict
+        if FileManager.default.fileExists(atPath: fileURL.path) {
+            showToast("File '\(filename)' already exists", icon: "exclamationmark.triangle.fill")
+            return false
+        }
+
+        do {
+            try "".write(to: fileURL, atomically: true, encoding: .utf8)
+
+            // Expand the folder to show the new file
+            if !isFolderExpanded(folderURL.path) {
+                toggleFolderExpansion(folderURL.path)
+            }
+
+            // Refresh workspace to show new file (no delay needed, sheet is in stable parent now)
+            refreshWorkspaceFiles()
+            loadDocument(from: fileURL)
+            return true
+        } catch {
+            showToast("Failed to create file", icon: "exclamationmark.triangle.fill")
+            return false
+        }
+    }
+
+    // MARK: - Folder Operations
+
+    func createFolderInWorkspace(name: String) -> Bool {
+        guard let workspaceURL = workspaceURL else { return false }
+        let folderURL = workspaceURL.appendingPathComponent(name)
+
+        if FileManager.default.fileExists(atPath: folderURL.path) {
+            showToast("Folder '\(name)' already exists", icon: "exclamationmark.triangle.fill")
+            return false
+        }
+
+        do {
+            try FileManager.default.createDirectory(at: folderURL, withIntermediateDirectories: false)
+            if !isFolderExpanded(workspaceURL.path) {
+                toggleFolderExpansion(workspaceURL.path)
+            }
+            refreshWorkspaceFiles()
+            showToast("Folder created", icon: "folder")
+            return true
+        } catch {
+            showToast("Failed to create folder", icon: "exclamationmark.triangle.fill")
+            return false
+        }
+    }
+
+    func createFolderInFolder(parentURL: URL, name: String) -> Bool {
+        let folderURL = parentURL.appendingPathComponent(name)
+
+        if FileManager.default.fileExists(atPath: folderURL.path) {
+            showToast("Folder '\(name)' already exists", icon: "exclamationmark.triangle.fill")
+            return false
+        }
+
+        do {
+            try FileManager.default.createDirectory(at: folderURL, withIntermediateDirectories: false)
+            if !isFolderExpanded(parentURL.path) {
+                toggleFolderExpansion(parentURL.path)
+            }
+            refreshWorkspaceFiles()
+            showToast("Folder created", icon: "folder")
+            return true
+        } catch {
+            showToast("Failed to create folder", icon: "exclamationmark.triangle.fill")
+            return false
+        }
+    }
+
+    func deleteFolder(at url: URL) {
+        do {
+            try FileManager.default.trashItem(at: url, resultingItemURL: nil)
+            refreshWorkspaceFiles()
+            showToast("Folder moved to trash", icon: "trash")
+        } catch {
+            showToast("Failed to delete folder", icon: "exclamationmark.triangle.fill")
+        }
+    }
+
+    func renameFolder(at url: URL, to newName: String) {
+        let newURL = url.deletingLastPathComponent().appendingPathComponent(newName)
+
+        if FileManager.default.fileExists(atPath: newURL.path) {
+            showToast("A folder named '\(newName)' already exists", icon: "exclamationmark.triangle.fill")
+            return
+        }
+
+        do {
+            try FileManager.default.moveItem(at: url, to: newURL)
+            refreshWorkspaceFiles()
+            showToast("Folder renamed", icon: "folder")
+        } catch {
+            showToast("Failed to rename folder", icon: "exclamationmark.triangle.fill")
+        }
+    }
+
+    // MARK: - File Operations
 
     func deleteFile(at url: URL) {
         do {
@@ -609,6 +808,156 @@ class AppState: ObservableObject {
             refreshWorkspaceFiles()
         } catch {
             showToast("Failed to delete file", icon: "exclamationmark.triangle.fill")
+        }
+    }
+
+    /// Delete multiple files
+    func deleteFiles(_ urls: [URL]) {
+        var successCount = 0
+        var failCount = 0
+
+        for url in urls {
+            do {
+                try FileManager.default.trashItem(at: url, resultingItemURL: nil)
+                successCount += 1
+            } catch {
+                failCount += 1
+            }
+        }
+
+        refreshWorkspaceFiles()
+
+        if failCount == 0 {
+            showToast("Moved \(successCount) file\(successCount == 1 ? "" : "s") to trash", icon: "trash")
+        } else {
+            showToast("Deleted \(successCount), failed \(failCount)", icon: "exclamationmark.triangle.fill")
+        }
+    }
+
+    /// Move a file from one location to another
+    /// Uses git mv for tracked files to preserve history
+    func moveFile(from sourceURL: URL, to destinationFolder: URL) -> Bool {
+        // Validate source and destination
+        guard sourceURL.deletingLastPathComponent() != destinationFolder else {
+            showToast("File is already in this folder", icon: "exclamationmark.triangle.fill")
+            return false
+        }
+
+        let fileName = sourceURL.lastPathComponent
+        let destinationURL = destinationFolder.appendingPathComponent(fileName)
+
+        // Check if destination already exists
+        if FileManager.default.fileExists(atPath: destinationURL.path) {
+            showToast("A file named '\(fileName)' already exists", icon: "exclamationmark.triangle.fill")
+            return false
+        }
+
+        // Check if file is git tracked
+        guard let workspaceURL = workspaceURL else {
+            return moveFileFileSystem(from: sourceURL, to: destinationURL)
+        }
+
+        let isGitTracked = GitService.shared.isFileTracked(sourceURL, in: workspaceURL)
+
+        if isGitTracked {
+            // Use git mv for tracked files
+            if GitService.shared.moveFile(from: sourceURL, to: destinationURL, in: workspaceURL) {
+                updateFileReferences(from: sourceURL, to: destinationURL)
+                refreshWorkspaceFiles()
+                showToast("File moved", icon: "arrow.right")
+                return true
+            } else {
+                showToast("Failed to move file", icon: "exclamationmark.triangle.fill")
+                return false
+            }
+        } else {
+            // Use filesystem move for untracked files
+            return moveFileFileSystem(from: sourceURL, to: destinationURL)
+        }
+    }
+
+    /// Move file using filesystem operations
+    private func moveFileFileSystem(from sourceURL: URL, to destinationURL: URL) -> Bool {
+        do {
+            try FileManager.default.moveItem(at: sourceURL, to: destinationURL)
+            updateFileReferences(from: sourceURL, to: destinationURL)
+            refreshWorkspaceFiles()
+            showToast("File moved", icon: "arrow.right")
+            return true
+        } catch {
+            showToast("Failed to move file", icon: "exclamationmark.triangle.fill")
+            return false
+        }
+    }
+
+    /// Copy a file with automatic renaming if conflict exists
+    func copyFile(from sourceURL: URL, to destinationFolder: URL) -> Bool {
+        let fileName = sourceURL.lastPathComponent
+        let fileExtension = sourceURL.pathExtension
+        let baseName = fileName.replacingOccurrences(of: ".\(fileExtension)", with: "")
+
+        var destinationURL = destinationFolder.appendingPathComponent(fileName)
+        var counter = 1
+
+        // Auto-rename if file exists
+        while FileManager.default.fileExists(atPath: destinationURL.path) {
+            let newName = fileExtension.isEmpty
+                ? "\(baseName) copy \(counter)"
+                : "\(baseName) copy \(counter).\(fileExtension)"
+            destinationURL = destinationFolder.appendingPathComponent(newName)
+            counter += 1
+        }
+
+        do {
+            try FileManager.default.copyItem(at: sourceURL, to: destinationURL)
+            refreshWorkspaceFiles()
+            showToast("File duplicated", icon: "doc.on.doc")
+            return true
+        } catch {
+            showToast("Failed to duplicate file", icon: "exclamationmark.triangle.fill")
+            return false
+        }
+    }
+
+    /// Move multiple files to a destination folder
+    func moveFiles(_ sourceURLs: [URL], to destinationFolder: URL) -> Bool {
+        var successCount = 0
+        var failCount = 0
+
+        for sourceURL in sourceURLs {
+            if moveFile(from: sourceURL, to: destinationFolder) {
+                successCount += 1
+            } else {
+                failCount += 1
+            }
+        }
+
+        if failCount == 0 {
+            showToast("Moved \(successCount) file\(successCount == 1 ? "" : "s")", icon: "arrow.right")
+        } else {
+            showToast("Moved \(successCount), failed \(failCount)", icon: "exclamationmark.triangle.fill")
+        }
+
+        return failCount == 0
+    }
+
+    /// Update all references when a file is moved
+    private func updateFileReferences(from oldURL: URL, to newURL: URL) {
+        // Update currently open document
+        if currentDocument.fileURL == oldURL {
+            currentDocument.fileURL = newURL
+        }
+
+        // Update recent files
+        if let index = recentFiles.firstIndex(of: oldURL) {
+            recentFiles[index] = newURL
+            saveRecentFiles()
+        }
+
+        // Update favorites
+        if let index = favoriteFiles.firstIndex(of: oldURL) {
+            favoriteFiles[index] = newURL
+            saveFavorites()
         }
     }
 

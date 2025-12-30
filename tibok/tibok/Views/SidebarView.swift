@@ -50,6 +50,20 @@ struct SidebarView: View {
     @State private var searchText = ""
     @State private var showNewFileSheet = false
     @State private var newFileName = ""
+    @State private var showFolderNewFileSheet = false
+    @State private var newFolderFileName = ""
+    @State private var selectedFolderURL: URL?
+    @State private var showNewFolderSheet = false
+    @State private var newFolderName = ""
+    @State private var showRenameFolderSheet = false
+    @State private var renameFolderName = ""
+    @State private var selectedFolderForRename: URL?
+    @State private var folderToDelete: URL?
+    @State private var showDeleteFolderAlert = false
+
+    // Multi-select state
+    @State private var selectedFileURLs: Set<URL> = []
+    @State private var lastSelectedURL: URL?
     @State private var contentSearchResults: [ContentSearchResult] = []
     @State private var isSearching = false
     @State private var searchTask: Task<Void, Never>?
@@ -228,9 +242,76 @@ struct SidebarView: View {
                                 }
                             }
 
+                            // Selection toolbar (appears when files are selected)
+                            if !selectedFileURLs.isEmpty {
+                                HStack(spacing: 8) {
+                                    Text("\(selectedFileURLs.count) selected")
+                                        .font(.system(size: 11, weight: .medium))
+                                        .foregroundColor(.white)
+
+                                    Spacer()
+
+                                    Button("Clear") {
+                                        selectedFileURLs.removeAll()
+                                        lastSelectedURL = nil
+                                    }
+                                    .font(.system(size: 10, weight: .medium))
+                                    .foregroundColor(.white)
+                                    .buttonStyle(.plain)
+
+                                    if appState.isGitRepository {
+                                        Button("Stage") {
+                                            guard appState.workspaceURL != nil else { return }
+                                            for url in selectedFileURLs {
+                                                appState.stageFile(url)
+                                            }
+                                            selectedFileURLs.removeAll()
+                                        }
+                                        .font(.system(size: 10, weight: .medium))
+                                        .foregroundColor(.white)
+                                        .buttonStyle(.plain)
+                                    }
+
+                                    Button("Delete") {
+                                        appState.deleteFiles(Array(selectedFileURLs))
+                                        selectedFileURLs.removeAll()
+                                        lastSelectedURL = nil
+                                    }
+                                    .font(.system(size: 10, weight: .medium))
+                                    .foregroundColor(.white)
+                                    .buttonStyle(.plain)
+                                }
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(Color.accentColor)
+                                .cornerRadius(6)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                            }
+
                             // File tree
                             ForEach(filteredWorkspaceFiles) { item in
-                                FileTreeRow(item: item)
+                                FileTreeRow(item: item,
+                                    onNewFileInFolder: { folderURL in
+                                        selectedFolderURL = folderURL
+                                        showFolderNewFileSheet = true
+                                    },
+                                    onNewFolderInFolder: { folderURL in
+                                        selectedFolderURL = folderURL
+                                        showNewFolderSheet = true
+                                    },
+                                    onRenameFolder: { folderURL, currentName in
+                                        selectedFolderForRename = folderURL
+                                        renameFolderName = currentName
+                                        showRenameFolderSheet = true
+                                    },
+                                    onDeleteFolder: { folderURL in
+                                        folderToDelete = folderURL
+                                        showDeleteFolderAlert = true
+                                    },
+                                    selectedFileURLs: $selectedFileURLs,
+                                    onFileClick: handleFileSelection
+                                )
                             }
                         }
                     } header: {
@@ -322,11 +403,81 @@ struct SidebarView: View {
         .background(VisualEffectBackground(material: .sidebar))
         .sheet(isPresented: $showNewFileSheet) {
             NewFileSheet(fileName: $newFileName) {
-                if !newFileName.isEmpty {
-                    appState.createFileInWorkspace(name: newFileName)
+                guard !newFileName.isEmpty else {
+                    showNewFileSheet = false
+                    newFileName = ""
+                    return
+                }
+
+                // Only close sheet if file creation succeeds
+                if appState.createFileInWorkspace(name: newFileName) {
+                    showNewFileSheet = false
                     newFileName = ""
                 }
-                showNewFileSheet = false
+            }
+        }
+        .sheet(isPresented: $showFolderNewFileSheet) {
+            NewFileSheet(fileName: $newFolderFileName) {
+                guard !newFolderFileName.isEmpty, let folderURL = selectedFolderURL else {
+                    showFolderNewFileSheet = false
+                    newFolderFileName = ""
+                    return
+                }
+
+                // Only close sheet if file creation succeeds
+                if appState.createFileInFolder(folderURL: folderURL, name: newFolderFileName) {
+                    showFolderNewFileSheet = false
+                    newFolderFileName = ""
+                }
+            }
+        }
+        .sheet(isPresented: $showNewFolderSheet) {
+            NewFolderSheet(folderName: $newFolderName) {
+                guard !newFolderName.isEmpty else {
+                    showNewFolderSheet = false
+                    newFolderName = ""
+                    return
+                }
+
+                // Create in selected folder or workspace root
+                let success = if let folderURL = selectedFolderURL {
+                    appState.createFolderInFolder(parentURL: folderURL, name: newFolderName)
+                } else {
+                    appState.createFolderInWorkspace(name: newFolderName)
+                }
+
+                if success {
+                    showNewFolderSheet = false
+                    newFolderName = ""
+                }
+            }
+        }
+        .sheet(isPresented: $showRenameFolderSheet) {
+            RenameFolderSheet(folderName: $renameFolderName) {
+                guard !renameFolderName.isEmpty, let folderURL = selectedFolderForRename else {
+                    showRenameFolderSheet = false
+                    renameFolderName = ""
+                    return
+                }
+
+                appState.renameFolder(at: folderURL, to: renameFolderName)
+                showRenameFolderSheet = false
+                renameFolderName = ""
+            }
+        }
+        .alert("Delete Folder", isPresented: $showDeleteFolderAlert) {
+            Button("Cancel", role: .cancel) {
+                folderToDelete = nil
+            }
+            Button("Delete", role: .destructive) {
+                if let url = folderToDelete {
+                    appState.deleteFolder(at: url)
+                    folderToDelete = nil
+                }
+            }
+        } message: {
+            if let url = folderToDelete {
+                Text("Are you sure you want to move '\(url.lastPathComponent)' to the trash?")
             }
         }
     }
@@ -428,6 +579,57 @@ struct SidebarView: View {
                 }
             }
         }
+    }
+
+    // MARK: - Multi-Select Helper Methods
+
+    /// Handle file selection with modifier keys
+    private func handleFileSelection(_ url: URL, modifiers: NSEvent.ModifierFlags) {
+        if modifiers.contains(.command) {
+            // Command-click: toggle selection
+            if selectedFileURLs.contains(url) {
+                selectedFileURLs.remove(url)
+            } else {
+                selectedFileURLs.insert(url)
+            }
+            lastSelectedURL = url
+        } else if modifiers.contains(.shift), let lastURL = lastSelectedURL {
+            // Shift-click: range selection
+            selectRange(from: lastURL, to: url)
+        } else {
+            // Normal click: clear selection and open file
+            selectedFileURLs.removeAll()
+            lastSelectedURL = nil
+            appState.loadDocument(from: url)
+        }
+    }
+
+    /// Select all files in range from one URL to another
+    private func selectRange(from startURL: URL, to endURL: URL) {
+        let allFiles = flattenFileTree(appState.workspaceFiles)
+        guard let startIndex = allFiles.firstIndex(of: startURL),
+              let endIndex = allFiles.firstIndex(of: endURL) else {
+            return
+        }
+
+        let range = min(startIndex, endIndex)...max(startIndex, endIndex)
+        for index in range {
+            selectedFileURLs.insert(allFiles[index])
+        }
+    }
+
+    /// Flatten file tree into ordered list of file URLs
+    private func flattenFileTree(_ items: [FileItem]) -> [URL] {
+        var urls: [URL] = []
+        for item in items {
+            if !item.isDirectory {
+                urls.append(item.url)
+            }
+            if let children = item.children {
+                urls.append(contentsOf: flattenFileTree(children))
+            }
+        }
+        return urls
     }
 }
 
@@ -683,13 +885,27 @@ struct FavoriteFileRow: View {
 struct FileTreeRow: View {
     @EnvironmentObject var appState: AppState
     let item: FileItem
+    let depth: Int
+    var onNewFileInFolder: ((URL) -> Void)?
+    var onNewFolderInFolder: ((URL) -> Void)?
+    var onRenameFolder: ((URL, String) -> Void)?
+    var onDeleteFolder: ((URL) -> Void)?
+    var selectedFileURLs: Binding<Set<URL>>?
+    var onFileClick: ((URL, NSEvent.ModifierFlags) -> Void)?
     @State private var isExpanded = false
     @State private var loadedChildren: [FileItem]?
     @State private var hasFrontmatter: Bool = false
     @State private var isScanning: Bool = false
 
-    init(item: FileItem) {
+    init(item: FileItem, depth: Int = 0, onNewFileInFolder: ((URL) -> Void)? = nil, onNewFolderInFolder: ((URL) -> Void)? = nil, onRenameFolder: ((URL, String) -> Void)? = nil, onDeleteFolder: ((URL) -> Void)? = nil, selectedFileURLs: Binding<Set<URL>>? = nil, onFileClick: ((URL, NSEvent.ModifierFlags) -> Void)? = nil) {
         self.item = item
+        self.depth = depth
+        self.onNewFileInFolder = onNewFileInFolder
+        self.onNewFolderInFolder = onNewFolderInFolder
+        self.onRenameFolder = onRenameFolder
+        self.onDeleteFolder = onDeleteFolder
+        self.selectedFileURLs = selectedFileURLs
+        self.onFileClick = onFileClick
         // Initialize with existing children if already loaded
         _loadedChildren = State(initialValue: item.children)
     }
@@ -710,13 +926,22 @@ struct FileTreeRow: View {
                 }
 
                 ForEach(loadedChildren ?? []) { child in
-                    FileTreeRow(item: child)
+                    FileTreeRow(item: child, depth: depth + 1, onNewFileInFolder: onNewFileInFolder, onNewFolderInFolder: onNewFolderInFolder, onRenameFolder: onRenameFolder, onDeleteFolder: onDeleteFolder, selectedFileURLs: selectedFileURLs, onFileClick: onFileClick)
                 }
             } label: {
                 HStack {
                     Image(systemName: isExpanded ? "folder.fill" : "folder")
-                        .foregroundColor(.blue)
+                        .foregroundColor(depth == 0 ? .blue : .blue.opacity(0.7))
+                        .font(.system(size: depth == 0 ? 14 : 13))
                     Text(item.name)
+                        .fontWeight(depth == 0 ? .semibold : .regular)
+
+                    // Show heart if favorited
+                    if appState.isFavorite(item.url) {
+                        Image(systemName: "heart.fill")
+                            .font(.system(size: 9))
+                            .foregroundColor(.pink)
+                    }
 
                     // Show small spinner if scanning
                     if isScanning && !isExpanded {
@@ -725,14 +950,45 @@ struct FileTreeRow: View {
                             .padding(.leading, 4)
                     }
                 }
+                .padding(.leading, CGFloat(depth * 16))
             }
             .contextMenu {
+                Button("New File...") {
+                    onNewFileInFolder?(item.url)
+                }
+                Button("New Folder...") {
+                    onNewFolderInFolder?(item.url)
+                }
+                Divider()
+                Button("Rename...") {
+                    onRenameFolder?(item.url, item.name)
+                }
+                Divider()
+                if appState.isFavorite(item.url) {
+                    Button("Remove from Favorites") {
+                        appState.removeFromFavorites(item.url)
+                    }
+                } else {
+                    Button("Add to Favorites") {
+                        appState.addToFavorites(item.url)
+                    }
+                }
+                Divider()
                 Button("Reveal in Finder") {
                     appState.revealInFinder(item.url)
                 }
                 Button("Copy Path") {
                     appState.copyPathToClipboard(item.url)
                 }
+                Divider()
+                Button("Delete Folder", role: .destructive) {
+                    onDeleteFolder?(item.url)
+                }
+            }
+            .dropDestination(for: URL.self) { droppedURLs, _ in
+                // Handle file drop on folder
+                guard let fileURL = droppedURLs.first else { return false }
+                return appState.moveFile(from: fileURL, to: item.url)
             }
             .onChange(of: isExpanded) { _, expanded in
                 // Save expansion state to AppState
@@ -779,36 +1035,57 @@ struct FileTreeRow: View {
                 // Initialize expansion state from AppState
                 isExpanded = appState.isFolderExpanded(item.url.path)
             }
-        } else {
-            Button {
-                appState.loadDocument(from: item.url)
-            } label: {
-                HStack {
-                    Image(systemName: fileIcon(for: item))
-                        .foregroundColor(fileColor(for: item))
-                    Text(item.name)
-                    Spacer()
-                    // Show frontmatter indicator
-                    if hasFrontmatter {
-                        Image(systemName: "doc.badge.gearshape")
-                            .font(.system(size: 9))
-                            .foregroundColor(.purple.opacity(0.6))
-                    }
-                    // Show heart if favorited
-                    if appState.isFavorite(item.url) {
-                        Image(systemName: "heart.fill")
-                            .font(.system(size: 9))
-                            .foregroundColor(.pink)
-                    }
-                    // Show indicator if modified in open tabs
-                    if appState.documents.first(where: { $0.fileURL == item.url })?.isModified == true {
-                        Circle()
-                            .fill(Color.primary.opacity(0.5))
-                            .frame(width: 6, height: 6)
-                    }
+            .onChange(of: item.children) { _, newChildren in
+                // Update cached children when item.children changes (e.g., after workspace refresh)
+                if isExpanded && newChildren != nil {
+                    loadedChildren = newChildren
                 }
             }
-            .buttonStyle(.animatedIcon)
+        } else {
+            HStack {
+                Image(systemName: fileIcon(for: item))
+                    .foregroundColor(fileColor(for: item))
+                Text(item.name)
+                Spacer()
+                // Show frontmatter indicator
+                if hasFrontmatter {
+                    Image(systemName: "doc.badge.gearshape")
+                        .font(.system(size: 9))
+                        .foregroundColor(.purple.opacity(0.6))
+                }
+                // Show heart if favorited
+                if appState.isFavorite(item.url) {
+                    Image(systemName: "heart.fill")
+                        .font(.system(size: 9))
+                        .foregroundColor(.pink)
+                }
+                // Show indicator if modified in open tabs
+                if appState.documents.first(where: { $0.fileURL == item.url })?.isModified == true {
+                    Circle()
+                        .fill(Color.primary.opacity(0.5))
+                        .frame(width: 6, height: 6)
+                }
+            }
+            .padding(.leading, CGFloat(depth * 16))
+            .padding(.vertical, 3)
+            .padding(.horizontal, 8)
+            .background(
+                // Selection highlight
+                (selectedFileURLs?.wrappedValue.contains(item.url) ?? false)
+                    ? Color.accentColor.opacity(0.2)
+                    : Color.clear
+            )
+            .cornerRadius(4)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                // Handle clicks with modifier detection
+                let modifiers = NSEvent.modifierFlags
+                if let onFileClick = onFileClick {
+                    onFileClick(item.url, modifiers)
+                } else {
+                    appState.loadDocument(from: item.url)
+                }
+            }
             .onAppear {
                 if !item.isDirectory {
                     hasFrontmatter = FrontmatterCacheService.shared.hasFrontmatter(url: item.url)
@@ -817,6 +1094,11 @@ struct FileTreeRow: View {
             .contextMenu {
                 Button("Open") {
                     appState.loadDocument(from: item.url)
+                }
+                Button("Duplicate") {
+                    // Duplicate in same folder
+                    let parentFolder = item.url.deletingLastPathComponent()
+                    _ = appState.copyFile(from: item.url, to: parentFolder)
                 }
                 Divider()
                 if appState.isFavorite(item.url) {
@@ -836,6 +1118,7 @@ struct FileTreeRow: View {
                     appState.copyPathToClipboard(item.url)
                 }
             }
+            .draggable(item.url)
         }
     }
 
@@ -936,6 +1219,95 @@ struct NewFileSheet: View {
                 }
                 .keyboardShortcut(.defaultAction)
                 .disabled(fileName.isEmpty)
+            }
+        }
+        .padding(20)
+        .frame(width: 300)
+        .onAppear {
+            isFocused = true
+        }
+    }
+}
+
+// MARK: - New Folder Sheet
+
+struct NewFolderSheet: View {
+    @Binding var folderName: String
+    var onCreate: () -> Void
+    @FocusState private var isFocused: Bool
+
+    var body: some View {
+        VStack(spacing: 16) {
+            Text("New Folder")
+                .font(.headline)
+
+            TextField("Folder Name", text: $folderName)
+                .textFieldStyle(.roundedBorder)
+                .focused($isFocused)
+                .onSubmit {
+                    if !folderName.isEmpty {
+                        onCreate()
+                    }
+                }
+
+            HStack {
+                Button("Cancel") {
+                    folderName = ""
+                    onCreate()
+                }
+                .keyboardShortcut(.cancelAction)
+
+                Spacer()
+
+                Button("Create") {
+                    onCreate()
+                }
+                .keyboardShortcut(.defaultAction)
+                .disabled(folderName.isEmpty)
+            }
+        }
+        .padding(20)
+        .frame(width: 300)
+        .onAppear {
+            isFocused = true
+        }
+    }
+}
+
+// MARK: - Rename Folder Sheet
+
+struct RenameFolderSheet: View {
+    @Binding var folderName: String
+    var onRename: () -> Void
+    @FocusState private var isFocused: Bool
+
+    var body: some View {
+        VStack(spacing: 16) {
+            Text("Rename Folder")
+                .font(.headline)
+
+            TextField("Folder Name", text: $folderName)
+                .textFieldStyle(.roundedBorder)
+                .focused($isFocused)
+                .onSubmit {
+                    if !folderName.isEmpty {
+                        onRename()
+                    }
+                }
+
+            HStack {
+                Button("Cancel") {
+                    onRename()
+                }
+                .keyboardShortcut(.cancelAction)
+
+                Spacer()
+
+                Button("Rename") {
+                    onRename()
+                }
+                .keyboardShortcut(.defaultAction)
+                .disabled(folderName.isEmpty)
             }
         }
         .padding(20)

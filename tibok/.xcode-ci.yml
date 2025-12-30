@@ -1,0 +1,95 @@
+# Xcode Cloud Workflow Configuration for Tibok
+# This workflow builds and distributes Tibok to the Mac App Store
+
+version: 1
+
+ci:
+  # Workflow for App Store distribution
+  appstore_release:
+    name: "App Store Release"
+    description: "Build and distribute Tibok to Mac App Store"
+
+    # Trigger on pushes to apple-store-distro branch
+    trigger:
+      - branch: apple-store-distro
+
+    # Build configuration
+    build:
+      # Use macOS for building Mac apps
+      platform: macOS
+
+      # Xcode version
+      xcode: latest
+
+      # Scheme to build
+      scheme: tibok
+
+      # Build configuration
+      configuration: Release
+
+      # Destination
+      destination: platform=macOS,arch=arm64
+
+      # Clean build
+      clean: true
+
+    # Archive configuration
+    archive:
+      # Create archive for App Store
+      export_method: app-store
+
+      # Signing configuration (managed by Xcode Cloud)
+      signing:
+        automatic: true
+        team_id: F2PFRMGC9V
+
+    # Post-build actions
+    post_build:
+      # Automatically submit to TestFlight
+      testflight:
+        enable: true
+        groups:
+          - "Internal Testers"
+
+      # Submit to App Store for review
+      app_store:
+        enable: true
+        submit_for_review: false  # Manually submit after review
+
+    # Environment variables
+    environment:
+      # App version (from git tag)
+      APP_VERSION: ${CI_TAG}
+
+    # Test configuration (optional)
+    test:
+      enable: false  # No tests configured yet
+
+  # Workflow for development builds
+  development:
+    name: "Development Build"
+    description: "Build for development and testing"
+
+    # Trigger on pushes to development branch
+    trigger:
+      - branch: development
+
+    build:
+      platform: macOS
+      xcode: latest
+      scheme: tibok
+      configuration: Debug
+      destination: platform=macOS,arch=arm64
+
+    # No archiving for dev builds
+    archive:
+      enable: false
+
+    test:
+      enable: false
+
+# Notification settings
+notifications:
+  email:
+    on_success: true
+    on_failure: true

@@ -15,6 +15,12 @@ struct GitPanelView: View {
     @State private var commitError: String?
     @State private var showError = false
     @State private var committingStagedCount = 0
+    @State private var showNewBranchSheet = false
+    @State private var newBranchName = ""
+    @State private var showDiffSheet = false
+    @State private var selectedDiffFile: GitChangedFile?
+    @State private var isDiffStaged = false
+    @State private var showHistorySheet = false
     @AppStorage("sidebar.showGit") private var persistShowGit = true
 
     let uiState = UIStateService.shared
@@ -22,11 +28,58 @@ struct GitPanelView: View {
     var body: some View {
         Section {
             if persistShowGit {
+                // Branch selector
+                if let currentBranch = appState.currentBranch {
+                    Menu {
+                        ForEach(appState.availableBranches, id: \.self) { branch in
+                            Button {
+                                let result = appState.switchBranch(to: branch)
+                                if !result.success, let error = result.error {
+                                    appState.showToast(error, icon: "exclamationmark.triangle.fill")
+                                }
+                            } label: {
+                                HStack {
+                                    Text(branch)
+                                    if branch == currentBranch {
+                                        Image(systemName: "checkmark")
+                                    }
+                                }
+                            }
+                        }
+                        Divider()
+                        Button("New Branch...") {
+                            showNewBranchSheet = true
+                        }
+                    } label: {
+                        HStack {
+                            Image(systemName: "arrow.triangle.branch")
+                                .foregroundColor(.purple)
+                                .font(.system(size: 11))
+                            Text(currentBranch)
+                                .font(.system(size: 11, weight: .medium))
+                            Spacer()
+                            Image(systemName: "chevron.down")
+                                .font(.system(size: 9))
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(.vertical, 4)
+                        .padding(.horizontal, 8)
+                        .background(Color.secondary.opacity(0.1))
+                        .cornerRadius(4)
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.bottom, 8)
+                }
+
                 // Staged changes section
                 if !appState.stagedFiles.isEmpty {
                     DisclosureGroup {
                         ForEach(appState.stagedFiles, id: \.id) { file in
-                            GitFileRow(file: file, isStaged: true)
+                            GitFileRow(file: file, isStaged: true) {
+                                selectedDiffFile = file
+                                isDiffStaged = true
+                                showDiffSheet = true
+                            }
                         }
                     } label: {
                         HStack {
@@ -45,7 +98,11 @@ struct GitPanelView: View {
                 if !appState.unstagedFiles.isEmpty {
                     DisclosureGroup {
                         ForEach(appState.unstagedFiles, id: \.id) { file in
-                            GitFileRow(file: file, isStaged: false)
+                            GitFileRow(file: file, isStaged: false) {
+                                selectedDiffFile = file
+                                isDiffStaged = false
+                                showDiffSheet = true
+                            }
                         }
                     } label: {
                         HStack {
@@ -93,6 +150,16 @@ struct GitPanelView: View {
                         .buttonStyle(.animatedIcon)
                         .help("Unstage All")
                     }
+
+                    // History button
+                    Button {
+                        showHistorySheet = true
+                    } label: {
+                        Image(systemName: "clock.arrow.circlepath")
+                            .font(.system(size: 12))
+                    }
+                    .buttonStyle(.animatedIcon)
+                    .help("Commit History")
 
                     Spacer()
 
@@ -209,6 +276,33 @@ struct GitPanelView: View {
                 }
             )
         }
+        .sheet(isPresented: $showNewBranchSheet) {
+            NewBranchSheet(
+                branchName: $newBranchName,
+                onCreate: {
+                    guard !newBranchName.isEmpty else {
+                        showNewBranchSheet = false
+                        return
+                    }
+                    let result = appState.createBranch(name: newBranchName, switchTo: true)
+                    if !result.success, let error = result.error {
+                        appState.showToast(error, icon: "exclamationmark.triangle.fill")
+                    }
+                    newBranchName = ""
+                    showNewBranchSheet = false
+                }
+            )
+        }
+        .sheet(isPresented: $showDiffSheet) {
+            if let file = selectedDiffFile, let repoURL = appState.workspaceURL {
+                GitDiffView(fileURL: file.url, repoURL: repoURL, isStaged: isDiffStaged)
+            }
+        }
+        .sheet(isPresented: $showHistorySheet) {
+            if let repoURL = appState.workspaceURL {
+                GitHistoryView(repoURL: repoURL)
+            }
+        }
         .alert("Commit Failed", isPresented: $showError) {
             Button("OK") {
                 showError = false
@@ -225,6 +319,7 @@ struct GitFileRow: View {
     @EnvironmentObject var appState: AppState
     let file: GitChangedFile
     let isStaged: Bool
+    var onShowDiff: (() -> Void)?
 
     var body: some View {
         HStack(spacing: 4) {
@@ -240,6 +335,17 @@ struct GitFileRow: View {
                 .truncationMode(.middle)
 
             Spacer()
+
+            // Diff button
+            Button {
+                onShowDiff?()
+            } label: {
+                Image(systemName: "doc.text.magnifyingglass")
+                    .font(.system(size: 9, weight: .bold))
+                    .foregroundColor(.secondary)
+            }
+            .buttonStyle(.animatedIcon)
+            .help("View Diff")
 
             // Action buttons
             if isStaged {
@@ -408,5 +514,50 @@ struct AnimatedIconButtonStyle: ButtonStyle {
 extension ButtonStyle where Self == AnimatedIconButtonStyle {
     static var animatedIcon: AnimatedIconButtonStyle {
         AnimatedIconButtonStyle()
+    }
+}
+
+// MARK: - New Branch Sheet
+
+struct NewBranchSheet: View {
+    @Binding var branchName: String
+    var onCreate: () -> Void
+    @FocusState private var isFocused: Bool
+
+    var body: some View {
+        VStack(spacing: 16) {
+            Text("New Branch")
+                .font(.headline)
+
+            TextField("Branch Name", text: $branchName)
+                .textFieldStyle(.roundedBorder)
+                .focused($isFocused)
+                .onSubmit {
+                    if !branchName.isEmpty {
+                        onCreate()
+                    }
+                }
+
+            HStack {
+                Button("Cancel") {
+                    branchName = ""
+                    onCreate()
+                }
+                .keyboardShortcut(.cancelAction)
+
+                Spacer()
+
+                Button("Create") {
+                    onCreate()
+                }
+                .keyboardShortcut(.defaultAction)
+                .disabled(branchName.isEmpty)
+            }
+        }
+        .padding(20)
+        .frame(width: 300)
+        .onAppear {
+            isFocused = true
+        }
     }
 }
