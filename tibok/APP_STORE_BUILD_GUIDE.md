@@ -445,9 +445,89 @@ EOF
 
 ---
 
+## GitHub Release Distribution (Direct Download)
+
+For distributing DMG files outside the Mac App Store (e.g., GitHub releases), you must complete the full notarization workflow to avoid Gatekeeper warnings.
+
+### Complete Notarization Workflow
+
+**IMPORTANT**: Always run ALL steps in order. Skipping notarization will cause "malware" warnings on user machines.
+
+```bash
+# 1. Build and sign the app bundle
+./scripts/build-release-dmg.sh F2PFRMGC9V <version>
+
+# 2. Create DMG from signed app
+./scripts/create-dmg.sh <version>
+
+# 3. Notarize with Apple (THIS STEP IS CRITICAL - DO NOT SKIP)
+xcrun notarytool submit .build/release/Tibok-<version>.dmg \
+  --keychain-profile "TIBOK_NOTARIZATION" \
+  --wait
+
+# 4. Staple notarization ticket to DMG
+xcrun stapler staple .build/release/Tibok-<version>.dmg
+
+# 5. Verify notarization
+xcrun stapler validate .build/release/Tibok-<version>.dmg
+
+# 6. Upload to GitHub release
+gh release upload v<version> .build/release/Tibok-<version>.dmg
+```
+
+### Why Each Step Matters
+
+1. **Build & Sign**: Code signs app with Developer ID certificate (required for notarization)
+2. **Create DMG**: Packages signed app into distributable disk image
+3. **Notarize**: Apple scans for malware and approves the app (prevents Gatekeeper warnings)
+4. **Staple**: Attaches notarization ticket to DMG (works offline)
+5. **Verify**: Confirms notarization succeeded
+6. **Upload**: Makes notarized DMG available for download
+
+### What Happens If You Skip Notarization?
+
+Users will see this error when trying to open the app:
+```
+"Apple could not verify 'tibok' is free of malware that may harm your Mac
+or compromise your privacy."
+```
+
+The app will be blocked by macOS Gatekeeper and won't run. Users would need to:
+- Right-click → Open (override Gatekeeper)
+- Or go to System Settings → Privacy & Security → "Allow anyway"
+
+This creates a terrible user experience. **Always complete the full notarization workflow.**
+
+### Notarization Troubleshooting
+
+**Check notarization history:**
+```bash
+xcrun notarytool history --keychain-profile "TIBOK_NOTARIZATION"
+```
+
+**View detailed logs if notarization fails:**
+```bash
+xcrun notarytool log <submission-id> --keychain-profile "TIBOK_NOTARIZATION"
+```
+
+**Common notarization failures:**
+- **Not signed with Developer ID**: Must use Developer ID Application certificate (not Mac App Store cert)
+- **Invalid entitlements**: Check `tibok/Resources/tibok-dmg.entitlements`
+- **Missing hardened runtime**: Verify `--options runtime` in codesign command
+- **Unsigned frameworks**: All embedded frameworks must be signed
+
+**Verify app signature before notarizing:**
+```bash
+codesign --verify --deep --strict --verbose=2 .build/release/tibok.app
+```
+
+---
+
 ## Summary
 
-The key to successful App Store builds for tibok is:
+The key to successful builds for tibok:
+
+### For App Store Distribution (Xcode Cloud)
 
 1. **Assets.xcassets in `sources` section** with `buildPhase: resources`
 2. **Icon name consistency**: ASSETCATALOG_COMPILER_APPICON_NAME and CFBundleIconName both = "AppIcon"
@@ -456,7 +536,18 @@ The key to successful App Store builds for tibok is:
 5. **Dynamic build number injection** via ci_post_clone.sh
 6. **Entitlements file restoration** after each XcodeGen run
 
-This configuration has been validated through v1.0.2 build #11 and beyond.
+### For Direct Distribution (GitHub Releases)
+
+1. **Sign with Developer ID Application certificate**
+2. **Create DMG** from signed app
+3. **Notarize with Apple** (CRITICAL - prevents Gatekeeper warnings)
+4. **Staple notarization ticket** to DMG
+5. **Verify notarization** succeeded
+6. **Upload to GitHub** release
+
+**Never skip notarization for direct distribution.**
+
+This configuration has been validated through v1.0.3 and beyond.
 
 ---
 
