@@ -19,6 +19,7 @@ struct ContentView: View {
     @State private var showDocumentPopover = false
     @State private var showGitCommitSheet = false
     @State private var gitCommitMessage = ""
+    @State private var pendingGitCommitMessage: String?
     @AppStorage("ui.showInspector") private var showInspector = false
 
     // Store state before focus mode to restore later
@@ -155,18 +156,24 @@ struct ContentView: View {
                 showInspector.toggle()
             }
         }
-        .sheet(isPresented: $showGitCommitSheet) {
+        .sheet(isPresented: $showGitCommitSheet, onDismiss: {
+            if let message = pendingGitCommitMessage {
+                let result = appState.commitChanges(message: message)
+                if result.success {
+                    appState.refreshGitStatus()
+                    gitCommitMessage = ""
+                } else {
+                    showGitError("Commit Failed", result.error)
+                }
+                pendingGitCommitMessage = nil
+            }
+        }) {
             GitCommitSheet(
                 message: $gitCommitMessage,
                 stagedCount: appState.stagedFiles.count,
                 onCommit: {
-                    let result = appState.commitChanges(message: gitCommitMessage)
-                    if result.success {
-                        gitCommitMessage = ""
-                        showGitCommitSheet = false
-                    } else {
-                        showGitError("Commit Failed", result.error)
-                    }
+                    pendingGitCommitMessage = gitCommitMessage
+                    showGitCommitSheet = false
                 },
                 onCancel: {
                     showGitCommitSheet = false

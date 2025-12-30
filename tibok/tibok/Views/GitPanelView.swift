@@ -21,6 +21,8 @@ struct GitPanelView: View {
     @State private var selectedDiffFile: GitChangedFile?
     @State private var isDiffStaged = false
     @State private var showHistorySheet = false
+    @State private var pendingCommitMessage: String?
+    @State private var pendingBranchName: String?
     @AppStorage("sidebar.showGit") private var persistShowGit = true
 
     let uiState = UIStateService.shared
@@ -35,7 +37,7 @@ struct GitPanelView: View {
                             Button {
                                 let result = appState.switchBranch(to: branch)
                                 if !result.success, let error = result.error {
-                                    appState.showToast(error, icon: "exclamationmark.triangle.fill")
+                                    uiState.showToast(error, icon: "exclamationmark.triangle.fill", duration: 4.0)
                                 }
                             } label: {
                                 HStack {
@@ -241,42 +243,41 @@ struct GitPanelView: View {
                 isExpanded: $persistShowGit
             )
         }
-        .sheet(isPresented: $showCommitSheet) {
+        .sheet(isPresented: $showCommitSheet, onDismiss: {
+            if let message = pendingCommitMessage {
+                let result = appState.commitChanges(message: message)
+                if result.success {
+                    appState.refreshGitStatus()
+                    sheetMessage = ""
+                    commitMessage = ""
+                } else {
+                    commitError = result.error
+                    showError = true
+                }
+                pendingCommitMessage = nil
+            }
+        }) {
             GitCommitSheet(
                 message: $sheetMessage,
                 stagedCount: committingStagedCount,
                 onCommit: {
-                    // Capture message before clearing
-                    let messageToCommit = sheetMessage
-
-                    // Close sheet immediately without any state changes
-                    withTransaction(Transaction(animation: nil)) {
-                        showCommitSheet = false
-                    }
-
-                    // Commit and refresh after sheet fully dismisses (1.2+ seconds)
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
-                        let result = appState.commitChanges(message: messageToCommit, deferRefresh: true)
-                        if result.success {
-                            // Refresh after commit
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                                appState.refreshGitStatus()
-                            }
-                            // Clear both message vars after everything completes
-                            sheetMessage = ""
-                            commitMessage = ""
-                        } else {
-                            commitError = result.error
-                            showError = true
-                        }
-                    }
+                    pendingCommitMessage = sheetMessage
+                    showCommitSheet = false
                 },
                 onCancel: {
                     showCommitSheet = false
                 }
             )
         }
-        .sheet(isPresented: $showNewBranchSheet) {
+        .sheet(isPresented: $showNewBranchSheet, onDismiss: {
+            if let branchName = pendingBranchName {
+                let result = appState.createBranch(name: branchName, switchTo: true)
+                if !result.success, let error = result.error {
+                    uiState.showToast(error, icon: "exclamationmark.triangle.fill")
+                }
+                pendingBranchName = nil
+            }
+        }) {
             NewBranchSheet(
                 branchName: $newBranchName,
                 onCreate: {
@@ -284,10 +285,7 @@ struct GitPanelView: View {
                         showNewBranchSheet = false
                         return
                     }
-                    let result = appState.createBranch(name: newBranchName, switchTo: true)
-                    if !result.success, let error = result.error {
-                        appState.showToast(error, icon: "exclamationmark.triangle.fill")
-                    }
+                    pendingBranchName = newBranchName
                     newBranchName = ""
                     showNewBranchSheet = false
                 }
@@ -296,6 +294,8 @@ struct GitPanelView: View {
         .sheet(isPresented: $showDiffSheet) {
             if let file = selectedDiffFile, let repoURL = appState.workspaceURL {
                 GitDiffView(fileURL: file.url, repoURL: repoURL, isStaged: isDiffStaged)
+                    .presentationBackground(.regularMaterial)
+                    .presentationCornerRadius(12)
             }
         }
         .sheet(isPresented: $showHistorySheet) {
@@ -341,8 +341,8 @@ struct GitFileRow: View {
                 onShowDiff?()
             } label: {
                 Image(systemName: "doc.text.magnifyingglass")
-                    .font(.system(size: 9, weight: .bold))
-                    .foregroundColor(.secondary)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(.blue)
             }
             .buttonStyle(.animatedIcon)
             .help("View Diff")
@@ -384,7 +384,14 @@ struct GitFileRow: View {
         }
         .padding(.vertical, 1)
         .contentShape(Rectangle())
+        .onTapGesture {
+            onShowDiff?()
+        }
         .contextMenu {
+            Button("View Diff") {
+                onShowDiff?()
+            }
+            Divider()
             Button("Open File") {
                 appState.loadDocument(from: file.url)
             }
