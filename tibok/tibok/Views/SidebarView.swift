@@ -764,11 +764,12 @@ struct FileTreeRow: View {
             }
             .sheet(isPresented: $showNewFileSheet) {
                 NewFileSheet(fileName: $newFileName) {
-                    if !newFileName.isEmpty {
-                        appState.createFileInFolder(folderURL: item.url, name: newFileName)
+                    defer {
+                        showNewFileSheet = false
                         newFileName = ""
                     }
-                    showNewFileSheet = false
+                    guard !newFileName.isEmpty else { return }
+                    appState.createFileInFolder(folderURL: item.url, name: newFileName)
                 }
             }
             .onChange(of: isExpanded) { _, expanded in

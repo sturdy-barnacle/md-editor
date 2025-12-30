@@ -627,8 +627,18 @@ class AppState: ObservableObject {
 
         do {
             try "".write(to: fileURL, atomically: true, encoding: .utf8)
-            refreshWorkspaceFiles()
-            loadDocument(from: fileURL)
+
+            // Expand the folder to show the new file
+            if !isFolderExpanded(folderURL.path) {
+                toggleFolderExpansion(folderURL.path)
+            }
+
+            // Delay refresh slightly to avoid sheet flashing
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 150_000_000) // 150ms
+                refreshWorkspaceFiles()
+                loadDocument(from: fileURL)
+            }
         } catch {
             showToast("Failed to create file", icon: "exclamationmark.triangle.fill")
         }
