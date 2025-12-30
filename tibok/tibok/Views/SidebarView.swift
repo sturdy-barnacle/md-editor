@@ -388,6 +388,7 @@ struct SidebarView: View {
                 // MARK: - 4. Git Section (collapsed by default)
                 if appState.isGitRepository {
                     GitPanelView()
+                        .environmentObject(appState)
                 }
             }
             .listStyle(.sidebar)
