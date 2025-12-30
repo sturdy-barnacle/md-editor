@@ -153,10 +153,20 @@ class GitService: ObservableObject {
 
     /// Switch to a branch with error reporting
     func switchBranch(to branchName: String, in repoURL: URL) -> (success: Bool, error: String?) {
+        print("🔀 [GitService] Switching to branch: \(branchName)")
+        print("   Repository: \(repoURL.path)")
+
         let result = runGitCommand(["checkout", branchName], in: repoURL)
+
         if result.exitCode == 0 {
+            print("✅ [GitService] Successfully switched to branch: \(branchName)")
             return (true, nil)
         } else {
+            print("❌ [GitService] Branch switch failed:")
+            print("   Exit code: \(result.exitCode)")
+            if let error = result.error {
+                print("   Error: \(error)")
+            }
             return (false, result.error ?? "Failed to switch branch")
         }
     }
