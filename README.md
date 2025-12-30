@@ -31,6 +31,7 @@ Coming soon to the App Store.
 [![Latest Release](https://img.shields.io/github/v/release/sturdy-barnacle/md-editor?style=flat-square)](https://github.com/sturdy-barnacle/md-editor/releases/latest)     
 
 ### Build from Source
+(I highly recommend you download the latest release rather than build from source, but hey, you do you.)
 
 ```bash
 git clone https://github.com/sturdy-barnacle/md-editor.git

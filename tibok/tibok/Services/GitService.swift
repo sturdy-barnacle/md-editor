@@ -94,12 +94,32 @@ class GitService: ObservableObject {
 
     /// Get the root directory of the git repository containing the given path
     func getRepositoryRoot(for url: URL) -> URL? {
+        print("🔍 [GitService] Detecting git repo in: \(url.path)")
         let result = runGitCommand(["rev-parse", "--show-toplevel"], in: url)
-        guard let output = result.output, result.exitCode == 0 else {
+
+        if result.exitCode != 0 {
+            print("❌ [GitService] Git detection failed:")
+            print("   Exit code: \(result.exitCode)")
+            if let error = result.error {
+                print("   Error: \(error)")
+            }
             return nil
         }
+
+        guard let output = result.output else {
+            print("❌ [GitService] Git command succeeded but returned no output")
+            return nil
+        }
+
         let path = output.trimmingCharacters(in: .whitespacesAndNewlines)
-        return path.isEmpty ? nil : URL(fileURLWithPath: path)
+        if path.isEmpty {
+            print("❌ [GitService] Git returned empty path")
+            return nil
+        }
+
+        let repoURL = URL(fileURLWithPath: path)
+        print("✅ [GitService] Git repo found: \(repoURL.path)")
+        return repoURL
     }
 
     // MARK: - Branch Operations
