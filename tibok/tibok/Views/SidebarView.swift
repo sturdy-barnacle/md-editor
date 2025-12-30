@@ -823,6 +823,12 @@ struct FileTreeRow: View {
                 // Initialize expansion state from AppState
                 isExpanded = appState.isFolderExpanded(item.url.path)
             }
+            .onChange(of: item.children) { _, newChildren in
+                // Update cached children when item.children changes (e.g., after workspace refresh)
+                if isExpanded && newChildren != nil {
+                    loadedChildren = newChildren
+                }
+            }
         } else {
             Button {
                 appState.loadDocument(from: item.url)

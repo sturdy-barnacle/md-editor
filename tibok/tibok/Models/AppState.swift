@@ -625,6 +625,12 @@ class AppState: ObservableObject {
         let filename = name.hasSuffix(".md") ? name : "\(name).md"
         let fileURL = folderURL.appendingPathComponent(filename)
 
+        // Check for file conflict
+        if FileManager.default.fileExists(atPath: fileURL.path) {
+            showToast("File '\(filename)' already exists", icon: "exclamationmark.triangle.fill")
+            return
+        }
+
         do {
             try "".write(to: fileURL, atomically: true, encoding: .utf8)
 
@@ -633,12 +639,9 @@ class AppState: ObservableObject {
                 toggleFolderExpansion(folderURL.path)
             }
 
-            // Delay refresh slightly to avoid sheet flashing
-            Task { @MainActor in
-                try? await Task.sleep(nanoseconds: 150_000_000) // 150ms
-                refreshWorkspaceFiles()
-                loadDocument(from: fileURL)
-            }
+            // Refresh workspace to show new file (no delay needed, sheet is in stable parent now)
+            refreshWorkspaceFiles()
+            loadDocument(from: fileURL)
         } catch {
             showToast("Failed to create file", icon: "exclamationmark.triangle.fill")
         }
