@@ -8,6 +8,40 @@
 
         <!-- Latest version item - update this when releasing new versions -->
         <item>
+            <title>Version 1.0.3</title>
+            <description>
+                <![CDATA[
+                    <h2>tibok 1.0.3 - Undo/Redo Bug Fix</h2>
+                    <h3>What's Fixed</h3>
+                    <ul>
+                        <li><strong>Undo/Redo Character Loss</strong> - Fixed critical bug where entire undo steps were lost when typing fast then using undo/redo. Undo/redo now works reliably without losing any characters.</li>
+                    </ul>
+                    <h3>Improvements</h3>
+                    <ul>
+                        <li><strong>Better Undo Granularity</strong> - Added intelligent undo grouping based on 1-second typing pauses. You can now undo text in smaller, more manageable segments instead of entire typing sessions.</li>
+                    </ul>
+                    <h3>Release Details</h3>
+                    <ul>
+                        <li>✓ Fully signed with Developer ID Application certificate</li>
+                        <li>✓ Notarized by Apple for Gatekeeper approval</li>
+                        <li>✓ No security warnings on installation</li>
+                        <li>✓ macOS 14.0 (Sonoma) or later, Apple Silicon (ARM64)</li>
+                    </ul>
+                ]]>
+            </description>
+            <pubDate>Sun, 29 Dec 2025 15:00:00 +0000</pubDate>
+            <sparkle:version>1767039691</sparkle:version>
+            <sparkle:shortVersionString>1.0.3</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <enclosure
+                url="https://github.com/sturdy-barnacle/md-editor/releases/download/v1.0.3/Tibok-1.0.3.dmg"
+                sparkle:edSignature="500OryuL2/3PIZOoPAajY9H6QQwPF07EZPbSFgquH33vWY6B259gIQoGhteZt4MHuCMO9EOC0HMDhgQ0X1+XAw=="
+                length="5423018"
+                type="application/octet-stream"
+            />
+        </item>
+
+        <item>
             <title>Version 1.0.2</title>
             <description>
                 <![CDATA[

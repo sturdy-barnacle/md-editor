@@ -4,6 +4,20 @@ All notable changes to tibok are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.3] - 2025-12-29
+
+### Fixed
+- **Undo/Redo Character Loss**: Fixed critical bug where entire undo steps were lost when typing fast then using undo/redo
+  - Root cause: Syntax highlighting was disabling undo registration globally, creating race condition where user edits weren't registered in undo stack
+  - Solution: Removed redundant `disableUndoRegistration()` / `enableUndoRegistration()` calls; added safety check to prevent highlighting during undo/redo operations
+  - Impact: Undo/redo now works reliably without losing any characters
+
+### Improved
+- **Undo Granularity**: Enhanced undo behavior to break typing into reasonable chunks
+  - Added intelligent undo grouping based on 1-second typing pauses
+  - Users can now undo text in smaller, more manageable segments instead of entire typing sessions
+  - Improves editor UX by providing more predictable and useful undo/redo behavior
+
 ## [1.0.2] - 2025-12-22
 
 ### Added
