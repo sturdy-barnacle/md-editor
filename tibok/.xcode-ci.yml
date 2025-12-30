@@ -9,11 +9,9 @@ ci:
     name: "App Store Release"
     description: "Build and distribute Tibok to Mac App Store"
 
-    # Trigger on tags matching version pattern
+    # Trigger on pushes to apple-store-distro branch
     trigger:
-      - branch: main
-        tag:
-          - "v*.*.*"
+      - branch: apple-store-distro
 
     # Build configuration
     build:

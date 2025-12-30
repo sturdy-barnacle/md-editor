@@ -650,9 +650,14 @@ struct FindableTextEditor: NSViewRepresentable {
             // Find the current paragraph range
             let currentParagraphRange = nsString.paragraphRange(for: NSRange(location: min(cursorLocation, nsString.length - 1), length: 0))
 
+            // Determine alpha based on appearance (dark mode needs higher opacity for visibility)
+            let appearance = NSApp.effectiveAppearance
+            let isDarkMode = appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+            let dimmedAlpha: CGFloat = isDarkMode ? 0.5 : 0.3
+
             // Dim all text first
             let fullRange = NSRange(location: 0, length: textStorage.length)
-            textStorage.addAttribute(.foregroundColor, value: NSColor.labelColor.withAlphaComponent(0.3), range: fullRange)
+            textStorage.addAttribute(.foregroundColor, value: NSColor.labelColor.withAlphaComponent(dimmedAlpha), range: fullRange)
 
             // Restore full opacity for current paragraph
             if currentParagraphRange.location != NSNotFound && currentParagraphRange.length > 0 {

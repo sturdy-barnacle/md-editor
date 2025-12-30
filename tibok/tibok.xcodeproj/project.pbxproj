@@ -71,6 +71,11 @@
 		E9C43AA5E1F80A20C575D404 /* FolderScanCacheTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC14559B2BB3A58BDF5546CA /* FolderScanCacheTests.swift */; };
 		EAF5AD81F0C4684CB2A06AFF /* PluginStateManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A46F7DB71EFAD51E6F68887F /* PluginStateManager.swift */; };
 		F0F86904BEAF06BD1C727B20 /* UIStateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68A522514ED9A6050DF7AB59 /* UIStateService.swift */; };
+		016F03EBC2D9AA8CC1381132 /* GitHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 042B77C4CFBE439C1ADE2A4C /* GitHistoryView.swift */; };
+		798329FF6B2DB5F77E21D215 /* GitDiffView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5913E295469E357066FCBFAB /* GitDiffView.swift */; };
+		81A6B2583B68A340F8A74D86 /* KeyboardShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F82FD5C79107BF08DA922DD /* KeyboardShortcuts.swift */; };
+		3AF8932BB0633F049B7FE9C7 /* GitModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96B67F7C0CC890305E0955B3 /* GitModels.swift */; };
+		507C1157A4EC3D47A6647EED /* WorkspaceMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D65A4021FFD848BA7899E2DC /* WorkspaceMonitor.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -146,6 +151,11 @@
 		FC14559B2BB3A58BDF5546CA /* FolderScanCacheTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderScanCacheTests.swift; sourceTree = "<group>"; };
 		FCD5C5034F2BC8E6E35DA54E /* WebhookSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebhookSettingsView.swift; sourceTree = "<group>"; };
 		FF213603A438FA52BA947AA0 /* FolderScanCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderScanCache.swift; sourceTree = "<group>"; };
+		042B77C4CFBE439C1ADE2A4C /* GitHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitHistoryView.swift; sourceTree = "<group>"; };
+		5913E295469E357066FCBFAB /* GitDiffView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitDiffView.swift; sourceTree = "<group>"; };
+		6F82FD5C79107BF08DA922DD /* KeyboardShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardShortcuts.swift; sourceTree = "<group>"; };
+		96B67F7C0CC890305E0955B3 /* GitModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitModels.swift; sourceTree = "<group>"; };
+		D65A4021FFD848BA7899E2DC /* WorkspaceMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceMonitor.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -176,6 +186,7 @@
 				F69D012BEAC8DF582B383B8F /* AppState.swift */,
 				32B40D864EBAC48D07EE4F8F /* Document.swift */,
 				A45AD517F1F9959BE32288AC /* Frontmatter.swift */,
+				96B67F7C0CC890305E0955B3 /* GitModels.swift */,
 				2B1AA243704EDDCFB8D0FD6E /* WebhookConfig.swift */,
 				79A01C4222D926E85ED44F95 /* WordPressModels.swift */,
 			);
@@ -214,6 +225,8 @@
 			children = (
 				D2FD193BFC908EAE01AC7309 /* EditorView.swift */,
 				097446BFCA2A23C41B595D1D /* FrontmatterInspectorView.swift */,
+				5913E295469E357066FCBFAB /* GitDiffView.swift */,
+				042B77C4CFBE439C1ADE2A4C /* GitHistoryView.swift */,
 				04D5D249B1E0D9522DC31B13 /* GitPanelView.swift */,
 				E299168D4FA7A93C215ADDA5 /* PluginSettingsView.swift */,
 				AB59E47AD0065CA436508F9B /* PreviewView.swift */,
@@ -263,9 +276,18 @@
 				68A522514ED9A6050DF7AB59 /* UIStateService.swift */,
 				B474561C00E71F6745A5E2EC /* WebhookService.swift */,
 				AF44F644D4838B28FE57CE3C /* WordPressExporter.swift */,
+				D65A4021FFD848BA7899E2DC /* WorkspaceMonitor.swift */,
 				98EB81A7AE13FB33CB6E0316 /* WorkspaceService.swift */,
 			);
 			path = Services;
+			sourceTree = "<group>";
+		};
+		3C641E81E519D545BE4AD209 /* Extensions */ = {
+			isa = PBXGroup;
+			children = (
+				6F82FD5C79107BF08DA922DD /* KeyboardShortcuts.swift */,
+			);
+			path = Extensions;
 			sourceTree = "<group>";
 		};
 		C6A228CFBAEBF6F88F19607A /* Builtin */ = {
@@ -283,6 +305,7 @@
 			children = (
 				094819A03A1970C5BC200C3B /* ContentView.swift */,
 				8702A62F19C796F171937927 /* tibokApp.swift */,
+				3C641E81E519D545BE4AD209 /* Extensions */,
 				349D8CBC23FADDA8D1961AAC /* Helpers */,
 				23906A9A1E28EF3606172181 /* Models */,
 				EADE2E326047656276251111 /* Plugins */,
@@ -438,10 +461,14 @@
 				6B0165A1CA6305A63073E566 /* FrontmatterCacheService.swift in Sources */,
 				91E74C661594AB6B0BDF633B /* FrontmatterInspectorView.swift in Sources */,
 				D4089D15A268F4762C5929AC /* FrontmatterPlugin.swift in Sources */,
+				798329FF6B2DB5F77E21D215 /* GitDiffView.swift in Sources */,
+				016F03EBC2D9AA8CC1381132 /* GitHistoryView.swift in Sources */,
+				3AF8932BB0633F049B7FE9C7 /* GitModels.swift in Sources */,
 				195D049CF3EA8771778B86D5 /* GitPanelView.swift in Sources */,
 				119A1904C05393D6CF418195 /* GitService.swift in Sources */,
 				48F435885AFCC6DE8373453D /* ImageUploadService.swift in Sources */,
 				DDCA4BFC2B5E2400E722098F /* KeychainHelper.swift in Sources */,
+				81A6B2583B68A340F8A74D86 /* KeyboardShortcuts.swift in Sources */,
 				B484D880C67F87186B1A3434 /* LogService.swift in Sources */,
 				802AE4751B1198C8386145B2 /* MarkdownRenderer.swift in Sources */,
 				DF22E3D1605211AEE59F2C62 /* PluginContext.swift in Sources */,
@@ -468,6 +495,7 @@
 				6F7ACCFE58FD92A9EB3A5B8A /* WordPressExporter.swift in Sources */,
 				8392AA2E1D6582F2A41870FD /* WordPressModels.swift in Sources */,
 				42EDB2CEB271EDF7F062092D /* WordPressSettingsView.swift in Sources */,
+				507C1157A4EC3D47A6647EED /* WorkspaceMonitor.swift in Sources */,
 				B8A4AF9C33BE8D0F23CC04F0 /* WorkspaceService.swift in Sources */,
 				DBDDCE5AD045625C90EA6E17 /* tibokApp.swift in Sources */,
 			);
