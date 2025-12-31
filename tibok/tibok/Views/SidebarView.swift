@@ -935,24 +935,22 @@ struct FileTreeRow: View {
 
     var body: some View {
         if item.isDirectory {
-            DisclosureGroup(isExpanded: $isExpanded) {
-                // Show loading indicator while scanning
-                if isScanning {
-                    HStack {
-                        ProgressView()
-                            .scaleEffect(0.6)
-                        Text("Scanning...")
-                            .font(.caption)
+            VStack(alignment: .leading, spacing: 0) {
+                // Folder row with manual disclosure control
+                HStack(spacing: 4) {
+                    // Disclosure triangle button
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.15)) {
+                            isExpanded.toggle()
+                        }
+                    } label: {
+                        Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
+                            .font(.system(size: 10, weight: .semibold))
                             .foregroundColor(.secondary)
+                            .frame(width: 12, height: 12)
                     }
-                    .padding(.leading, 20)
-                }
+                    .buttonStyle(.plain)
 
-                ForEach(loadedChildren ?? []) { child in
-                    FileTreeRow(item: child, depth: depth + 1, onNewFileInFolder: onNewFileInFolder, onNewFolderInFolder: onNewFolderInFolder, onRenameFolder: onRenameFolder, onDeleteFolder: onDeleteFolder, onDeleteFile: onDeleteFile, selectedFileURLs: selectedFileURLs, onFileClick: onFileClick)
-                }
-            } label: {
-                HStack {
                     Image(systemName: isExpanded ? "folder.fill" : "folder")
                         .foregroundColor(depth == 0 ? .blue : .blue.opacity(0.7))
                         .font(.system(size: depth == 0 ? 14 : 13))
@@ -972,8 +970,30 @@ struct FileTreeRow: View {
                             .scaleEffect(0.5)
                             .padding(.leading, 4)
                     }
+
+                    Spacer()
                 }
                 .padding(.leading, CGFloat(depth * 16))
+                .contentShape(Rectangle())
+
+                // Expanded content
+                if isExpanded {
+                    // Show loading indicator while scanning
+                    if isScanning {
+                        HStack {
+                            ProgressView()
+                                .scaleEffect(0.6)
+                            Text("Scanning...")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(.leading, CGFloat((depth + 1) * 16) + 16)
+                    }
+
+                    ForEach(loadedChildren ?? []) { child in
+                        FileTreeRow(item: child, depth: depth + 1, onNewFileInFolder: onNewFileInFolder, onNewFolderInFolder: onNewFolderInFolder, onRenameFolder: onRenameFolder, onDeleteFolder: onDeleteFolder, onDeleteFile: onDeleteFile, selectedFileURLs: selectedFileURLs, onFileClick: onFileClick)
+                    }
+                }
             }
             .contextMenu {
                 Button("New File...") {
@@ -1014,8 +1034,11 @@ struct FileTreeRow: View {
                 return appState.moveFile(from: fileURL, to: item.url)
             }
             .onChange(of: isExpanded) { _, expanded in
-                // Save expansion state to AppState
-                appState.toggleFolderExpansion(item.url.path)
+                print("🔄 [FileTreeRow] onChange: \(item.name) isExpanded=\(expanded)")
+                // Only update AppState if it differs (prevents toggle on restoration from onAppear)
+                if appState.isFolderExpanded(item.url.path) != expanded {
+                    appState.setFolderExpanded(item.url.path, expanded: expanded)
+                }
 
                 if expanded && loadedChildren == nil {
                     // Lazy load children on first expand
@@ -1056,7 +1079,9 @@ struct FileTreeRow: View {
             }
             .onAppear {
                 // Initialize expansion state from AppState
-                isExpanded = appState.isFolderExpanded(item.url.path)
+                let savedExpansion = appState.isFolderExpanded(item.url.path)
+                print("👁️ [FileTreeRow] onAppear: \(item.name) savedExpansion=\(savedExpansion) current=\(isExpanded)")
+                isExpanded = savedExpansion
             }
             .onChange(of: item.children) { _, newChildren in
                 // Update cached children when item.children changes (e.g., after workspace refresh)
