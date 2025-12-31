@@ -257,6 +257,84 @@ presentationState = PresentationState(file: file, isStaged: false)
 **Implemented in:**
 - `GitPanelView.swift` - DiffPresentationState (Dec 30, 2025)
 
+#### Security-Scoped Bookmarks for Sandbox Access
+
+For App Store compliance, the app runs in a sandbox that restricts access to hidden files like .git directories. Use security-scoped bookmarks to request persistent access to these directories.
+
+**When to use:**
+- Accessing hidden directories (.git, .DS_Store, etc.)
+- Reading/writing files outside user-selected directories
+- Any resource that requires explicit sandbox permission
+
+**Pattern** (see `AppState.swift:325-415` for reference):
+
+```swift
+// 1. Request access when opening resource
+let hiddenURL = workspaceURL.appendingPathComponent(".git")
+if FileManager.default.fileExists(atPath: hiddenURL.path) {
+    let canAccess = hiddenURL.startAccessingSecurityScopedResource()
+
+    if canAccess {
+        do {
+            // Create bookmark for persistent access
+            let bookmarkData = try hiddenURL.bookmarkData(
+                options: .withSecurityScope,
+                includingResourceValuesForKeys: nil,
+                relativeTo: nil
+            )
+
+            // Store bookmark in UserDefaults
+            let bookmarkKey = "bookmark-\(workspaceURL.path)"
+            UserDefaults.standard.set(bookmarkData, forKey: bookmarkKey)
+        } catch {
+            print("Failed to create bookmark: \(error)")
+        }
+    }
+}
+
+// 2. Restore access on app launch
+if let bookmarkData = UserDefaults.standard.data(forKey: bookmarkKey) {
+    do {
+        var isStale = false
+        let restoredURL = try URL(
+            resolvingBookmarkData: bookmarkData,
+            options: .withSecurityScope,
+            relativeTo: nil,
+            bookmarkDataIsStale: &isStale
+        )
+
+        if !isStale {
+            _ = restoredURL.startAccessingSecurityScopedResource()
+        } else {
+            // Bookmark expired, recreate on next access
+            UserDefaults.standard.removeObject(forKey: bookmarkKey)
+        }
+    } catch {
+        print("Failed to restore bookmark: \(error)")
+        UserDefaults.standard.removeObject(forKey: bookmarkKey)
+    }
+}
+
+// 3. Cleanup when done
+hiddenURL.stopAccessingSecurityScopedResource()
+```
+
+**Key principles:**
+- `startAccessingSecurityScopedResource()` must be paired with `stopAccessingSecurityScopedResource()`
+- Store bookmarks in UserDefaults for persistence across app launches
+- Handle stale bookmarks gracefully (remove and recreate)
+- Use unique keys for each resource (e.g., include workspace path)
+- Call stop when switching resources or on app termination
+
+**Implemented in:**
+- `AppState.swift` - .git directory access (Dec 30, 2025)
+- `tibokApp.swift` - cleanup on app termination (Dec 30, 2025)
+
+**Why this matters:**
+- Debug builds: Sandbox relaxed, violations logged but not enforced
+- Production builds: Sandbox strict, violations block access immediately
+- Without bookmarks: `.git` access denied → git detection fails in production
+
 ### Xcode Project Management
 
 The project uses **XcodeGen** to generate the `.xcodeproj` file from `project.yml`.

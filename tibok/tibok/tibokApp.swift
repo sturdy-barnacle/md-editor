@@ -55,9 +55,6 @@ struct tibokApp: App {
                         }
                     }
                 }
-                .onDisappear {
-                    cleanupSecurityScopedResources()
-                }
                 .onChange(of: appearanceMode) { _, _ in
                     applyAppearance()
                 }
@@ -436,13 +433,6 @@ struct tibokApp: App {
             commandRegistry: CommandService.shared,
             appState: appState
         )
-    }
-
-    private func cleanupSecurityScopedResources() {
-        if let workspaceURL = appState.workspaceURL {
-            workspaceURL.stopAccessingSecurityScopedResource()
-            print("🧹 [App] Cleaned up workspace access")
-        }
     }
 
     private func performFormatting(_ type: FormattingType) {

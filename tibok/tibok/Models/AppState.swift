@@ -323,29 +323,6 @@ class AppState: ObservableObject {
     }
 
     func setWorkspace(_ url: URL) {
-        // Stop accessing previous workspace
-        if let previousURL = workspaceURL {
-            previousURL.stopAccessingSecurityScopedResource()
-        }
-
-        // Start accessing the workspace URL (grants access to all subdirectories including .git)
-        _ = url.startAccessingSecurityScopedResource()
-
-        // Create bookmark for persistent access
-        do {
-            let bookmarkData = try url.bookmarkData(
-                options: .withSecurityScope,
-                includingResourceValuesForKeys: nil,
-                relativeTo: nil
-            )
-
-            let bookmarkKey = "workspaceBookmark-\(url.path)"
-            UserDefaults.standard.set(bookmarkData, forKey: bookmarkKey)
-            print("✅ [AppState] Workspace access granted: \(url.path)")
-        } catch {
-            print("⚠️ [AppState] Failed to create workspace bookmark: \(error.localizedDescription)")
-        }
-
         workspaceURL = url
         saveWorkspaceState()
         refreshWorkspaceFiles()
@@ -373,42 +350,13 @@ class AppState: ObservableObject {
     }
 
     private func loadWorkspaceState() {
+        // Load expanded folders BEFORE setWorkspace so refreshWorkspaceFiles can use them
+        loadExpandedFolders()
+
         if let url = UserDefaults.standard.url(forKey: "lastWorkspaceURL"),
            FileManager.default.fileExists(atPath: url.path) {
-
-            // Restore security-scoped access to workspace from bookmark
-            let bookmarkKey = "workspaceBookmark-\(url.path)"
-
-            if let bookmarkData = UserDefaults.standard.data(forKey: bookmarkKey) {
-                do {
-                    var isStale = false
-                    let restoredURL = try URL(
-                        resolvingBookmarkData: bookmarkData,
-                        options: .withSecurityScope,
-                        relativeTo: nil,
-                        bookmarkDataIsStale: &isStale
-                    )
-
-                    if !isStale {
-                        // Use the restored security-scoped URL
-                        setWorkspace(restoredURL)
-                        print("✅ [AppState] Restored workspace from bookmark: \(restoredURL.path)")
-                        loadExpandedFolders()
-                        return
-                    } else {
-                        print("⚠️ [AppState] Workspace bookmark is stale")
-                        UserDefaults.standard.removeObject(forKey: bookmarkKey)
-                    }
-                } catch {
-                    print("⚠️ [AppState] Failed to restore workspace bookmark: \(error.localizedDescription)")
-                    UserDefaults.standard.removeObject(forKey: bookmarkKey)
-                }
-            }
-
-            // Fallback: open without security-scoped access (user will need to reopen)
-            print("⚠️ [AppState] No valid bookmark, workspace may have limited access")
+            setWorkspace(url)
         }
-        loadExpandedFolders()
     }
 
     func toggleFolderExpansion(_ path: String) {
