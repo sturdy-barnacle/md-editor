@@ -323,9 +323,39 @@ class AppState: ObservableObject {
     }
 
     func setWorkspace(_ url: URL) {
+        // Stop accessing previous .git directory
+        if let previousURL = workspaceURL {
+            let previousGitURL = previousURL.appendingPathComponent(".git")
+            previousGitURL.stopAccessingSecurityScopedResource()
+        }
+
         workspaceURL = url
         saveWorkspaceState()
         refreshWorkspaceFiles()
+
+        // Request security-scoped access to .git directory
+        let gitURL = url.appendingPathComponent(".git")
+        if FileManager.default.fileExists(atPath: gitURL.path) {
+            let canAccess = gitURL.startAccessingSecurityScopedResource()
+
+            if canAccess {
+                do {
+                    let bookmarkData = try gitURL.bookmarkData(
+                        options: .withSecurityScope,
+                        includingResourceValuesForKeys: nil,
+                        relativeTo: nil
+                    )
+
+                    let bookmarkKey = "gitBookmark-\(url.path)"
+                    UserDefaults.standard.set(bookmarkData, forKey: bookmarkKey)
+                    print("✅ [AppState] Git directory access granted: \(gitURL.path)")
+                } catch {
+                    print("⚠️ [AppState] Failed to create git bookmark: \(error.localizedDescription)")
+                }
+            } else {
+                print("⚠️ [AppState] Could not access .git directory: \(gitURL.path)")
+            }
+        }
 
         // Start monitoring workspace for external changes
         workspaceMonitor.startMonitoring(url: url) { [weak self] in
@@ -352,6 +382,33 @@ class AppState: ObservableObject {
     private func loadWorkspaceState() {
         if let url = UserDefaults.standard.url(forKey: "lastWorkspaceURL"),
            FileManager.default.fileExists(atPath: url.path) {
+
+            // Restore security-scoped access to .git directory
+            let bookmarkKey = "gitBookmark-\(url.path)"
+
+            if let bookmarkData = UserDefaults.standard.data(forKey: bookmarkKey) {
+                do {
+                    var isStale = false
+                    let gitURL = try URL(
+                        resolvingBookmarkData: bookmarkData,
+                        options: .withSecurityScope,
+                        relativeTo: nil,
+                        bookmarkDataIsStale: &isStale
+                    )
+
+                    if !isStale {
+                        _ = gitURL.startAccessingSecurityScopedResource()
+                        print("✅ [AppState] Restored git directory access: \(gitURL.path)")
+                    } else {
+                        print("⚠️ [AppState] Git bookmark is stale, will recreate on next access")
+                        UserDefaults.standard.removeObject(forKey: bookmarkKey)
+                    }
+                } catch {
+                    print("⚠️ [AppState] Failed to restore git bookmark: \(error.localizedDescription)")
+                    UserDefaults.standard.removeObject(forKey: bookmarkKey)
+                }
+            }
+
             setWorkspace(url)
         }
         loadExpandedFolders()

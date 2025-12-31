@@ -55,6 +55,9 @@ struct tibokApp: App {
                         }
                     }
                 }
+                .onDisappear {
+                    cleanupSecurityScopedResources()
+                }
                 .onChange(of: appearanceMode) { _, _ in
                     applyAppearance()
                 }
@@ -433,6 +436,14 @@ struct tibokApp: App {
             commandRegistry: CommandService.shared,
             appState: appState
         )
+    }
+
+    private func cleanupSecurityScopedResources() {
+        if let workspaceURL = appState.workspaceURL {
+            let gitURL = workspaceURL.appendingPathComponent(".git")
+            gitURL.stopAccessingSecurityScopedResource()
+            print("🧹 [App] Cleaned up git directory access")
+        }
     }
 
     private func performFormatting(_ type: FormattingType) {
