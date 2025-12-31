@@ -440,9 +440,8 @@ struct tibokApp: App {
 
     private func cleanupSecurityScopedResources() {
         if let workspaceURL = appState.workspaceURL {
-            let gitURL = workspaceURL.appendingPathComponent(".git")
-            gitURL.stopAccessingSecurityScopedResource()
-            print("🧹 [App] Cleaned up git directory access")
+            workspaceURL.stopAccessingSecurityScopedResource()
+            print("🧹 [App] Cleaned up workspace access")
         }
     }
 
