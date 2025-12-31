@@ -350,11 +350,13 @@ class AppState: ObservableObject {
     }
 
     private func loadWorkspaceState() {
+        // Load expanded folders BEFORE setWorkspace so refreshWorkspaceFiles can use them
+        loadExpandedFolders()
+
         if let url = UserDefaults.standard.url(forKey: "lastWorkspaceURL"),
            FileManager.default.fileExists(atPath: url.path) {
             setWorkspace(url)
         }
-        loadExpandedFolders()
     }
 
     func toggleFolderExpansion(_ path: String) {

@@ -95,31 +95,30 @@ class GitService: ObservableObject {
     /// Get the root directory of the git repository containing the given path
     func getRepositoryRoot(for url: URL) -> URL? {
         print("🔍 [GitService] Detecting git repo in: \(url.path)")
-        let result = runGitCommand(["rev-parse", "--show-toplevel"], in: url)
 
-        if result.exitCode != 0 {
-            print("❌ [GitService] Git detection failed:")
-            print("   Exit code: \(result.exitCode)")
-            if let error = result.error {
-                print("   Error: \(error)")
+        // In sandboxed environment, use FileManager to check for .git directory
+        // This bypasses sandbox restrictions on running git commands
+        var currentURL = url
+        let fileManager = FileManager.default
+
+        // Search up the directory tree for .git
+        while currentURL.path != "/" {
+            let gitURL = currentURL.appendingPathComponent(".git")
+            var isDirectory: ObjCBool = false
+
+            if fileManager.fileExists(atPath: gitURL.path, isDirectory: &isDirectory) {
+                if isDirectory.boolValue {
+                    print("✅ [GitService] Git repo found: \(currentURL.path)")
+                    return currentURL
+                }
             }
-            return nil
+
+            // Move up one directory
+            currentURL = currentURL.deletingLastPathComponent()
         }
 
-        guard let output = result.output else {
-            print("❌ [GitService] Git command succeeded but returned no output")
-            return nil
-        }
-
-        let path = output.trimmingCharacters(in: .whitespacesAndNewlines)
-        if path.isEmpty {
-            print("❌ [GitService] Git returned empty path")
-            return nil
-        }
-
-        let repoURL = URL(fileURLWithPath: path)
-        print("✅ [GitService] Git repo found: \(repoURL.path)")
-        return repoURL
+        print("❌ [GitService] No git repository found")
+        return nil
     }
 
     // MARK: - Branch Operations
@@ -738,6 +737,12 @@ class GitService: ObservableObject {
         process.executableURL = URL(fileURLWithPath: "/usr/bin/git")
         process.arguments = arguments
         process.currentDirectoryURL = directory
+
+        // Set GIT_DIR and GIT_WORK_TREE to help git find .git in sandboxed environment
+        var env = ProcessInfo.processInfo.environment
+        env["GIT_DIR"] = directory.appendingPathComponent(".git").path
+        env["GIT_WORK_TREE"] = directory.path
+        process.environment = env
 
         let outputPipe = Pipe()
         let errorPipe = Pipe()
