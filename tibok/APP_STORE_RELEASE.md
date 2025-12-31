@@ -1,6 +1,6 @@
 # Tibok - App Store Release Information
 
-## Current Version: 1.0.3
+## Current Version: 1.0.4
 
 Last updated: 2025-12-30
 
@@ -84,7 +84,22 @@ markdown,editor,git,version control,writing,developer,text editor,documentation,
 
 ## Changelog
 
-### Version 1.0.3 (Current Release)
+### Version 1.0.4 (Current Release)
+
+#### Critical Bug Fix
+
+- **Git Repository Detection in Production Builds**: Fixed critical issue where production builds (DMG and App Store) failed to detect git repositories due to App Sandbox restrictions
+  - Implemented security-scoped bookmark access for .git directories
+  - Fixes "git repository not found" error in workspaces that previously worked
+  - Sandbox-compliant solution using persistent bookmarks
+  - Proper cleanup on workspace close and app termination
+  - Technical: Uses `URL.startAccessingSecurityScopedResource()` with UserDefaults bookmark persistence
+
+**Note**: This fix only affects production builds. Debug builds were unaffected as they have relaxed sandbox enforcement.
+
+---
+
+### Version 1.0.3
 
 #### Workspace & File Management
 - **Workspace Folder Operations**: Browse and manage entire folders of markdown files with native file browser

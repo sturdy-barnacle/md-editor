@@ -220,7 +220,8 @@ The Team ID doesn't match any Developer ID Application certificate in your Keych
 
 ## Release History
 
-- **v1.0.3** (In Development) - Git UI improvements, NSPanel migration - December 30, 2025
+- **v1.0.4** - Critical git detection fix for production builds - December 30, 2025
+- **v1.0.3** - Git UI improvements, NSPanel migration - December 30, 2025
 - **v1.0.2** - Bug fixes (keyboard input, WordPress selection) - Code-signed and distributed via DMG
 - **v1.0.1** - Previous release
 - **v1.0.0** - Initial release
@@ -302,3 +303,71 @@ All releases from v1.0.0 onwards are code-signed with Developer ID certificates.
 - User testing to verify modal flash elimination
 - User testing to verify diff preview reliability
 - Consider applying NSPanel pattern to other modals if needed
+
+### December 30, 2025 - Git Detection Fix for Production Builds
+
+**Critical Issue:**
+Production builds (both DMG and App Store) showing "git repository not found" for workspaces that previously worked. Debug builds unaffected.
+
+**Root Cause:**
+App Sandbox restrictions (introduced in commit 9cc7e96 for App Store compliance) block access to .git directories:
+- Production builds: Sandbox strictly enforced, .git access blocked
+- Debug builds: Sandbox relaxed, violations logged but not enforced
+- Git detection uses `git rev-parse --show-toplevel` which requires reading .git directory
+
+**Solution Implemented:**
+Security-scoped resource bookmarks for App Store-compliant .git access:
+
+1. **Request Access on Workspace Open** (AppState.swift:325-366)
+   - When user opens workspace, request explicit .git directory access
+   - Create security-scoped bookmark for persistent access
+   - Store bookmark in UserDefaults keyed by workspace path
+
+2. **Restore Access on App Launch** (AppState.swift:382-415)
+   - Restore bookmarks from UserDefaults
+   - Handle stale bookmarks gracefully (recreate on next access)
+   - Start accessing .git directory before git detection
+
+3. **Cleanup on Close** (AppState.swift + tibokApp.swift:441-447)
+   - Stop accessing .git when switching workspaces
+   - Stop accessing .git on app termination
+   - Proper resource management prevents leaks
+
+**Files Changed:**
+1. **Modified**: `tibok/Models/AppState.swift` (~45 lines added)
+   - setWorkspace(): Cleanup previous + request new .git access
+   - loadWorkspaceState(): Restore bookmarks from UserDefaults
+
+2. **Modified**: `tibok/tibokApp.swift` (~10 lines added)
+   - Added cleanupSecurityScopedResources() method
+   - Integrated with .onDisappear for proper cleanup
+
+**Technical Details:**
+- API: `URL.startAccessingSecurityScopedResource()` / `stopAccessingSecurityScopedResource()`
+- Bookmarks: Created with `.withSecurityScope` option for persistence
+- Stale handling: Detect stale bookmarks, remove from UserDefaults, recreate on next access
+- Error logging: Diagnostic prints for debugging access grants/denials
+
+**Build Status:**
+- ✅ Build successful (15.19s release build)
+- ✅ DMG created and notarized (Submission ID: 71083ccc-3fb6-4057-ab2f-33492a61bd24)
+- ✅ GitHub release v1.0.4 published
+- ✅ Only pre-existing warning (await on refreshGitStatus)
+
+**Testing Checklist:**
+- [ ] Git panel appears in production DMG for git repositories
+- [ ] Git detection works after app restart (bookmark restored)
+- [ ] All git operations functional (commit, push, pull, diff)
+- [ ] No sandbox violations in Console.app
+- [ ] Debug builds continue to work
+- [ ] App Store build detects git correctly
+
+**Documentation Updated:**
+- ✅ DEVELOPMENT.md - Added v1.0.4 progress notes
+- [ ] APP_STORE_RELEASE.md - Update version history
+- [ ] CLAUDE.md - Document security-scoped bookmark pattern
+
+**Next Steps:**
+- User testing with production DMG
+- Monitor for sandbox violations
+- Consider applying pattern to other hidden directories if needed
