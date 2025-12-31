@@ -28,8 +28,6 @@ class GitPanelManager: ObservableObject {
     ) {
         dismissCommitPanel()
 
-        var message = ""
-
         let panel = NSPanel(
             contentRect: NSRect(x: 0, y: 0, width: 420, height: 230),
             styleMask: [.titled, .closable],
@@ -41,14 +39,11 @@ class GitPanelManager: ObservableObject {
         panel.level = .floating
         panel.becomesKeyOnlyIfNeeded = true
 
+        // Use a wrapper view that holds @State internally
         let hostingView = NSHostingView(rootView:
-            GitCommitSheet(
-                message: Binding(
-                    get: { message },
-                    set: { message = $0 }
-                ),
+            CommitPanelWrapper(
                 stagedCount: stagedCount,
-                onCommit: {
+                onCommit: { message in
                     onCommit(message)
                     self.dismissCommitPanel()
                 },
@@ -77,8 +72,6 @@ class GitPanelManager: ObservableObject {
     ) {
         dismissBranchPanel()
 
-        var branchName = ""
-
         let panel = NSPanel(
             contentRect: NSRect(x: 0, y: 0, width: 320, height: 150),
             styleMask: [.titled, .closable],
@@ -90,18 +83,14 @@ class GitPanelManager: ObservableObject {
         panel.level = .floating
         panel.becomesKeyOnlyIfNeeded = true
 
+        // Use a wrapper view that holds @State internally
         let hostingView = NSHostingView(rootView:
-            NewBranchSheet(
-                branchName: Binding(
-                    get: { branchName },
-                    set: { branchName = $0 }
-                ),
-                onCreate: {
-                    guard !branchName.isEmpty else {
-                        self.dismissBranchPanel()
-                        return
-                    }
+            BranchPanelWrapper(
+                onCreate: { branchName in
                     onCreate(branchName)
+                    self.dismissBranchPanel()
+                },
+                onCancel: {
                     self.dismissBranchPanel()
                 }
             )
@@ -205,5 +194,46 @@ class GitPanelManager: ObservableObject {
         dismissBranchPanel()
         dismissDiffPanel()
         dismissHistoryPanel()
+    }
+}
+
+// MARK: - Panel Wrapper Views
+// These wrappers hold @State internally to ensure SwiftUI reactivity works correctly
+// when embedded in NSHostingView inside NSPanel.
+
+struct CommitPanelWrapper: View {
+    let stagedCount: Int
+    let onCommit: (String) -> Void
+    let onCancel: () -> Void
+
+    @State private var message = ""
+
+    var body: some View {
+        GitCommitSheet(
+            message: $message,
+            stagedCount: stagedCount,
+            onCommit: { onCommit(message) },
+            onCancel: onCancel
+        )
+    }
+}
+
+struct BranchPanelWrapper: View {
+    let onCreate: (String) -> Void
+    let onCancel: () -> Void
+
+    @State private var branchName = ""
+
+    var body: some View {
+        NewBranchSheet(
+            branchName: $branchName,
+            onCreate: {
+                guard !branchName.isEmpty else {
+                    onCancel()
+                    return
+                }
+                onCreate(branchName)
+            }
+        )
     }
 }

@@ -102,6 +102,9 @@ class AppState: ObservableObject {
     // Workspace monitoring
     private let workspaceMonitor = WorkspaceMonitor()
 
+    // Security-scoped URL for sandbox access (grants access to .git)
+    private var workspaceAccessURL: URL?
+
     // Git state
     @Published var isGitRepository: Bool = false
     @Published var currentBranch: String?
@@ -323,6 +326,28 @@ class AppState: ObservableObject {
     }
 
     func setWorkspace(_ url: URL) {
+        // Stop accessing previous workspace
+        workspaceAccessURL?.stopAccessingSecurityScopedResource()
+
+        // Start accessing new workspace (grants .git access in sandbox)
+        let hasAccess = url.startAccessingSecurityScopedResource()
+        workspaceAccessURL = hasAccess ? url : nil
+
+        // Create bookmark for persistence across app launches
+        if hasAccess {
+            do {
+                let bookmarkData = try url.bookmarkData(
+                    options: .withSecurityScope,
+                    includingResourceValuesForKeys: nil,
+                    relativeTo: nil
+                )
+                UserDefaults.standard.set(bookmarkData, forKey: "workspaceBookmark")
+                print("✅ [AppState] Created security-scoped bookmark for: \(url.path)")
+            } catch {
+                print("⚠️ [AppState] Failed to create bookmark: \(error.localizedDescription)")
+            }
+        }
+
         workspaceURL = url
         saveWorkspaceState()
         refreshWorkspaceFiles()
@@ -337,6 +362,9 @@ class AppState: ObservableObject {
 
     func closeWorkspace() {
         workspaceMonitor.stopMonitoring()
+        // Cleanup security-scoped resource access
+        workspaceAccessURL?.stopAccessingSecurityScopedResource()
+        workspaceAccessURL = nil
         saveWorkspaceState()  // Save before closing
         workspaceURL = nil
         workspaceFiles = []
@@ -353,6 +381,32 @@ class AppState: ObservableObject {
         // Load expanded folders BEFORE setWorkspace so refreshWorkspaceFiles can use them
         loadExpandedFolders()
 
+        // Try security-scoped bookmark first (required for sandbox access to .git)
+        if let bookmarkData = UserDefaults.standard.data(forKey: "workspaceBookmark") {
+            do {
+                var isStale = false
+                let url = try URL(
+                    resolvingBookmarkData: bookmarkData,
+                    options: .withSecurityScope,
+                    relativeTo: nil,
+                    bookmarkDataIsStale: &isStale
+                )
+
+                if !isStale {
+                    print("✅ [AppState] Restored workspace from bookmark: \(url.path)")
+                    setWorkspace(url)
+                    return
+                } else {
+                    print("⚠️ [AppState] Bookmark is stale, removing")
+                    UserDefaults.standard.removeObject(forKey: "workspaceBookmark")
+                }
+            } catch {
+                print("⚠️ [AppState] Failed to restore bookmark: \(error.localizedDescription)")
+                UserDefaults.standard.removeObject(forKey: "workspaceBookmark")
+            }
+        }
+
+        // Fallback to URL only (won't have sandbox access but handles migration)
         if let url = UserDefaults.standard.url(forKey: "lastWorkspaceURL"),
            FileManager.default.fileExists(atPath: url.path) {
             setWorkspace(url)
@@ -370,6 +424,15 @@ class AppState: ObservableObject {
 
     func isFolderExpanded(_ path: String) -> Bool {
         expandedFolders.contains(path)
+    }
+
+    func setFolderExpanded(_ path: String, expanded: Bool) {
+        if expanded {
+            expandedFolders.insert(path)
+        } else {
+            expandedFolders.remove(path)
+        }
+        saveExpandedFolders()
     }
 
     private func saveExpandedFolders() {

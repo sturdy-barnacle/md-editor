@@ -148,6 +148,23 @@ tibok/
 - **Entitlements (DMG)**: `tibok/Resources/tibok-dmg.entitlements`
 - **Entitlements (App Store)**: `tibok/Resources/tibok-appstore.entitlements`
 
+### Sandbox Configuration (CRITICAL)
+
+**DMG Distribution**: Sandbox DISABLED (`com.apple.security.app-sandbox = false`)
+- Required for git subprocess execution (`/usr/bin/git`)
+- App sandbox blocks Process() calls to external binaries
+- Hardened runtime still enabled for notarization
+
+**App Store Distribution**: Sandbox ENABLED (`com.apple.security.app-sandbox = true`)
+- Required by Mac App Store guidelines
+- Uses security-scoped bookmarks for .git access
+- Git operations may have limitations
+
+**Why this matters:**
+- Sandboxed apps cannot execute `/usr/bin/git` - will show "xcrun: error: cannot be used within an App Sandbox"
+- DMG users expect full git functionality, so sandbox must be disabled
+- App Store requires sandbox, so git features may be limited or require workarounds
+
 ### Important Build Settings
 
 - **Deployment Target**: macOS 14.0+
@@ -257,11 +274,13 @@ presentationState = PresentationState(file: file, isStaged: false)
 **Implemented in:**
 - `GitPanelView.swift` - DiffPresentationState (Dec 30, 2025)
 
-#### Security-Scoped Bookmarks for Sandbox Access
+#### Security-Scoped Bookmarks for Sandbox Access (App Store Only)
+
+**Note:** This section applies ONLY to App Store builds. DMG builds have sandbox disabled and don't need security-scoped bookmarks.
 
 For App Store compliance, the app runs in a sandbox that restricts access to hidden files like .git directories. Use security-scoped bookmarks to request persistent access to these directories.
 
-**When to use:**
+**When to use (App Store builds only):**
 - Accessing hidden directories (.git, .DS_Store, etc.)
 - Reading/writing files outside user-selected directories
 - Any resource that requires explicit sandbox permission
@@ -330,10 +349,11 @@ hiddenURL.stopAccessingSecurityScopedResource()
 - `AppState.swift` - .git directory access (Dec 30, 2025)
 - `tibokApp.swift` - cleanup on app termination (Dec 30, 2025)
 
-**Why this matters:**
+**Why this matters (App Store builds only):**
 - Debug builds: Sandbox relaxed, violations logged but not enforced
-- Production builds: Sandbox strict, violations block access immediately
-- Without bookmarks: `.git` access denied → git detection fails in production
+- App Store builds: Sandbox strict, violations block access immediately
+- Without bookmarks: `.git` access denied → git detection fails
+- DMG builds: Sandbox disabled, so this doesn't apply
 
 ### Xcode Project Management
 
