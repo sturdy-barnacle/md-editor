@@ -690,6 +690,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				PRODUCT_BUNDLE_IDENTIFIER = app.tibok.editor.Tests;
+				GENERATE_INFOPLIST_FILE = YES;
 				SDKROOT = macosx;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/tibok.app/Contents/MacOS/tibok";
 			};
@@ -707,6 +708,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				PRODUCT_BUNDLE_IDENTIFIER = app.tibok.editor.Tests;
+				GENERATE_INFOPLIST_FILE = YES;
 				SDKROOT = macosx;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/tibok.app/Contents/MacOS/tibok";
 			};
