@@ -45,7 +45,7 @@ git push origin apple-store-distro
 # - Notify when complete
 ```
 
-Monitor builds at: https://appstoreconnect.apple.com → Xcode Cloud → Builds
+Monitor builds at: https://appstoreconnect.apple.com → Xcode Cloud → Builds .
 
 ### GitHub Release Distribution (Direct Download DMG)
 
