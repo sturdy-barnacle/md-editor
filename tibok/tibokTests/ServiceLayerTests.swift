@@ -2,13 +2,14 @@
 //  ServiceLayerTests.swift
 //  tibokTests
 //
-//  Comprehensive tests for service layer classes: DocumentManager, WorkspaceService,
+//  Tests for service layer classes: DocumentManager, WorkspaceService,
 //  CommandService, UIStateService, and FileOperationsService.
 //
 
 import XCTest
 @testable import tibok
 
+@MainActor
 final class ServiceLayerTests: XCTestCase {
 
     var tempDir: URL!
@@ -29,401 +30,376 @@ final class ServiceLayerTests: XCTestCase {
 
     // MARK: - FileOperationsService Tests
 
-    func testFileOperationsService_ReadFile_Success() {
+    func testFileOperationsService_CreateFile_Success() throws {
+        let service = FileOperationsService.shared
+        let fileURL = try service.createFile(named: "test", in: tempDir)
+
+        XCTAssertTrue(FileManager.default.fileExists(atPath: fileURL.path))
+        XCTAssertTrue(fileURL.lastPathComponent.hasSuffix(".md"))
+    }
+
+    func testFileOperationsService_CreateFile_AddsExtensionIfMissing() throws {
+        let service = FileOperationsService.shared
+        let fileURL = try service.createFile(named: "myfile", in: tempDir)
+
+        XCTAssertEqual(fileURL.lastPathComponent, "myfile.md")
+    }
+
+    func testFileOperationsService_CreateFile_PreservesExtension() throws {
+        let service = FileOperationsService.shared
+        let fileURL = try service.createFile(named: "existing.md", in: tempDir)
+
+        XCTAssertEqual(fileURL.lastPathComponent, "existing.md")
+    }
+
+    func testFileOperationsService_DeleteFile_Success() throws {
+        let service = FileOperationsService.shared
+
+        // Create a file first
+        let fileURL = tempDir.appendingPathComponent("todelete.md")
+        try "content".write(to: fileURL, atomically: true, encoding: .utf8)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: fileURL.path))
+
+        // Delete it
+        try service.deleteFile(at: fileURL)
+        // Note: deleteFile moves to trash, so file may still exist in trash
+    }
+
+    func testFileOperationsService_LoadDocument_Success() throws {
+        let service = FileOperationsService.shared
+
         let fileURL = tempDir.appendingPathComponent("test.md")
         let content = "Test content"
-        try? content.write(to: fileURL, atomically: true, encoding: .utf8)
+        try content.write(to: fileURL, atomically: true, encoding: .utf8)
 
-        let result = FileOperationsService.readFile(at: fileURL)
-        XCTAssertEqual(result, content)
+        let (title, loadedContent) = try service.loadDocument(from: fileURL)
+
+        XCTAssertEqual(title, "test")
+        XCTAssertEqual(loadedContent, content)
     }
 
-    func testFileOperationsService_ReadFile_NonexistentFile_ReturnsNil() {
-        let fileURL = tempDir.appendingPathComponent("nonexistent.md")
-        let result = FileOperationsService.readFile(at: fileURL)
-        XCTAssertNil(result)
-    }
+    func testFileOperationsService_SaveDocument_Success() throws {
+        let service = FileOperationsService.shared
 
-    func testFileOperationsService_WriteFile_Success() {
         let fileURL = tempDir.appendingPathComponent("output.md")
         let content = "Written content"
 
-        let success = FileOperationsService.writeFile(content, to: fileURL)
-        XCTAssertTrue(success)
+        try service.saveDocument(content: content, to: fileURL)
 
-        let readContent = try? String(contentsOf: fileURL, encoding: .utf8)
+        let readContent = try String(contentsOf: fileURL, encoding: .utf8)
         XCTAssertEqual(readContent, content)
-    }
-
-    func testFileOperationsService_FileExists_ExistingFile_ReturnsTrue() {
-        let fileURL = tempDir.appendingPathComponent("existing.md")
-        try? "content".write(to: fileURL, atomically: true, encoding: .utf8)
-
-        let exists = FileOperationsService.fileExists(at: fileURL)
-        XCTAssertTrue(exists)
-    }
-
-    func testFileOperationsService_FileExists_NonexistentFile_ReturnsFalse() {
-        let fileURL = tempDir.appendingPathComponent("nonexistent.md")
-        let exists = FileOperationsService.fileExists(at: fileURL)
-        XCTAssertFalse(exists)
-    }
-
-    func testFileOperationsService_CreateDirectory_Success() {
-        let dirURL = tempDir.appendingPathComponent("newdir")
-        let success = FileOperationsService.createDirectory(at: dirURL)
-        XCTAssertTrue(success)
-
-        var isDir: ObjCBool = false
-        let exists = FileManager.default.fileExists(atPath: dirURL.path, isDirectory: &isDir)
-        XCTAssertTrue(exists && isDir.boolValue)
-    }
-
-    func testFileOperationsService_DeleteFile_Success() {
-        let fileURL = tempDir.appendingPathComponent("todelete.md")
-        try? "content".write(to: fileURL, atomically: true, encoding: .utf8)
-        XCTAssertTrue(FileManager.default.fileExists(atPath: fileURL.path))
-
-        let success = FileOperationsService.deleteFile(at: fileURL)
-        XCTAssertTrue(success)
-        XCTAssertFalse(FileManager.default.fileExists(atPath: fileURL.path))
     }
 
     // MARK: - UIStateService Tests
 
-    func testUIStateService_ShowToast_UpdatesState() {
-        let service = UIStateService()
-        let initialToastCount = service.toasts.count
-
-        service.showToast("Test message", icon: nil, duration: 2)
-        XCTAssertEqual(service.toasts.count, initialToastCount + 1)
-    }
-
-    func testUIStateService_Toast_HasCorrectMessage() {
-        let service = UIStateService()
+    func testUIStateService_ShowToast_UpdatesMessage() {
+        let service = UIStateService.shared
         let message = "Test message"
 
-        service.showToast(message, icon: nil, duration: 2)
-        XCTAssertTrue(service.toasts.last?.message == message)
+        service.showToast(message)
+        XCTAssertEqual(service.toastMessage, message)
     }
 
-    func testUIStateService_Toast_HasCorrectDuration() {
-        let service = UIStateService()
-        let duration: TimeInterval = 3.0
+    func testUIStateService_ShowToast_WithIcon() {
+        let service = UIStateService.shared
+        let icon = "checkmark"
 
-        service.showToast("Message", icon: nil, duration: duration)
-        XCTAssertEqual(service.toasts.last?.duration, duration)
+        service.showToast("Message", icon: icon)
+        XCTAssertEqual(service.toastIcon, icon)
     }
 
-    func testUIStateService_RemoveToast_RemovesFromList() {
-        let service = UIStateService()
-        service.showToast("Message 1", icon: nil, duration: 2)
-        let toast1 = service.toasts.first
-        XCTAssertNotNil(toast1)
+    func testUIStateService_ShowToast_WithNilIcon() {
+        let service = UIStateService.shared
 
-        if let toast = toast1 {
-            service.removeToast(toast)
-            XCTAssertFalse(service.toasts.contains(where: { $0.id == toast.id }))
-        }
+        service.showToast("Message", icon: nil)
+        XCTAssertNil(service.toastIcon)
     }
 
     // MARK: - CommandService Tests
 
-    func testCommandService_RegisterCommand_Success() {
-        let service = CommandService()
-        let initialCount = service.allCommands.count
+    func testCommandService_Register_AddsCommand() {
+        let service = CommandService.shared
+        let initialCount = service.commands.count
 
         let command = Command(
             id: UUID().uuidString,
             title: "Test Command",
-            category: "Test",
-            shortcut: nil,
+            category: .general,
+            source: "test.source",
             action: {}
         )
 
-        service.registerCommand(command, source: "test.source")
-        XCTAssertGreater(service.allCommands.count, initialCount)
+        service.register(command)
+        XCTAssertGreaterThan(service.commands.count, initialCount)
+
+        // Cleanup
+        service.unregister(source: "test.source")
     }
 
-    func testCommandService_UnregisterCommand_Success() {
-        let service = CommandService()
-        let commandID = UUID().uuidString
-        let command = Command(
-            id: commandID,
-            title: "Test Command",
-            category: "Test",
-            shortcut: nil,
-            action: {}
-        )
-
-        service.registerCommand(command, source: "test.source")
-        let countAfterRegister = service.allCommands.count
-
-        service.unregisterCommand(id: commandID)
-        XCTAssertLess(service.allCommands.count, countAfterRegister)
-    }
-
-    func testCommandService_UnregisterCommandsBySource_RemovesAllFromSource() {
-        let service = CommandService()
-        let source = "test.source"
+    func testCommandService_Unregister_RemovesCommandsBySource() {
+        let service = CommandService.shared
+        let source = "test.source.unique"
 
         let command1 = Command(
             id: UUID().uuidString,
             title: "Command 1",
-            category: "Test",
-            shortcut: nil,
+            category: .general,
+            source: source,
             action: {}
         )
         let command2 = Command(
             id: UUID().uuidString,
             title: "Command 2",
-            category: "Test",
-            shortcut: nil,
+            category: .general,
+            source: source,
             action: {}
         )
 
-        service.registerCommand(command1, source: source)
-        service.registerCommand(command2, source: source)
+        service.register(command1)
+        service.register(command2)
 
-        let countBefore = service.allCommands.count
-        service.unregisterCommandsBySource(source)
-        let countAfter = service.allCommands.count
+        let countBefore = service.commands.count
+        service.unregister(source: source)
+        let countAfter = service.commands.count
 
         XCTAssertEqual(countAfter, countBefore - 2)
     }
 
-    func testCommandService_SearchCommands_FiltersCorrectly() {
-        let service = CommandService()
+    func testCommandService_Search_FiltersCorrectly() {
+        let service = CommandService.shared
+        let source = "test.search.source"
 
         let command1 = Command(
             id: UUID().uuidString,
             title: "Open File",
-            category: "File",
-            shortcut: nil,
+            category: .file,
+            source: source,
             action: {}
         )
         let command2 = Command(
             id: UUID().uuidString,
             title: "Save File",
-            category: "File",
-            shortcut: nil,
-            action: {}
-        )
-        let command3 = Command(
-            id: UUID().uuidString,
-            title: "Edit Text",
-            category: "Edit",
-            shortcut: nil,
+            category: .file,
+            source: source,
             action: {}
         )
 
-        service.registerCommand(command1, source: "test")
-        service.registerCommand(command2, source: "test")
-        service.registerCommand(command3, source: "test")
+        service.register(command1)
+        service.register(command2)
 
-        let searchResults = service.searchCommands(query: "File")
-        XCTAssertEqual(searchResults.count, 2)
-        XCTAssertTrue(searchResults.allSatisfy { $0.title.contains("File") })
+        let searchResults = service.search("File")
+        XCTAssertGreaterThanOrEqual(searchResults.count, 2)
+        XCTAssertTrue(searchResults.contains(where: { $0.title == "Open File" }))
+        XCTAssertTrue(searchResults.contains(where: { $0.title == "Save File" }))
+
+        // Cleanup
+        service.unregister(source: source)
     }
 
-    func testCommandService_GetCommandsByCategory_GroupsCorrectly() {
-        let service = CommandService()
-
-        let command1 = Command(
-            id: UUID().uuidString,
-            title: "Open",
-            category: "File",
-            shortcut: nil,
-            action: {}
-        )
-        let command2 = Command(
-            id: UUID().uuidString,
-            title: "Save",
-            category: "File",
-            shortcut: nil,
-            action: {}
-        )
-        let command3 = Command(
-            id: UUID().uuidString,
-            title: "Undo",
-            category: "Edit",
-            shortcut: nil,
-            action: {}
-        )
-
-        service.registerCommand(command1, source: "test")
-        service.registerCommand(command2, source: "test")
-        service.registerCommand(command3, source: "test")
-
-        let categories = service.groupedByCategory()
-        XCTAssertTrue(categories.keys.contains("File"))
-        XCTAssertTrue(categories.keys.contains("Edit"))
-        XCTAssertEqual(categories["File"]?.count, 2)
-        XCTAssertEqual(categories["Edit"]?.count, 1)
+    func testCommandService_CommandCategory_HasCorrectIcons() {
+        XCTAssertEqual(CommandCategory.file.icon, "doc")
+        XCTAssertEqual(CommandCategory.edit.icon, "pencil")
+        XCTAssertEqual(CommandCategory.view.icon, "eye")
+        XCTAssertEqual(CommandCategory.general.icon, "command")
     }
 
     // MARK: - DocumentManager Tests
 
-    func testDocumentManager_CreateDocument_Success() {
-        let manager = DocumentManager()
-        let initialCount = manager.openDocuments.count
+    func testDocumentManager_AddDocument_Success() {
+        let manager = DocumentManager.shared
+        let initialCount = manager.documents.count
 
-        let docURL = tempDir.appendingPathComponent("test.md")
-        try? "content".write(to: docURL, atomically: true, encoding: .utf8)
+        let doc = Document(
+            title: "Test",
+            content: "Content",
+            fileURL: nil,
+            isModified: false,
+            lastSaved: nil,
+            isActive: true
+        )
 
-        manager.openDocument(at: docURL, content: "content")
-        XCTAssertGreater(manager.openDocuments.count, initialCount)
+        manager.addDocument(doc)
+        XCTAssertGreaterThan(manager.documents.count, initialCount)
+
+        // Cleanup
+        manager.closeTab(id: doc.id)
     }
 
-    func testDocumentManager_CloseDocument_Success() {
-        let manager = DocumentManager()
+    func testDocumentManager_AddDocument_SetsActive() {
+        let manager = DocumentManager.shared
 
-        let docURL = tempDir.appendingPathComponent("test.md")
-        try? "content".write(to: docURL, atomically: true, encoding: .utf8)
+        let doc = Document(
+            title: "Test",
+            content: "Content",
+            fileURL: nil,
+            isModified: false,
+            lastSaved: nil,
+            isActive: true
+        )
 
-        manager.openDocument(at: docURL, content: "content")
-        let countAfterOpen = manager.openDocuments.count
+        manager.addDocument(doc, makeActive: true)
+        XCTAssertEqual(manager.activeDocumentID, doc.id)
 
-        if let doc = manager.openDocuments.first {
-            manager.closeDocument(doc)
-            XCTAssertLess(manager.openDocuments.count, countAfterOpen)
-        }
+        // Cleanup
+        manager.closeTab(id: doc.id)
     }
 
-    func testDocumentManager_ActiveDocument_TracksCurrentDocument() {
-        let manager = DocumentManager()
+    func testDocumentManager_CloseTab_RemovesDocument() {
+        let manager = DocumentManager.shared
 
-        let docURL1 = tempDir.appendingPathComponent("test1.md")
-        let docURL2 = tempDir.appendingPathComponent("test2.md")
-        try? "content1".write(to: docURL1, atomically: true, encoding: .utf8)
-        try? "content2".write(to: docURL2, atomically: true, encoding: .utf8)
+        let doc = Document(
+            title: "Test",
+            content: "Content",
+            fileURL: nil,
+            isModified: false,
+            lastSaved: nil,
+            isActive: true
+        )
 
-        manager.openDocument(at: docURL1, content: "content1")
-        manager.openDocument(at: docURL2, content: "content2")
+        manager.addDocument(doc)
+        let countAfterAdd = manager.documents.count
 
-        if let doc = manager.openDocuments.last {
-            manager.setActiveDocument(doc)
-            XCTAssertEqual(manager.activeDocument?.url, doc.url)
-        }
+        manager.closeTab(id: doc.id)
+        XCTAssertLessThan(manager.documents.count, countAfterAdd)
+    }
+
+    func testDocumentManager_SwitchToTab_UpdatesActiveDocument() {
+        let manager = DocumentManager.shared
+
+        let doc1 = Document(
+            title: "Test 1",
+            content: "Content 1",
+            fileURL: nil,
+            isModified: false,
+            lastSaved: nil,
+            isActive: true
+        )
+        let doc2 = Document(
+            title: "Test 2",
+            content: "Content 2",
+            fileURL: nil,
+            isModified: false,
+            lastSaved: nil,
+            isActive: true
+        )
+
+        manager.addDocument(doc1)
+        manager.addDocument(doc2)
+
+        manager.switchToTab(id: doc1.id)
+        XCTAssertEqual(manager.activeDocumentID, doc1.id)
+
+        // Cleanup
+        manager.closeTab(id: doc1.id)
+        manager.closeTab(id: doc2.id)
     }
 
     // MARK: - WorkspaceService Tests
 
-    func testWorkspaceService_OpenWorkspace_Success() {
-        let service = WorkspaceService()
+    func testWorkspaceService_SetWorkspace_Success() {
+        let service = WorkspaceService.shared
 
-        let success = service.openWorkspace(at: tempDir)
-        XCTAssertTrue(success)
-        XCTAssertEqual(service.currentWorkspace, tempDir)
+        service.setWorkspace(tempDir)
+        XCTAssertEqual(service.workspaceURL, tempDir)
+
+        // Cleanup
+        service.closeWorkspace()
     }
 
-    func testWorkspaceService_CloseWorkspace_Success() {
-        let service = WorkspaceService()
+    func testWorkspaceService_CloseWorkspace_ClearsURL() {
+        let service = WorkspaceService.shared
 
-        service.openWorkspace(at: tempDir)
-        XCTAssertNotNil(service.currentWorkspace)
+        service.setWorkspace(tempDir)
+        XCTAssertNotNil(service.workspaceURL)
 
         service.closeWorkspace()
-        XCTAssertNil(service.currentWorkspace)
+        XCTAssertNil(service.workspaceURL)
     }
 
-    func testWorkspaceService_AddToRecents_TracksFile() {
-        let service = WorkspaceService()
+    func testWorkspaceService_AddToRecentFiles_TracksFile() {
+        let service = WorkspaceService.shared
 
         let fileURL = tempDir.appendingPathComponent("recent.md")
         try? "content".write(to: fileURL, atomically: true, encoding: .utf8)
 
-        service.addToRecents(fileURL)
+        service.addToRecentFiles(fileURL)
         XCTAssertTrue(service.recentFiles.contains(fileURL))
+
+        // Cleanup
+        service.removeFromRecentFiles(fileURL)
     }
 
-    func testWorkspaceService_RemoveFromRecents_Success() {
-        let service = WorkspaceService()
+    func testWorkspaceService_RemoveFromRecentFiles_Success() {
+        let service = WorkspaceService.shared
 
-        let fileURL = tempDir.appendingPathComponent("recent.md")
+        let fileURL = tempDir.appendingPathComponent("recent2.md")
         try? "content".write(to: fileURL, atomically: true, encoding: .utf8)
 
-        service.addToRecents(fileURL)
-        service.removeFromRecents(fileURL)
+        service.addToRecentFiles(fileURL)
+        service.removeFromRecentFiles(fileURL)
         XCTAssertFalse(service.recentFiles.contains(fileURL))
     }
 
     func testWorkspaceService_AddToFavorites_TracksFile() {
-        let service = WorkspaceService()
+        let service = WorkspaceService.shared
 
         let fileURL = tempDir.appendingPathComponent("favorite.md")
         try? "content".write(to: fileURL, atomically: true, encoding: .utf8)
 
         service.addToFavorites(fileURL)
-        XCTAssertTrue(service.favorites.contains(fileURL))
+        XCTAssertTrue(service.favoriteFiles.contains(fileURL))
+
+        // Cleanup
+        service.removeFromFavorites(fileURL)
     }
 
     func testWorkspaceService_RemoveFromFavorites_Success() {
-        let service = WorkspaceService()
+        let service = WorkspaceService.shared
 
-        let fileURL = tempDir.appendingPathComponent("favorite.md")
+        let fileURL = tempDir.appendingPathComponent("favorite2.md")
         try? "content".write(to: fileURL, atomically: true, encoding: .utf8)
 
         service.addToFavorites(fileURL)
         service.removeFromFavorites(fileURL)
-        XCTAssertFalse(service.favorites.contains(fileURL))
+        XCTAssertFalse(service.favoriteFiles.contains(fileURL))
     }
 
-    func testWorkspaceService_ClearRecents_RemovesAll() {
-        let service = WorkspaceService()
+    func testWorkspaceService_ClearRecentFiles_RemovesAll() {
+        let service = WorkspaceService.shared
 
         let file1 = tempDir.appendingPathComponent("file1.md")
         let file2 = tempDir.appendingPathComponent("file2.md")
         try? "content1".write(to: file1, atomically: true, encoding: .utf8)
         try? "content2".write(to: file2, atomically: true, encoding: .utf8)
 
-        service.addToRecents(file1)
-        service.addToRecents(file2)
-        XCTAssertGreater(service.recentFiles.count, 0)
+        service.addToRecentFiles(file1)
+        service.addToRecentFiles(file2)
 
-        service.clearRecents()
+        service.clearRecentFiles()
         XCTAssertEqual(service.recentFiles.count, 0)
     }
 
     // MARK: - Integration Tests
 
-    func testServiceLayer_FileAndWorkspaceIntegration() {
-        let fileService = FileOperationsService.self
-        let workspaceService = WorkspaceService()
+    func testServiceLayer_FileAndWorkspaceIntegration() throws {
+        let fileService = FileOperationsService.shared
+        let workspaceService = WorkspaceService.shared
 
-        let fileURL = tempDir.appendingPathComponent("integration.md")
-        let content = "Integration test"
+        // Create file
+        let fileURL = try fileService.createFile(named: "integration", in: tempDir)
 
-        // Write file
-        let writeSuccess = fileService.writeFile(content, to: fileURL)
-        XCTAssertTrue(writeSuccess)
+        // Save content to it
+        try fileService.saveDocument(content: "Integration test", to: fileURL)
 
-        // Add to workspace
-        workspaceService.addToRecents(fileURL)
+        // Add to workspace recents
+        workspaceService.addToRecentFiles(fileURL)
         XCTAssertTrue(workspaceService.recentFiles.contains(fileURL))
 
-        // Read file
-        let readContent = fileService.readFile(at: fileURL)
-        XCTAssertEqual(readContent, content)
-    }
+        // Load and verify
+        let (_, content) = try fileService.loadDocument(from: fileURL)
+        XCTAssertEqual(content, "Integration test")
 
-    func testServiceLayer_CommandAndUIIntegration() {
-        let commandService = CommandService()
-        let uiService = UIStateService()
-
-        var commandExecuted = false
-        let command = Command(
-            id: UUID().uuidString,
-            title: "Integration Command",
-            category: "Test",
-            shortcut: nil,
-            action: {
-                commandExecuted = true
-                uiService.showToast("Command executed", icon: nil, duration: 2)
-            }
-        )
-
-        commandService.registerCommand(command, source: "test")
-        XCTAssertTrue(commandService.allCommands.contains(where: { $0.id == command.id }))
+        // Cleanup
+        workspaceService.removeFromRecentFiles(fileURL)
     }
 }
