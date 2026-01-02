@@ -17,6 +17,9 @@ let package = Package(
 
         // Syntax highlighting for code blocks
         .package(url: "https://github.com/raspu/Highlightr.git", from: "2.1.0"),
+
+        // Native git operations via libgit2 (sandbox-compatible, no subprocess)
+        .package(url: "https://github.com/bdewey/static-libgit2.git", from: "0.5.0"),
     ],
     targets: [
         .executableTarget(
@@ -24,6 +27,7 @@ let package = Package(
             dependencies: [
                 .product(name: "Markdown", package: "swift-markdown"),
                 .product(name: "Highlightr", package: "Highlightr"),
+                .product(name: "static-libgit2", package: "static-libgit2"),
             ],
             path: "tibok",
             exclude: ["Resources/tibok.entitlements", "Resources/Info.plist", "Resources/IconLayers"],

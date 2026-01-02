@@ -84,7 +84,7 @@ struct GitDiffView: View {
 
     private func loadDiff() {
         Task {
-            let diff = GitService.shared.getDiff(for: fileURL, in: repoURL, staged: isStaged)
+            let diff = LibGit2Service.shared.getDiff(for: fileURL, in: repoURL, staged: isStaged)
 
             await MainActor.run {
                 if let diff = diff {

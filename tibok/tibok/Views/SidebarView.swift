@@ -318,6 +318,25 @@ struct SidebarView: View {
                                     onFileClick: handleFileSelection
                                 )
                             }
+
+                            // No Git notice (shown when workspace has no .git)
+                            if !appState.isGitRepository {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "info.circle.fill")
+                                        .font(.system(size: 10))
+                                        .foregroundColor(.blue)
+                                    Text("No Git repository")
+                                        .font(.system(size: 10))
+                                        .foregroundColor(.secondary)
+                                    Spacer()
+                                }
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(Color.blue.opacity(0.08))
+                                .cornerRadius(4)
+                                .padding(.horizontal, 8)
+                                .padding(.top, 4)
+                            }
                         }
                     } header: {
                         CollapsibleSectionHeader(
@@ -396,13 +415,35 @@ struct SidebarView: View {
             // Bottom action - only show when no documents (avoid redundancy with editor empty state)
             if appState.hasNoDocuments && appState.workspaceURL == nil {
                 Divider()
-                Button {
-                    appState.createNewDocument()
-                } label: {
-                    Label("New Document", systemImage: "plus")
-                        .frame(maxWidth: .infinity)
+
+                VStack(spacing: 8) {
+                    // Open folder prompt
+                    HStack(spacing: 6) {
+                        Image(systemName: "folder.badge.questionmark")
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary)
+                        Text("Open a folder to start")
+                            .font(.system(size: 11))
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.top, 4)
+
+                    Button {
+                        appState.openWorkspace()
+                    } label: {
+                        Label("Open Folder", systemImage: "folder")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+
+                    Button {
+                        appState.createNewDocument()
+                    } label: {
+                        Label("New Document", systemImage: "plus")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
                 }
-                .buttonStyle(.bordered)
                 .padding(8)
             }
         }

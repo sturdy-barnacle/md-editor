@@ -319,7 +319,7 @@ struct GitPanelView: View {
         }
 
         // Get remote URL from git config
-        let gitService = GitService.shared
+        let gitService = LibGit2Service.shared
         let (remoteURL, _) = gitService.getRemoteURL(for: repoURL)
 
         guard let remoteURL = remoteURL else {

@@ -8,5 +8,9 @@
 	<!-- Hardened runtime still enabled via codesign for notarization -->
 	<key>com.apple.security.network.client</key>
 	<true/>
+	<key>com.apple.security.temporary-exception.files.absolute-path.read-only</key>
+	<array>
+		<string>$(HOME)</string>
+	</array>
 </dict>
 </plist>

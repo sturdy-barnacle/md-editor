@@ -117,6 +117,17 @@ struct ContentView: View {
         .sheet(isPresented: $showCommandPalette) {
             CommandPaletteSheet(isPresented: $showCommandPalette)
         }
+        .sheet(isPresented: $appState.showWelcomeSheet) {
+            WelcomeView(
+                onDismiss: {
+                    appState.showWelcomeSheet = false
+                },
+                onOpenFolder: {
+                    appState.openWorkspace()
+                }
+            )
+            .environmentObject(appState)
+        }
         .onReceive(NotificationCenter.default.publisher(for: .showCommandPalette)) { _ in
             showCommandPalette = true
         }

@@ -98,6 +98,10 @@ class AppState: ObservableObject {
     @Published var workspaceFiles: [FileItem] = []
     @Published var expandedFolders: Set<String> = []  // Stores relative paths of expanded folders
     @AppStorage("workspace.smartFiltering") var smartFilteringEnabled = true
+    @AppStorage("app.hasLaunchedBefore") var hasLaunchedBefore = false
+
+    // Onboarding state
+    @Published var showWelcomeSheet: Bool = false
 
     // Workspace monitoring
     private let workspaceMonitor = WorkspaceMonitor()
@@ -129,6 +133,16 @@ class AppState: ObservableObject {
         loadFavorites()
         loadOpenTabs()
         loadWorkspaceState()
+        checkFirstLaunch()
+    }
+
+    /// Check if this is first launch and show welcome sheet
+    private func checkFirstLaunch() {
+        if !hasLaunchedBefore {
+            // First launch - show welcome sheet
+            showWelcomeSheet = true
+            hasLaunchedBefore = true
+        }
     }
 
     // MARK: - Active Document Access
@@ -410,6 +424,16 @@ class AppState: ObservableObject {
         if let url = UserDefaults.standard.url(forKey: "lastWorkspaceURL"),
            FileManager.default.fileExists(atPath: url.path) {
             setWorkspace(url)
+
+            // Show migration notice after delay (allows UI to render)
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 500_000_000)  // 0.5s delay
+                UIStateService.shared.showToast(
+                    "Re-open folder to restore full access",
+                    icon: "info.circle.fill",
+                    duration: 4.0
+                )
+            }
         }
     }
 
@@ -578,7 +602,7 @@ class AppState: ObservableObject {
                 return
             }
 
-            let gitService = GitService.shared
+            let gitService = LibGit2Service.shared
 
             // Check if workspace is a git repo and get the actual repo root
             guard let repoRoot = gitService.getRepositoryRoot(for: url) else {
@@ -626,18 +650,18 @@ class AppState: ObservableObject {
     /// Get the git repository root for the current workspace
     private func getGitRepoRoot() -> URL? {
         guard let workspaceURL else { return nil }
-        return GitService.shared.getRepositoryRoot(for: workspaceURL)
+        return LibGit2Service.shared.getRepositoryRoot(for: workspaceURL)
     }
 
     func stageFile(_ url: URL) {
         guard let repoRoot = getGitRepoRoot() else { return }
-        _ = GitService.shared.stageFiles([url], in: repoRoot)
+        _ = LibGit2Service.shared.stageFiles([url], in: repoRoot)
         refreshGitStatus()
     }
 
     func stageAllFiles() {
         guard let repoRoot = getGitRepoRoot() else { return }
-        _ = GitService.shared.stageAll(in: repoRoot)
+        _ = LibGit2Service.shared.stageAll(in: repoRoot)
         refreshGitStatus()
     }
 
@@ -648,13 +672,13 @@ class AppState: ObservableObject {
 
     func unstageFile(_ url: URL) {
         guard let repoRoot = getGitRepoRoot() else { return }
-        _ = GitService.shared.unstageFiles([url], in: repoRoot)
+        _ = LibGit2Service.shared.unstageFiles([url], in: repoRoot)
         refreshGitStatus()
     }
 
     func unstageAllFiles() {
         guard let repoRoot = getGitRepoRoot() else { return }
-        _ = GitService.shared.unstageAll(in: repoRoot)
+        _ = LibGit2Service.shared.unstageAll(in: repoRoot)
         refreshGitStatus()
     }
 
@@ -665,14 +689,14 @@ class AppState: ObservableObject {
 
     func discardChanges(_ url: URL) {
         guard let repoRoot = getGitRepoRoot() else { return }
-        _ = GitService.shared.discardChanges([url], in: repoRoot)
+        _ = LibGit2Service.shared.discardChanges([url], in: repoRoot)
         refreshGitStatus()
         refreshWorkspaceFiles()
     }
 
     func commitChanges(message: String, deferRefresh: Bool = false) -> (success: Bool, error: String?) {
         guard let repoRoot = getGitRepoRoot() else { return (false, "No workspace open") }
-        let result = GitService.shared.commit(message: message, in: repoRoot)
+        let result = LibGit2Service.shared.commit(message: message, in: repoRoot)
         if result.success && !deferRefresh {
             refreshGitStatus()
         }
@@ -681,7 +705,7 @@ class AppState: ObservableObject {
 
     func pushChanges() -> (success: Bool, error: String?, alreadyUpToDate: Bool) {
         guard let repoRoot = getGitRepoRoot() else { return (false, "No workspace open", false) }
-        let result = GitService.shared.push(in: repoRoot)
+        let result = LibGit2Service.shared.push(in: repoRoot)
         if result.success {
             refreshGitStatus()
 
@@ -695,7 +719,7 @@ class AppState: ObservableObject {
 
     func pullChanges() -> (success: Bool, error: String?) {
         guard let repoRoot = getGitRepoRoot() else { return (false, "No workspace open") }
-        let result = GitService.shared.pull(in: repoRoot)
+        let result = LibGit2Service.shared.pull(in: repoRoot)
         if result.success {
             refreshGitStatus()
             refreshWorkspaceFiles()
@@ -723,7 +747,7 @@ class AppState: ObservableObject {
         }
 
         print("✅ [AppState] No uncommitted changes, proceeding with switch")
-        let result = GitService.shared.switchBranch(to: branchName, in: repoRoot)
+        let result = LibGit2Service.shared.switchBranch(to: branchName, in: repoRoot)
 
         if result.success {
             print("✅ [AppState] Branch switch successful, refreshing state")
@@ -748,7 +772,7 @@ class AppState: ObservableObject {
             return (false, "Branch '\(name)' already exists")
         }
 
-        let result = GitService.shared.createBranch(name: name, switchTo: switchTo, in: repoRoot)
+        let result = LibGit2Service.shared.createBranch(name: name, switchTo: switchTo, in: repoRoot)
         if result.success {
             refreshGitStatus()
             if switchTo {
@@ -942,11 +966,11 @@ class AppState: ObservableObject {
             return moveFileFileSystem(from: sourceURL, to: destinationURL)
         }
 
-        let isGitTracked = GitService.shared.isFileTracked(sourceURL, in: workspaceURL)
+        let isGitTracked = LibGit2Service.shared.isFileTracked(sourceURL, in: workspaceURL)
 
         if isGitTracked {
             // Use git mv for tracked files
-            if GitService.shared.moveFile(from: sourceURL, to: destinationURL, in: workspaceURL) {
+            if LibGit2Service.shared.moveFile(from: sourceURL, to: destinationURL, in: workspaceURL) {
                 updateFileReferences(from: sourceURL, to: destinationURL)
                 refreshWorkspaceFiles()
                 showToast("File moved", icon: "arrow.right")
