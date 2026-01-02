@@ -98,6 +98,10 @@ class AppState: ObservableObject {
     @Published var workspaceFiles: [FileItem] = []
     @Published var expandedFolders: Set<String> = []  // Stores relative paths of expanded folders
     @AppStorage("workspace.smartFiltering") var smartFilteringEnabled = true
+    @AppStorage("app.hasLaunchedBefore") var hasLaunchedBefore = false
+
+    // Onboarding state
+    @Published var showWelcomeSheet: Bool = false
 
     // Workspace monitoring
     private let workspaceMonitor = WorkspaceMonitor()
@@ -129,6 +133,16 @@ class AppState: ObservableObject {
         loadFavorites()
         loadOpenTabs()
         loadWorkspaceState()
+        checkFirstLaunch()
+    }
+
+    /// Check if this is first launch and show welcome sheet
+    private func checkFirstLaunch() {
+        if !hasLaunchedBefore {
+            // First launch - show welcome sheet
+            showWelcomeSheet = true
+            hasLaunchedBefore = true
+        }
     }
 
     // MARK: - Active Document Access
@@ -410,6 +424,16 @@ class AppState: ObservableObject {
         if let url = UserDefaults.standard.url(forKey: "lastWorkspaceURL"),
            FileManager.default.fileExists(atPath: url.path) {
             setWorkspace(url)
+
+            // Show migration notice after delay (allows UI to render)
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 500_000_000)  // 0.5s delay
+                UIStateService.shared.showToast(
+                    "Re-open folder to restore full access",
+                    icon: "info.circle.fill",
+                    duration: 4.0
+                )
+            }
         }
     }
 

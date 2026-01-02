@@ -31,6 +31,34 @@ struct LibGit2Error: Error, LocalizedError {
             throw LibGit2Error(code: result, message: "\(operation): \(error.message)")
         }
     }
+
+    /// Returns a user-friendly error message for common git errors
+    static func userFriendlyMessage(for errorMessage: String) -> String {
+        let lowercased = errorMessage.lowercased()
+
+        // Authentication errors
+        if lowercased.contains("authentication") || lowercased.contains("credentials") {
+            return "Authentication failed. Check your SSH keys are added to ssh-agent."
+        }
+
+        // Permission errors
+        if lowercased.contains("permission denied") || lowercased.contains("publickey") {
+            return "Permission denied. Ensure your SSH key is configured correctly."
+        }
+
+        // Network errors
+        if lowercased.contains("failed to connect") || lowercased.contains("network") {
+            return "Network error. Check your internet connection."
+        }
+
+        // Remote not found
+        if lowercased.contains("remote") && lowercased.contains("not found") {
+            return "Remote 'origin' not found. Configure a remote first."
+        }
+
+        // Default: return the original message
+        return errorMessage
+    }
 }
 
 // MARK: - LibGit2 Repository Wrapper
@@ -768,10 +796,12 @@ class LibGit2Service: ObservableObject {
                     return (true, nil, true)
                 }
 
-                return (false, "Push failed: \(error.message)", false)
+                let userFriendly = LibGit2Error.userFriendlyMessage(for: error.message)
+                return (false, "Push failed: \(userFriendly)", false)
             }
         } catch {
-            return (false, error.localizedDescription, false)
+            let userFriendly = LibGit2Error.userFriendlyMessage(for: error.localizedDescription)
+            return (false, userFriendly, false)
         }
     }
 
@@ -819,10 +849,12 @@ class LibGit2Service: ObservableObject {
                 return (true, nil)
             } else {
                 let error = LibGit2Error.lastError()
-                return (false, "Fetch failed: \(error.message)")
+                let userFriendly = LibGit2Error.userFriendlyMessage(for: error.message)
+                return (false, "Fetch failed: \(userFriendly)")
             }
         } catch {
-            return (false, error.localizedDescription)
+            let userFriendly = LibGit2Error.userFriendlyMessage(for: error.localizedDescription)
+            return (false, userFriendly)
         }
     }
 
