@@ -638,6 +638,52 @@ class LibGit2Service: ObservableObject {
         }
     }
 
+    // MARK: - Signature Helpers
+
+    /// Get git signature with fallback mechanisms for sandboxed environments
+    /// 1. Try git_signature_default (reads from .gitconfig)
+    /// 2. Try reading from repo's local .git/config
+    /// 3. Fall back to macOS account name
+    private func getSignature(for repoPtr: OpaquePointer) -> UnsafeMutablePointer<git_signature>? {
+        var signature: UnsafeMutablePointer<git_signature>?
+
+        // Try 1: Default signature from git config
+        if git_signature_default(&signature, repoPtr) == 0 {
+            return signature
+        }
+
+        // Try 2: Read from repo's local config
+        var config: OpaquePointer?
+        if git_repository_config(&config, repoPtr) == 0, let cfg = config {
+            defer { git_config_free(cfg) }
+
+            var namePtr: UnsafePointer<Int8>?
+            var emailPtr: UnsafePointer<Int8>?
+
+            let hasName = git_config_get_string(&namePtr, cfg, "user.name") == 0
+            let hasEmail = git_config_get_string(&emailPtr, cfg, "user.email") == 0
+
+            if hasName, hasEmail, let name = namePtr, let email = emailPtr {
+                let nameStr = String(cString: name)
+                let emailStr = String(cString: email)
+                if git_signature_now(&signature, nameStr, emailStr) == 0 {
+                    return signature
+                }
+            }
+        }
+
+        // Try 3: Fallback to macOS account name
+        let fallbackName = NSFullUserName().isEmpty ? NSUserName() : NSFullUserName()
+        let fallbackEmail = "\(NSUserName())@localhost"
+
+        if git_signature_now(&signature, fallbackName, fallbackEmail) == 0 {
+            print("⚠️ [LibGit2Service] Using fallback signature: \(fallbackName) <\(fallbackEmail)>")
+            return signature
+        }
+
+        return nil
+    }
+
     // MARK: - Commit Operations
 
     /// Commit staged changes with message
@@ -671,11 +717,9 @@ class LibGit2Service: ObservableObject {
             }
             defer { git_tree_free(t) }
 
-            // Get signature from config
-            var signature: UnsafeMutablePointer<git_signature>?
-            result = git_signature_default(&signature, repoPtr)
-            guard result == 0, let sig = signature else {
-                return (false, "Failed to get signature. Please configure user.name and user.email in git config.")
+            // Get signature (with fallback for sandboxed environments)
+            guard let sig = getSignature(for: repoPtr) else {
+                return (false, "Failed to get signature. Please configure user.name and user.email in the repository's .git/config")
             }
             defer { git_signature_free(sig) }
 
