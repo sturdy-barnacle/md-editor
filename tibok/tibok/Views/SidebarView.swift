@@ -1016,6 +1016,11 @@ struct FileTreeRow: View {
                 }
                 .padding(.leading, CGFloat(depth * 16))
                 .contentShape(Rectangle())
+                .onTapGesture {
+                    withAnimation(.easeInOut(duration: 0.15)) {
+                        isExpanded.toggle()
+                    }
+                }
 
                 // Expanded content
                 if isExpanded {
