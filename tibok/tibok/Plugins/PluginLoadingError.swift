@@ -37,7 +37,13 @@ enum PluginLoadingError: LocalizedError {
     
     /// Framework is not in allowed location
     case invalidFrameworkLocation(URL)
-    
+
+    /// Permission denied during loading
+    case permissionDenied(String)
+
+    /// Script plugin loading failed
+    case scriptLoadFailed(String, Error)
+
     var errorDescription: String? {
         switch self {
         case .frameworkNotFound(let name):
@@ -58,9 +64,13 @@ enum PluginLoadingError: LocalizedError {
             return "Framework size (\(size) bytes) exceeds maximum allowed size (\(maxSize) bytes)"
         case .invalidFrameworkLocation(let url):
             return "Framework at \(url.path) is not in allowed location (must be in ThirdParty folder)"
+        case .permissionDenied(let reason):
+            return "Permission denied: \(reason)"
+        case .scriptLoadFailed(let identifier, let error):
+            return "Script plugin '\(identifier)' failed to load: \(error.localizedDescription)"
         }
     }
-    
+
     var failureReason: String? {
         switch self {
         case .frameworkNotFound:
@@ -81,9 +91,13 @@ enum PluginLoadingError: LocalizedError {
             return "The plugin framework is too large and may be malicious."
         case .invalidFrameworkLocation:
             return "The plugin framework is not in the allowed location."
+        case .permissionDenied:
+            return "The plugin requires permissions that were denied."
+        case .scriptLoadFailed:
+            return "The JavaScript plugin failed to execute."
         }
     }
-    
+
     var recoverySuggestion: String? {
         switch self {
         case .frameworkNotFound:
@@ -104,6 +118,10 @@ enum PluginLoadingError: LocalizedError {
             return "Contact the plugin developer. The plugin may be corrupted."
         case .invalidFrameworkLocation:
             return "Install the plugin using the Install Plugin button in Settings."
+        case .permissionDenied:
+            return "Review the plugin's permission requirements and try enabling it again."
+        case .scriptLoadFailed:
+            return "Check the plugin's JavaScript code for syntax errors or contact the developer."
         }
     }
 }

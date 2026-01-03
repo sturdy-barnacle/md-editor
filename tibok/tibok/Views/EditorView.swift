@@ -851,6 +851,24 @@ struct FindableTextEditor: NSViewRepresentable {
                 return
             }
 
+            // Handle dynamic plugin commands (JavaScript execute functions)
+            if insertText.hasPrefix("{{DYNAMIC:") && insertText.hasSuffix("}}") {
+                dismissSlashMenu()
+                // Remove the slash command text first
+                if textView.shouldChangeText(in: range, replacementString: "") {
+                    textView.replaceCharacters(in: range, with: "")
+                    textView.didChangeText()
+                }
+                // Extract the command ID: {{DYNAMIC:pluginId:commandName}}
+                let commandId = String(insertText.dropFirst(10).dropLast(2))
+                let commandIdToRecord = command.id
+                Task { @MainActor in
+                    ScriptPluginLoader.shared.executeSlashCommand(commandId)
+                    SlashCommandService.syncShared.recordUsage(commandIdToRecord)
+                }
+                return
+            }
+
             // Handle date/time placeholders
             let now = Date()
             let dateFormatter = DateFormatter()

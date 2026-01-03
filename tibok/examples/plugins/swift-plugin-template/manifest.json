@@ -1,0 +1,29 @@
+{
+  "identifier": "com.example.my-native-plugin",
+  "name": "My Native Plugin",
+  "version": "1.0.0",
+  "description": "A template for creating native Swift plugins for Tibok",
+  "icon": "swift",
+  "author": "Your Name",
+  "author_info": {
+    "name": "Your Name",
+    "email": "you@example.com",
+    "url": "https://example.com"
+  },
+  "minimum_tibok_version": "1.2.0",
+  "plugin_type": "native",
+  "permissions": [
+    "slash-commands",
+    "command-palette",
+    "read-current-document",
+    "insert-text"
+  ],
+  "entry_point": {
+    "framework": "MyNativePlugin",
+    "className": "MyNativePlugin"
+  },
+  "homepage": "https://github.com/your-username/my-native-plugin",
+  "repository": "https://github.com/your-username/my-native-plugin",
+  "license": "MIT",
+  "keywords": ["example", "template", "native"]
+}

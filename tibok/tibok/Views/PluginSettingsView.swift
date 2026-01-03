@@ -18,6 +18,38 @@ struct PluginDisplayInfo: Identifiable {
     let icon: String
     let author: String?
     let isLoaded: Bool
+    let trustTier: PluginTrustTier
+    let pluginType: PluginType
+    let permissions: [PluginPermission]
+    let source: PluginSource
+
+    init(
+        id: String,
+        identifier: String,
+        name: String,
+        version: String,
+        description: String?,
+        icon: String,
+        author: String?,
+        isLoaded: Bool,
+        trustTier: PluginTrustTier = .community,
+        pluginType: PluginType = .native,
+        permissions: [PluginPermission] = [],
+        source: PluginSource = .thirdParty
+    ) {
+        self.id = id
+        self.identifier = identifier
+        self.name = name
+        self.version = version
+        self.description = description
+        self.icon = icon
+        self.author = author
+        self.isLoaded = isLoaded
+        self.trustTier = trustTier
+        self.pluginType = pluginType
+        self.permissions = permissions
+        self.source = source
+    }
 }
 
 struct PluginSettingsView: View {
@@ -28,28 +60,32 @@ struct PluginSettingsView: View {
 
     private var plugins: [PluginDisplayInfo] {
         var allPlugins: [PluginDisplayInfo] = []
-        
-        // Add built-in plugins
-        for pluginType in pluginManager.availablePluginTypes {
+
+        // Add built-in plugins (Official tier)
+        for builtinType in pluginManager.availablePluginTypes {
             allPlugins.append(PluginDisplayInfo(
-                id: pluginType.identifier,
-                identifier: pluginType.identifier,
-                name: pluginType.name,
-                version: pluginType.version,
-                description: pluginType.description,
-                icon: pluginType.icon,
-                author: pluginType.author,
-                isLoaded: pluginManager.isLoaded(pluginType.identifier)
+                id: builtinType.identifier,
+                identifier: builtinType.identifier,
+                name: builtinType.name,
+                version: builtinType.version,
+                description: builtinType.description,
+                icon: builtinType.icon,
+                author: builtinType.author,
+                isLoaded: pluginManager.isLoaded(builtinType.identifier),
+                trustTier: .official,
+                pluginType: .native,
+                permissions: [],
+                source: .builtin
             ))
         }
-        
+
         // Add discovered third-party plugins
-        for (type, manifest, _, isLoaded) in pluginManager.allPluginInfo {
+        for (type, manifest, source, isLoaded) in pluginManager.allPluginInfo {
             // Skip if already added as built-in
             if type != nil { continue }
-            
+
             guard let manifest = manifest else { continue }
-            
+
             allPlugins.append(PluginDisplayInfo(
                 id: manifest.identifier,
                 identifier: manifest.identifier,
@@ -57,11 +93,15 @@ struct PluginSettingsView: View {
                 version: manifest.version,
                 description: manifest.description,
                 icon: manifest.iconName,
-                author: manifest.author,
-                isLoaded: isLoaded
+                author: manifest.resolvedAuthorName,
+                isLoaded: isLoaded,
+                trustTier: manifest.resolvedTrustTier,
+                pluginType: manifest.resolvedPluginType,
+                permissions: manifest.parsedPermissions,
+                source: source
             ))
         }
-        
+
         return allPlugins
     }
 
@@ -103,6 +143,13 @@ struct PluginSettingsView: View {
         }
         .formStyle(.grouped)
         .padding()
+        .sheet(item: $pluginManager.pendingApprovalRequest) { request in
+            PermissionApprovalView(
+                request: request,
+                onApprove: request.onApprove ?? {},
+                onDeny: request.onDeny ?? {}
+            )
+        }
     }
     
     private func installPlugin() {
@@ -137,15 +184,22 @@ struct PluginRow: View {
                 .foregroundColor(.accentColor)
                 .frame(width: 28)
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text(plugin.name)
-                    .fontWeight(.medium)
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 8) {
+                    Text(plugin.name)
+                        .fontWeight(.medium)
+
+                    // Trust tier badge
+                    TrustTierBadge(tier: plugin.trustTier)
+                }
+
                 if let desc = plugin.description {
                     Text(desc)
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .lineLimit(2)
                 }
+
                 if let author = plugin.author {
                     Text("by \(author)")
                         .font(.caption2)
@@ -187,3 +241,32 @@ struct PluginRow: View {
         .padding(.vertical, 4)
     }
 }
+
+// MARK: - Trust Tier Badge
+
+struct TrustTierBadge: View {
+    let tier: PluginTrustTier
+
+    var body: some View {
+        HStack(spacing: 3) {
+            Image(systemName: tier.icon)
+                .font(.system(size: 8))
+            Text(tier.displayName)
+                .font(.system(size: 9, weight: .medium))
+        }
+        .padding(.horizontal, 6)
+        .padding(.vertical, 2)
+        .background(badgeColor.opacity(0.15))
+        .foregroundColor(badgeColor)
+        .cornerRadius(4)
+    }
+
+    private var badgeColor: Color {
+        switch tier {
+        case .official: return .blue
+        case .verified: return .green
+        case .community: return .orange
+        }
+    }
+}
+

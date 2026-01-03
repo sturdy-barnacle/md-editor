@@ -737,8 +737,8 @@ struct CommandPaletteSheet: View {
         for command in filteredCommands {
             groups[command.category, default: []].append(command)
         }
-        // Sort by category order
-        let categoryOrder: [CommandCategory] = [.file, .edit, .view, .export, .git]
+        // Sort by category order (include all categories)
+        let categoryOrder: [CommandCategory] = [.file, .edit, .view, .insert, .export, .git, .general]
         return categoryOrder.compactMap { category in
             if let commands = groups[category], !commands.isEmpty {
                 return (category, commands)

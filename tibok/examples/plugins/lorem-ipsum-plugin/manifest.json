@@ -1,0 +1,21 @@
+{
+  "identifier": "com.tibok.example.lorem-ipsum",
+  "name": "Lorem Ipsum Generator",
+  "version": "1.0.0",
+  "description": "Insert placeholder text with customizable paragraph count",
+  "icon": "text.word.spacing",
+  "author": "Tibok Team",
+  "plugin_type": "script",
+  "permissions": [
+    "slash-commands",
+    "command-palette",
+    "insert-text"
+  ],
+  "entry_point": {
+    "script": "main.js"
+  },
+  "homepage": "https://github.com/tibok/example-plugins",
+  "repository": "https://github.com/tibok/example-plugins",
+  "license": "MIT",
+  "keywords": ["lorem", "ipsum", "placeholder", "text", "dummy"]
+}
