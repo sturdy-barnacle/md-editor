@@ -20,6 +20,8 @@ struct PluginMarketplaceView: View {
     @State private var pluginToInstall: RegistryPlugin?
     @State private var installError: String?
     @State private var showingError = false
+    @State private var showingUninstallConfirmation = false
+    @State private var pluginToUninstall: RegistryPlugin?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -80,6 +82,21 @@ struct PluginMarketplaceView: View {
         } message: {
             Text(installError ?? "Unknown error occurred")
         }
+        .alert("Uninstall Plugin", isPresented: $showingUninstallConfirmation) {
+            Button("Cancel", role: .cancel) {
+                pluginToUninstall = nil
+            }
+            Button("Uninstall", role: .destructive) {
+                if let plugin = pluginToUninstall {
+                    uninstallPlugin(plugin)
+                }
+                pluginToUninstall = nil
+            }
+        } message: {
+            if let plugin = pluginToUninstall {
+                Text("Are you sure you want to uninstall \"\(plugin.name)\"? This will remove the plugin and all its data.")
+            }
+        }
     }
 
     // MARK: - Search Bar
@@ -112,34 +129,79 @@ struct PluginMarketplaceView: View {
     }
 
     private var filterMenus: some View {
-        // Trust tier filter
-        Menu {
-            Button("All Tiers") { selectedTier = nil }
-            Divider()
-            ForEach([PluginTrustTier.verified, .community], id: \.self) { tier in
+        HStack(spacing: 8) {
+            // Category filter
+            Menu {
+                Button("All Categories") { selectedCategory = nil }
+                Divider()
+                ForEach(registry.categories) { category in
+                    Button {
+                        selectedCategory = category.slug
+                    } label: {
+                        Label(category.name, systemImage: category.icon ?? "folder")
+                    }
+                }
+            } label: {
+                HStack(spacing: 4) {
+                    if let slug = selectedCategory,
+                       let category = registry.categories.first(where: { $0.slug == slug }) {
+                        Image(systemName: category.icon ?? "folder")
+                        Text(category.name)
+                    } else {
+                        Image(systemName: "square.grid.2x2")
+                        Text("Category")
+                    }
+                }
+                .font(.caption)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(selectedCategory != nil ? Color.accentColor.opacity(0.2) : Color.secondary.opacity(0.1))
+                .cornerRadius(6)
+            }
+            .buttonStyle(.plain)
+
+            // Trust tier filter
+            Menu {
+                Button("All Tiers") { selectedTier = nil }
+                Divider()
+                ForEach([PluginTrustTier.verified, .community], id: \.self) { tier in
+                    Button {
+                        selectedTier = tier
+                    } label: {
+                        Label(tier.displayName, systemImage: tier.icon)
+                    }
+                }
+            } label: {
+                HStack(spacing: 4) {
+                    if let tier = selectedTier {
+                        Image(systemName: tier.icon)
+                        Text(tier.displayName)
+                    } else {
+                        Image(systemName: "shield")
+                        Text("Trust")
+                    }
+                }
+                .font(.caption)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(selectedTier != nil ? Color.accentColor.opacity(0.2) : Color.secondary.opacity(0.1))
+                .cornerRadius(6)
+            }
+            .buttonStyle(.plain)
+
+            // Clear filters button (only show if filters are active)
+            if selectedCategory != nil || selectedTier != nil {
                 Button {
-                    selectedTier = tier
+                    selectedCategory = nil
+                    selectedTier = nil
                 } label: {
-                    Label(tier.displayName, systemImage: tier.icon)
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundColor(.secondary)
                 }
+                .buttonStyle(.plain)
+                .help("Clear filters")
             }
-        } label: {
-            HStack(spacing: 4) {
-                if let tier = selectedTier {
-                    Image(systemName: tier.icon)
-                    Text(tier.displayName)
-                } else {
-                    Image(systemName: "shield")
-                    Text("Trust")
-                }
-            }
-            .font(.caption)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(selectedTier != nil ? Color.accentColor.opacity(0.2) : Color.secondary.opacity(0.1))
-            .cornerRadius(6)
         }
-        .buttonStyle(.plain)
     }
 
     // MARK: - Loading & Error Views
@@ -205,7 +267,12 @@ struct PluginMarketplaceView: View {
                         FeaturedPluginCard(
                             plugin: plugin,
                             isInstalled: isInstalled(plugin),
-                            onInstall: { installPlugin(plugin) }
+                            canUninstall: canUninstall(plugin),
+                            hasUpdate: hasUpdate(plugin),
+                            category: primaryCategory(for: plugin),
+                            onInstall: { installPlugin(plugin) },
+                            onUninstall: { requestUninstall(plugin) },
+                            onUpdate: { updatePlugin(plugin) }
                         )
                     }
                 }
@@ -229,7 +296,12 @@ struct PluginMarketplaceView: View {
                     PluginCard(
                         plugin: plugin,
                         isInstalled: isInstalled(plugin),
-                        onInstall: { installPlugin(plugin) }
+                        canUninstall: canUninstall(plugin),
+                        hasUpdate: hasUpdate(plugin),
+                        category: primaryCategory(for: plugin),
+                        onInstall: { installPlugin(plugin) },
+                        onUninstall: { requestUninstall(plugin) },
+                        onUpdate: { updatePlugin(plugin) }
                     )
                 }
             }
@@ -252,7 +324,12 @@ struct PluginMarketplaceView: View {
                     PluginCard(
                         plugin: plugin,
                         isInstalled: isInstalled(plugin),
-                        onInstall: { installPlugin(plugin) }
+                        canUninstall: canUninstall(plugin),
+                        hasUpdate: hasUpdate(plugin),
+                        category: primaryCategory(for: plugin),
+                        onInstall: { installPlugin(plugin) },
+                        onUninstall: { requestUninstall(plugin) },
+                        onUpdate: { updatePlugin(plugin) }
                     )
                 }
             }
@@ -271,7 +348,12 @@ struct PluginMarketplaceView: View {
                     PluginCard(
                         plugin: plugin,
                         isInstalled: isInstalled(plugin),
-                        onInstall: { installPlugin(plugin) }
+                        canUninstall: canUninstall(plugin),
+                        hasUpdate: hasUpdate(plugin),
+                        category: primaryCategory(for: plugin),
+                        onInstall: { installPlugin(plugin) },
+                        onUninstall: { requestUninstall(plugin) },
+                        onUpdate: { updatePlugin(plugin) }
                     )
                 }
             }
@@ -306,7 +388,12 @@ struct PluginMarketplaceView: View {
                         PluginCard(
                             plugin: plugin,
                             isInstalled: isInstalled(plugin),
-                            onInstall: { installPlugin(plugin) }
+                            canUninstall: canUninstall(plugin),
+                            hasUpdate: hasUpdate(plugin),
+                            category: primaryCategory(for: plugin),
+                            onInstall: { installPlugin(plugin) },
+                            onUninstall: { requestUninstall(plugin) },
+                            onUpdate: { updatePlugin(plugin) }
                         )
                     }
                 }
@@ -377,6 +464,15 @@ struct PluginMarketplaceView: View {
             if let tier = selectedTier, plugin.trustTier != tier {
                 return false
             }
+            // Apply category filter (matches against plugin keywords)
+            if let category = selectedCategory {
+                let hasCategory = plugin.keywords.contains { keyword in
+                    keyword.lowercased().contains(category.lowercased())
+                }
+                if !hasCategory {
+                    return false
+                }
+            }
             return true
         }
     }
@@ -407,12 +503,74 @@ struct PluginMarketplaceView: View {
         }
     }
 
+    private func requestUninstall(_ plugin: RegistryPlugin) {
+        pluginToUninstall = plugin
+        showingUninstallConfirmation = true
+    }
+
+    private func uninstallPlugin(_ plugin: RegistryPlugin) {
+        pluginManager.uninstallPlugin(plugin.identifier)
+    }
+
+    private func canUninstall(_ plugin: RegistryPlugin) -> Bool {
+        pluginManager.canUninstall(plugin.identifier)
+    }
+
+    /// Check if an installed plugin has an update available
+    private func hasUpdate(_ plugin: RegistryPlugin) -> Bool {
+        // Find the installed manifest
+        guard let installed = pluginManager.discoveredManifests.first(where: { $0.manifest.identifier == plugin.identifier }) else {
+            return false
+        }
+        // Compare versions (registry version > installed version)
+        return compareVersions(plugin.version, installed.manifest.version) > 0
+    }
+
+    /// Update an installed plugin to the latest version
+    private func updatePlugin(_ plugin: RegistryPlugin) {
+        Task {
+            do {
+                // Uninstall first, then install new version
+                pluginManager.uninstallPlugin(plugin.identifier)
+                try await registry.install(plugin: plugin)
+            } catch {
+                installError = "Update failed: \(error.localizedDescription)"
+                showingError = true
+            }
+        }
+    }
+
+    /// Simple semantic version comparison (returns positive if v1 > v2)
+    private func compareVersions(_ v1: String, _ v2: String) -> Int {
+        let parts1 = v1.split(separator: ".").compactMap { Int($0) }
+        let parts2 = v2.split(separator: ".").compactMap { Int($0) }
+
+        for i in 0..<max(parts1.count, parts2.count) {
+            let p1 = i < parts1.count ? parts1[i] : 0
+            let p2 = i < parts2.count ? parts2[i] : 0
+
+            if p1 > p2 { return 1 }
+            if p1 < p2 { return -1 }
+        }
+        return 0
+    }
+
     private func colorForRiskLevel(_ level: PermissionRiskLevel) -> Color {
         switch level {
         case .safe: return .green
         case .moderate: return .orange
         case .high: return .red
         }
+    }
+
+    /// Find the primary category for a plugin based on its keywords
+    private func primaryCategory(for plugin: RegistryPlugin) -> PluginCategory? {
+        for category in registry.categories {
+            if plugin.keywords.contains(where: { $0.lowercased().contains(category.slug.lowercased()) }) {
+                return category
+            }
+        }
+        return nil
     }
 
     @ViewBuilder
@@ -441,7 +599,12 @@ struct PluginMarketplaceView: View {
 private struct FeaturedPluginCard: View {
     let plugin: RegistryPlugin
     let isInstalled: Bool
+    let canUninstall: Bool
+    let hasUpdate: Bool
+    let category: PluginCategory?
     let onInstall: () -> Void
+    let onUninstall: () -> Void
+    let onUpdate: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -455,8 +618,16 @@ private struct FeaturedPluginCard: View {
                     .cornerRadius(8)
 
                 VStack(alignment: .leading) {
-                    Text(plugin.name)
-                        .font(.headline)
+                    HStack(spacing: 6) {
+                        Text(plugin.name)
+                            .font(.headline)
+                        if let category = category {
+                            CategoryBadge(category: category)
+                        }
+                        if hasUpdate {
+                            UpdateBadge()
+                        }
+                    }
                     if let author = plugin.author {
                         Text(author)
                             .font(.caption)
@@ -494,9 +665,25 @@ private struct FeaturedPluginCard: View {
                 Spacer()
 
                 if isInstalled {
-                    Label("Installed", systemImage: "checkmark.circle.fill")
-                        .font(.caption)
-                        .foregroundColor(.green)
+                    HStack(spacing: 8) {
+                        if hasUpdate {
+                            Button("Update", action: onUpdate)
+                                .buttonStyle(.borderedProminent)
+                                .controlSize(.small)
+                        } else {
+                            Label("Installed", systemImage: "checkmark.circle.fill")
+                                .font(.caption)
+                                .foregroundColor(.green)
+                        }
+                        if canUninstall {
+                            Button(action: onUninstall) {
+                                Image(systemName: "trash")
+                                    .foregroundColor(.red)
+                            }
+                            .buttonStyle(.plain)
+                            .help("Uninstall plugin")
+                        }
+                    }
                 } else {
                     Button("Install", action: onInstall)
                         .buttonStyle(.borderedProminent)
@@ -523,7 +710,12 @@ private struct FeaturedPluginCard: View {
 private struct PluginCard: View {
     let plugin: RegistryPlugin
     let isInstalled: Bool
+    let canUninstall: Bool
+    let hasUpdate: Bool
+    let category: PluginCategory?
     let onInstall: () -> Void
+    let onUninstall: () -> Void
+    let onUpdate: () -> Void
 
     var body: some View {
         HStack(spacing: 12) {
@@ -542,6 +734,12 @@ private struct PluginCard: View {
                         .font(.subheadline)
                         .fontWeight(.medium)
                     TrustTierBadge(tier: plugin.trustTier)
+                    if let category = category {
+                        CategoryBadge(category: category)
+                    }
+                    if hasUpdate {
+                        UpdateBadge()
+                    }
                 }
 
                 if let description = plugin.description {
@@ -554,10 +752,26 @@ private struct PluginCard: View {
 
             Spacer()
 
-            // Install button
+            // Install/Update/Uninstall buttons
             if isInstalled {
-                Image(systemName: "checkmark.circle.fill")
-                    .foregroundColor(.green)
+                HStack(spacing: 8) {
+                    if hasUpdate {
+                        Button("Update", action: onUpdate)
+                            .buttonStyle(.borderedProminent)
+                            .controlSize(.small)
+                    } else {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                    }
+                    if canUninstall {
+                        Button(action: onUninstall) {
+                            Image(systemName: "trash")
+                                .foregroundColor(.red)
+                        }
+                        .buttonStyle(.plain)
+                        .help("Uninstall plugin")
+                    }
+                }
             } else {
                 Button("Install", action: onInstall)
                     .buttonStyle(.bordered)
@@ -619,3 +833,40 @@ private struct DownloadProgressRow: View {
     }
 }
 
+// MARK: - Category Badge
+
+private struct CategoryBadge: View {
+    let category: PluginCategory
+
+    var body: some View {
+        HStack(spacing: 3) {
+            Image(systemName: category.icon ?? "folder")
+                .font(.system(size: 8))
+            Text(category.name)
+                .font(.system(size: 9))
+        }
+        .padding(.horizontal, 5)
+        .padding(.vertical, 2)
+        .background(Color.purple.opacity(0.15))
+        .foregroundColor(.purple)
+        .cornerRadius(4)
+    }
+}
+
+// MARK: - Update Badge
+
+private struct UpdateBadge: View {
+    var body: some View {
+        HStack(spacing: 3) {
+            Image(systemName: "arrow.up.circle.fill")
+                .font(.system(size: 8))
+            Text("Update")
+                .font(.system(size: 9))
+        }
+        .padding(.horizontal, 5)
+        .padding(.vertical, 2)
+        .background(Color.orange.opacity(0.15))
+        .foregroundColor(.orange)
+        .cornerRadius(4)
+    }
+}

@@ -1,0 +1,141 @@
+{
+  "version": "1.0.0",
+  "generated_at": "2026-01-03T00:00:00Z",
+  "registry_signature": null,
+  "plugins": [
+    {
+      "identifier": "com.example.writing-tools",
+      "name": "Writing Tools",
+      "version": "1.0.0",
+      "description": "Helpful tools for writers: author signature, text transforms, and quick inserts",
+      "icon": "pencil.and.outline",
+      "author": "Tibok Examples",
+      "plugin_type": "script",
+      "trust_tier": "community",
+      "permissions": [
+        "slash-commands",
+        "command-palette",
+        "read-current-document",
+        "insert-text",
+        "read-selection"
+      ],
+      "downloads": 150,
+      "rating": 4.5,
+      "rating_count": 12,
+      "minimum_tibok_version": "1.0.0",
+      "download_url": "https://github.com/sturdy-barnacle/tibok-plugins/releases/download/v1.0.0/writing-tools.zip",
+      "size": 2048,
+      "homepage": "https://github.com/sturdy-barnacle/tibok-plugins",
+      "repository": "https://github.com/sturdy-barnacle/tibok-plugins",
+      "license": "MIT",
+      "keywords": ["writing", "productivity", "signature", "transform"],
+      "updated_at": "2026-01-03T00:00:00Z"
+    },
+    {
+      "identifier": "com.tibok.example.lorem-ipsum",
+      "name": "Lorem Ipsum Generator",
+      "version": "1.0.0",
+      "description": "Insert placeholder text with customizable paragraph count. Great for designers and developers.",
+      "icon": "text.word.spacing",
+      "author": "Tibok Team",
+      "plugin_type": "script",
+      "trust_tier": "verified",
+      "permissions": [
+        "slash-commands",
+        "command-palette",
+        "insert-text"
+      ],
+      "downloads": 500,
+      "rating": 4.8,
+      "rating_count": 45,
+      "minimum_tibok_version": "1.0.0",
+      "download_url": "https://github.com/sturdy-barnacle/tibok-plugins/releases/download/v1.0.0/lorem-ipsum.zip",
+      "size": 3072,
+      "homepage": "https://github.com/sturdy-barnacle/tibok-plugins",
+      "repository": "https://github.com/sturdy-barnacle/tibok-plugins",
+      "license": "MIT",
+      "keywords": ["lorem", "ipsum", "placeholder", "text", "dummy", "design"],
+      "updated_at": "2026-01-03T00:00:00Z"
+    },
+    {
+      "identifier": "com.tibok.example.word-count",
+      "name": "Word Count",
+      "version": "1.0.0",
+      "description": "Display word, character, and paragraph counts for your document or selection",
+      "icon": "number.circle",
+      "author": "Tibok Team",
+      "plugin_type": "script",
+      "trust_tier": "verified",
+      "permissions": [
+        "slash-commands",
+        "command-palette",
+        "read-current-document",
+        "read-selection"
+      ],
+      "downloads": 320,
+      "rating": 4.6,
+      "rating_count": 28,
+      "minimum_tibok_version": "1.0.0",
+      "download_url": "https://github.com/sturdy-barnacle/tibok-plugins/releases/download/v1.0.0/word-count.zip",
+      "size": 1536,
+      "homepage": "https://github.com/sturdy-barnacle/tibok-plugins",
+      "repository": "https://github.com/sturdy-barnacle/tibok-plugins",
+      "license": "MIT",
+      "keywords": ["word", "count", "statistics", "character", "paragraph"],
+      "updated_at": "2026-01-02T00:00:00Z"
+    },
+    {
+      "identifier": "com.tibok.example.markdown-table",
+      "name": "Markdown Table Generator",
+      "version": "1.0.0",
+      "description": "Quickly create and format markdown tables with an interactive dialog",
+      "icon": "tablecells",
+      "author": "Tibok Team",
+      "plugin_type": "script",
+      "trust_tier": "verified",
+      "permissions": [
+        "slash-commands",
+        "command-palette",
+        "insert-text"
+      ],
+      "downloads": 280,
+      "rating": 4.4,
+      "rating_count": 22,
+      "minimum_tibok_version": "1.0.0",
+      "download_url": "https://github.com/sturdy-barnacle/tibok-plugins/releases/download/v1.0.0/markdown-table.zip",
+      "size": 2560,
+      "homepage": "https://github.com/sturdy-barnacle/tibok-plugins",
+      "repository": "https://github.com/sturdy-barnacle/tibok-plugins",
+      "license": "MIT",
+      "keywords": ["table", "markdown", "generator", "formatting"],
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  ],
+  "featured": [
+    "com.tibok.example.lorem-ipsum",
+    "com.example.writing-tools"
+  ],
+  "categories": [
+    {
+      "slug": "productivity",
+      "name": "Productivity",
+      "description": "Tools to help you write more efficiently",
+      "icon": "bolt.fill",
+      "count": 2
+    },
+    {
+      "slug": "formatting",
+      "name": "Formatting",
+      "description": "Plugins for text and document formatting",
+      "icon": "textformat",
+      "count": 2
+    },
+    {
+      "slug": "utilities",
+      "name": "Utilities",
+      "description": "Helpful utility plugins",
+      "icon": "wrench.and.screwdriver.fill",
+      "count": 2
+    }
+  ]
+}

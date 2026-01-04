@@ -26,6 +26,7 @@ struct ContentView: View {
     @State private var preFocusSidebarVisible = true
     @State private var preFocusPreviewVisible = true
 
+
     private var windowTitle: String {
         let docName = appState.currentDocument.fileURL?.lastPathComponent ?? "Untitled.md"
         let modified = appState.currentDocument.isModified ? " •" : ""
@@ -113,6 +114,7 @@ struct ContentView: View {
                     }
                 }
             }
+
         }
         .sheet(isPresented: $showCommandPalette) {
             CommandPaletteSheet(isPresented: $showCommandPalette)

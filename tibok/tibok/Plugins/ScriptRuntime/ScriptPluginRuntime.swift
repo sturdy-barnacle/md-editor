@@ -95,6 +95,7 @@ final class ScriptPluginRuntime: ObservableObject {
 
         // Add utility APIs (always available)
         tibok.setObject(createLogAPI(), forKeyedSubscript: "log" as NSString)
+        tibok.setObject(createSettingsAPI(), forKeyedSubscript: "settings" as NSString)
 
         // Expose the tibok object globally
         context.setObject(tibok, forKeyedSubscript: "tibok" as NSString)
@@ -401,6 +402,25 @@ final class ScriptPluginRuntime: ObservableObject {
             self?.onError?(message)
         }
         api.setObject(error, forKeyedSubscript: "error" as NSString)
+
+        return api
+    }
+
+    private func createSettingsAPI() -> JSValue {
+        let api = JSValue(newObjectIn: context)!
+
+        // tibok.settings.get(key) - Read a setting value
+        let get: @convention(block) (String) -> Any? = { key in
+            // Map known setting keys to UserDefaults
+            switch key {
+            case "author.signature":
+                return UserDefaults.standard.string(forKey: SettingsKeys.authorSignature)
+                    ?? "-- Written with Tibok --"
+            default:
+                return nil
+            }
+        }
+        api.setObject(get, forKeyedSubscript: "get" as NSString)
 
         return api
     }

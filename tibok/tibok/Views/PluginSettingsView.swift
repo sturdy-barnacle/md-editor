@@ -57,6 +57,7 @@ struct PluginSettingsView: View {
     @ObservedObject var stateManager = PluginStateManager.shared
     @ObservedObject var uiState = UIStateService.shared
     @State private var isInstalling = false
+    @State private var showMarketplace = false
 
     private var plugins: [PluginDisplayInfo] {
         var allPlugins: [PluginDisplayInfo] = []
@@ -119,6 +120,14 @@ struct PluginSettingsView: View {
             }
             
             Section {
+                Button(action: { showMarketplace = true }) {
+                    HStack {
+                        Image(systemName: "storefront")
+                        Text("Browse Marketplace")
+                    }
+                }
+                .help("Browse and install plugins from the marketplace")
+
                 Button(action: installPlugin) {
                     HStack {
                         if isInstalling {
@@ -128,11 +137,11 @@ struct PluginSettingsView: View {
                         } else {
                             Image(systemName: "plus.circle.fill")
                         }
-                        Text("Install Plugin...")
+                        Text("Install from File...")
                     }
                 }
                 .disabled(isInstalling)
-                .help("Install a plugin from a folder or ZIP file")
+                .help("Install a plugin from a local folder or ZIP file")
             }
 
             Section {
@@ -146,9 +155,13 @@ struct PluginSettingsView: View {
         .sheet(item: $pluginManager.pendingApprovalRequest) { request in
             PermissionApprovalView(
                 request: request,
-                onApprove: request.onApprove ?? {},
-                onDeny: request.onDeny ?? {}
+                onApprove: { (request.onApprove ?? {})() },
+                onDeny: { (request.onDeny ?? {})() }
             )
+        }
+        .sheet(isPresented: $showMarketplace) {
+            PluginMarketplaceView()
+                .frame(minWidth: 600, minHeight: 500)
         }
     }
     

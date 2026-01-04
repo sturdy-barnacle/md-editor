@@ -14,8 +14,11 @@ import Foundation
 final class RegistryClient: ObservableObject {
     static let shared = RegistryClient()
 
-    /// Default registry URL (can be overridden for testing or custom registries)
-    static let defaultRegistryURL = URL(string: "https://plugins.tibok.app/api/v1/registry.json")!
+    /// Default registry URL - uses GitHub raw for now until plugins.tibok.app is set up
+    static let defaultRegistryURL = URL(string: "https://raw.githubusercontent.com/sturdy-barnacle/md-editor/main/tibok/examples/plugins/registry.json")!
+
+    /// Fallback URL (same as default for now, but could point to a CDN backup)
+    static let fallbackRegistryURL = URL(string: "https://raw.githubusercontent.com/sturdy-barnacle/md-editor/apple-store-distro/tibok/examples/plugins/registry.json")!
 
     /// Current registry URL
     var registryURL: URL
@@ -95,9 +98,24 @@ final class RegistryClient: ObservableObject {
         }
     }
 
-    /// Fetch registry from network
+    /// Fetch registry from network with fallback
     private func fetchFromNetwork() async throws -> PluginRegistryData {
-        let (data, response) = try await session.data(from: registryURL)
+        // Try primary URL first
+        do {
+            return try await fetchFromURL(registryURL)
+        } catch {
+            // If primary fails and we have a different fallback, try it
+            if registryURL != Self.fallbackRegistryURL {
+                print("Primary registry failed, trying fallback: \(error.localizedDescription)")
+                return try await fetchFromURL(Self.fallbackRegistryURL)
+            }
+            throw error
+        }
+    }
+
+    /// Fetch registry from a specific URL
+    private func fetchFromURL(_ url: URL) async throws -> PluginRegistryData {
+        let (data, response) = try await session.data(from: url)
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw RegistryError.invalidResponse

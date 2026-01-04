@@ -268,7 +268,9 @@ struct PluginManifest: Codable {
     /// Parse permissions from string array to PluginPermission enum
     var parsedPermissions: [PluginPermission] {
         guard let permissions = permissions else { return [] }
-        return permissions.compactMap { PluginPermission(rawValue: $0) }
+        return permissions.compactMap { (permissionString: String) in
+            PluginPermission(rawValue: permissionString)
+        }
     }
 
     /// Get the permission set for this plugin
@@ -353,3 +355,4 @@ struct AnyCodable: Codable {
         }
     }
 }
+

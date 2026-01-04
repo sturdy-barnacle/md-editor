@@ -46,7 +46,12 @@ struct tibokApp: App {
                 }
                 .onAppear {
                     applyAppearance()
-                    initializePlugins()
+                    // Defer plugin initialization to next run loop iteration
+                    // This ensures SwiftUI's .sheet() bindings are fully subscribed
+                    // before any pendingApprovalRequest is set
+                    DispatchQueue.main.async {
+                        initializePlugins()
+                    }
                     // Ensure app window gets focus when launched
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                         NSApplication.shared.activate(ignoringOtherApps: true)

@@ -89,6 +89,7 @@ enum AppURLs {
 enum SettingsKeys {
     static let autoSaveEnabled = "autoSaveEnabled"
     static let appearanceMode = "appearanceMode"
+    static let authorSignature = "author.signature"
     // Editor settings
     static let editorFontSize = "editor.fontSize"
     static let editorFontFamily = "editor.fontFamily"
@@ -198,9 +199,25 @@ struct SettingsView: View {
 struct GeneralSettingsView: View {
     @Binding var autoSaveEnabled: Bool
     @Binding var appearanceMode: String
+    @AppStorage(SettingsKeys.authorSignature) private var authorSignature: String = "-- Written with Tibok --"
+    @ObservedObject private var pluginStateManager = PluginStateManager.shared
+
+    /// Check if any plugin that uses the signature setting is enabled
+    private var hasSignaturePlugin: Bool {
+        // The writing-tools plugin uses the signature setting
+        pluginStateManager.isEnabled("com.example.writing-tools")
+    }
 
     var body: some View {
         Form {
+            if hasSignaturePlugin {
+                Section("Author") {
+                    TextField("Signature", text: $authorSignature)
+                        .textFieldStyle(.roundedBorder)
+                        .help("Text inserted by the /sig command. Leave empty to disable.")
+                }
+            }
+
             Section(L10n.General.appearanceSection) {
                 Picker(L10n.General.themePicker, selection: $appearanceMode) {
                     ForEach(AppearanceMode.allCases, id: \.rawValue) { mode in

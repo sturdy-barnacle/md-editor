@@ -82,7 +82,6 @@ final class PluginManager: ObservableObject {
     /// Discover plugins from folders on the file system
     private func discoverPluginsFromFolders() {
         discoveredManifests = PluginDiscovery.discoverAllManifests()
-        print("Discovered \(discoveredManifests.count) plugin manifests")
         for manifest in discoveredManifests {
             print("  - \(manifest.manifest.identifier): \(manifest.manifest.name) (\(manifest.source.displayName))")
         }
@@ -232,8 +231,6 @@ final class PluginManager: ObservableObject {
 
         loadedScriptPlugins.append(identifier)
         pluginErrors.removeValue(forKey: identifier)
-
-        print("Successfully loaded script plugin: \(identifier)")
     }
 
     /// Enable a plugin by identifier
@@ -366,5 +363,58 @@ final class PluginManager: ObservableObject {
     /// Reload plugin discovery (useful if plugins folder changes)
     func reloadDiscovery() {
         discoverPluginsFromFolders()
+    }
+
+    /// Uninstall a plugin completely: unload, revoke permissions, delete files
+    /// Returns true if successful, false if plugin cannot be uninstalled (e.g., built-in)
+    @discardableResult
+    func uninstallPlugin(_ identifier: String) -> Bool {
+        // Cannot uninstall built-in plugins
+        if availablePluginTypes.contains(where: { $0.identifier == identifier }) {
+            print("Cannot uninstall built-in plugin: \(identifier)")
+            return false
+        }
+
+        // Find the discovered plugin
+        guard let discoveredIndex = discoveredManifests.firstIndex(where: { $0.manifest.identifier == identifier }) else {
+            print("Plugin not found for uninstall: \(identifier)")
+            return false
+        }
+
+        let discovered = discoveredManifests[discoveredIndex]
+
+        // Unload from memory first
+        unloadPlugin(identifier)
+
+        // Disable the plugin
+        stateManager.setEnabled(identifier, false)
+
+        // Revoke all permissions
+        permissionValidator.revokeApproval(for: identifier)
+
+        // Delete the plugin folder
+        let fileManager = FileManager.default
+        do {
+            try fileManager.removeItem(at: discovered.url)
+            print("Deleted plugin folder: \(discovered.url.path)")
+        } catch {
+            print("Failed to delete plugin folder: \(error)")
+            // Continue anyway - the plugin is already unloaded
+        }
+
+        // Remove from discovered manifests
+        discoveredManifests.remove(at: discoveredIndex)
+
+        return true
+    }
+
+    /// Check if a plugin can be uninstalled (i.e., it's not a built-in plugin)
+    func canUninstall(_ identifier: String) -> Bool {
+        // Built-in plugins cannot be uninstalled
+        if availablePluginTypes.contains(where: { $0.identifier == identifier }) {
+            return false
+        }
+        // Only discovered plugins (from folders) can be uninstalled
+        return discoveredManifests.contains { $0.manifest.identifier == identifier }
     }
 }
