@@ -11,6 +11,7 @@ import WebKit
 
 @main
 struct tibokApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var appState = AppState()
     @AppStorage("appearanceMode") private var appearanceMode: String = AppearanceMode.system.rawValue
 
@@ -38,12 +39,8 @@ struct tibokApp: App {
     }
 
     var body: some Scene {
-        WindowGroup {
-            ContentView()
-                .environmentObject(appState)
-                .onOpenURL { url in
-                    appState.loadDocument(from: url)
-                }
+        WindowGroup(id: "main") {
+            MainWindowContent(appState: appState, windowTitle: windowTitle)
                 .onAppear {
                     applyAppearance()
                     // Defer plugin initialization to next run loop iteration
@@ -63,9 +60,10 @@ struct tibokApp: App {
                 .onChange(of: appearanceMode) { _, _ in
                     applyAppearance()
                 }
-                .navigationTitle(windowTitle)
         }
+        .handlesExternalEvents(matching: ["main"])
         .commands {
+            // File menu commands
             CommandGroup(replacing: .newItem) {
                 Button("New Document") {
                     appState.createNewDocument()
@@ -369,7 +367,18 @@ struct tibokApp: App {
                 .keyboardShortcut("l", modifiers: .command)
             }
 
-            // Add Find menu
+            // Window menu - add main window item
+            CommandGroup(after: .windowList) {
+                Divider()
+
+                Button("Main Window") {
+                    reopenMainWindow()
+                }
+                .keyboardShortcut("1", modifiers: [.command, .option])
+            }
+        }
+        .commands {
+            // Add Find menu (in separate .commands block to avoid 10-child limit)
             CommandMenu("Find") {
                 Button("Find…") {
                     performFind(.showFindPanel)
@@ -795,4 +804,79 @@ struct HelpWebView: NSViewRepresentable {
             decisionHandler(.allow)
         }
     }
+}
+
+// MARK: - Main Window Content
+
+/// Wrapper view that captures the openWindow environment action for later use
+struct MainWindowContent: View {
+    @ObservedObject var appState: AppState
+    let windowTitle: String
+    @Environment(\.openWindow) private var openWindow
+
+    var body: some View {
+        ContentView()
+            .environmentObject(appState)
+            .onOpenURL { url in
+                appState.loadDocument(from: url)
+            }
+            .navigationTitle(windowTitle)
+            .onAppear {
+                // Store the openWindow action for use outside SwiftUI
+                WindowAccessor.shared.openWindow = { id in
+                    openWindow(id: id)
+                }
+            }
+    }
+}
+
+// MARK: - App Delegate
+
+class AppDelegate: NSObject, NSApplicationDelegate {
+    /// Called when the user clicks the dock icon while the app is running
+    /// This handles the case where all windows are closed but the app is still active
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        if !flag {
+            // No visible windows - reopen the main window
+            reopenMainWindow()
+        }
+        return true
+    }
+}
+
+// MARK: - Window Management
+
+/// Reopens the main application window
+/// SwiftUI's WindowGroup automatically manages a single main window.
+/// When all windows are closed, we can trigger a new window by using openWindow or
+/// by activating the app which causes WindowGroup to create a new window instance.
+func reopenMainWindow() {
+    // First, check if there's an existing window we can just bring forward
+    if let existingWindow = NSApp.windows.first(where: { window in
+        // Find the main content window (not settings, help, or panels)
+        window.isVisible && window.title.contains("tibok")
+    }) {
+        existingWindow.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+        return
+    }
+
+    // If no main window exists, we need to trigger WindowGroup to create one
+    // Use the openWindow action stored by WindowAccessor
+    if let openWindow = WindowAccessor.shared.openWindow {
+        openWindow("main")
+        NSApp.activate(ignoringOtherApps: true)
+        return
+    }
+
+    // Fallback: Activate the app which often triggers window creation
+    NSApp.activate(ignoringOtherApps: true)
+}
+
+// MARK: - Window Accessor
+
+/// Stores SwiftUI Environment actions for use outside of SwiftUI views
+class WindowAccessor {
+    static let shared = WindowAccessor()
+    var openWindow: ((_ id: String) -> Void)?
 }
