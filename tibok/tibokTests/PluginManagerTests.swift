@@ -6,6 +6,7 @@
 //
 
 import Testing
+import Foundation
 @testable import tibok
 
 @Suite("Plugin Manager Tests")
@@ -63,8 +64,8 @@ struct PluginManagerTests {
         let plugin = MockPlugin()
         let appState = AppState()
         let context = PluginContext(
-            slashCommandRegistry: SlashCommandRegistry(),
-            commandRegistry: appState.commandRegistry,
+            slashCommandService: SlashCommandService.shared,
+            commandRegistry: CommandService.shared,
             appState: appState
         )
 
@@ -139,9 +140,14 @@ struct PluginManagerTests {
         // Should include all available plugins
         #expect(allInfo.count == manager.availablePluginTypes.count)
 
-        // Each entry should have type and loaded status
+        // Each entry should have type or manifest, and loaded status
         for entry in allInfo {
-            #expect(entry.type.identifier.isEmpty == false)
+            // Built-in plugins have type, discovered plugins have manifest
+            if let type = entry.type {
+                #expect(type.identifier.isEmpty == false)
+            } else if let manifest = entry.manifest {
+                #expect(manifest.identifier.isEmpty == false)
+            }
             // isLoaded is a boolean, just verify it exists
             _ = entry.isLoaded
         }

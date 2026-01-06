@@ -3,12 +3,13 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 63;
 	objects = {
 
 /* Begin PBXBuildFile section */
 		01AA9649170C98A133B0D494 /* Frontmatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A45AD517F1F9959BE32288AC /* Frontmatter.swift */; };
-		119A1904C05393D6CF418195 /* GitService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03A4A20D734230B360E5F310 /* GitService.swift */; };
+		08E1151D2F09C1B800715862 /* static-libgit2 in Frameworks */ = {isa = PBXBuildFile; productRef = C3D4E5F6A7B8901234567891 /* static-libgit2 */; };
+		08E1151E2F09C1B800715862 /* static-libgit2 in Frameworks */ = {isa = PBXBuildFile; productRef = C3D4E5F6A7B8901234567892 /* static-libgit2 */; };
 		16F60EDE4CE6E295FFF23067 /* CommandService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0E5DA78D0CA3123C96C226E /* CommandService.swift */; };
 		195D049CF3EA8771778B86D5 /* GitPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04D5D249B1E0D9522DC31B13 /* GitPanelView.swift */; };
 		21564FF2A727AF1048B4CB8B /* FolderScanCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF213603A438FA52BA947AA0 /* FolderScanCache.swift */; };
@@ -46,15 +47,28 @@
 		964ECD1CE6F64E0B80D6EFDF /* Document.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32B40D864EBAC48D07EE4F8F /* Document.swift */; };
 		989D1E0A0F8AB63E24776431 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0971E59469B05C2C91E6F602 /* SidebarView.swift */; };
 		A0C1A349130E3823E43D6E6F /* Markdown in Frameworks */ = {isa = PBXBuildFile; productRef = B6288F92F575FED62ABC517F /* Markdown */; };
+		A1B2C3D4E5F6789012345679 /* LibGit2Service.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6789012345678 /* LibGit2Service.swift */; };
 		A21A4C545D2C072E447CC36D /* GitServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4546A80E332B083FB060FBB7 /* GitServiceTests.swift */; };
 		A2FF55881873ECB3DC905BE0 /* WebhookConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B1AA243704EDDCFB8D0FD6E /* WebhookConfig.swift */; };
 		A58038DE8BF451C6DDF57759 /* PluginSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E299168D4FA7A93C215ADDA5 /* PluginSettingsView.swift */; };
 		AB6B6CF4B2B5658FBEDC30E0 /* SyntaxHighlighter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F847E52B160ADBAF688C0EF /* SyntaxHighlighter.swift */; };
 		AD0D39C5F2CB843172B2FA3E /* PreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB59E47AD0065CA436508F9B /* PreviewView.swift */; };
+		B1C2D3E4F5A67890ABCDEF13 /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C2D3E4F5A67890ABCDEF12 /* WelcomeView.swift */; };
 		B274A9375E2968F34809AF22 /* EditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2FD193BFC908EAE01AC7309 /* EditorView.swift */; };
 		B484D880C67F87186B1A3434 /* LogService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9C91904AB2D98448618E6A0 /* LogService.swift */; };
 		B4863E8D519A805BDCDD2950 /* PluginLoadingError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E1B4A6ECE718FF5048DB9CD /* PluginLoadingError.swift */; };
 		B8A4AF9C33BE8D0F23CC04F0 /* WorkspaceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98EB81A7AE13FB33CB6E0316 /* WorkspaceService.swift */; };
+		BB1111111111111111111111 /* PluginPermission.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1111111111111111111111 /* PluginPermission.swift */; };
+		BB2222222222222222222222 /* PermissionValidator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA2222222222222222222222 /* PermissionValidator.swift */; };
+		BB3333333333333333333333 /* RegistryClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA3333333333333333333333 /* RegistryClient.swift */; };
+		BB4444444444444444444444 /* PluginRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA4444444444444444444444 /* PluginRegistry.swift */; };
+		BB5555555555555555555555 /* PluginDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA5555555555555555555555 /* PluginDownloader.swift */; };
+		BB6666666666666666666666 /* ScriptPluginRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA6666666666666666666666 /* ScriptPluginRuntime.swift */; };
+		BB7777777777777777777777 /* ScriptPluginLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA7777777777777777777777 /* ScriptPluginLoader.swift */; };
+		BB8888888888888888888888 /* SignatureVerifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8888888888888888888888 /* SignatureVerifier.swift */; };
+		BB9999999999999999999999 /* PluginMarketplaceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA9999999999999999999999 /* PluginMarketplaceView.swift */; };
+		CCCCCCCCCCCCCCCCCCCCCCCC /* PermissionApprovalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDDDDDDDDDDDDDDDDDDDDDDD /* PermissionApprovalView.swift */; };
+		BBBBBBBBBBBBBBBBBBBBBBBB /* EditorService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAAAAAAAAAAAAAAAAAAA /* EditorService.swift */; };
 		BCC486C8BC54E924EA4EA846 /* SlashCommandRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76BB744E67609F3D510C4CDC /* SlashCommandRegistry.swift */; };
 		BD6FBFF24EED4BF58ED1B502 /* PluginManifest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C7459518357C61AA685A141 /* PluginManifest.swift */; };
 		C071307DBE45264495391C4B /* PluginInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2C55F2B525AC58C26423EBB /* PluginInstaller.swift */; };
@@ -93,7 +107,6 @@
 		01C4E9AE9B11934ADF3EECDF /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		02CB28301D7474A6011A8E50 /* WordPressSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordPressSettingsView.swift; sourceTree = "<group>"; };
 		0372580A357BD6A52AF35D12 /* ExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportService.swift; sourceTree = "<group>"; };
-		03A4A20D734230B360E5F310 /* GitService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitService.swift; sourceTree = "<group>"; };
 		04D5D249B1E0D9522DC31B13 /* GitPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitPanelView.swift; sourceTree = "<group>"; };
 		06792B6CD6215288F21345CC /* PluginManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginManagerTests.swift; sourceTree = "<group>"; };
 		0858B62C5673C0F28C742492 /* KeyboardShortcutsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardShortcutsTests.swift; sourceTree = "<group>"; };
@@ -129,15 +142,28 @@
 		981FE2880B4272514D49D4E1 /* GitHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitHistoryView.swift; sourceTree = "<group>"; };
 		98EB81A7AE13FB33CB6E0316 /* WorkspaceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceService.swift; sourceTree = "<group>"; };
 		A0053BC9E598BA18BE96E730 /* GitPanelManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitPanelManager.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6789012345678 /* LibGit2Service.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibGit2Service.swift; sourceTree = "<group>"; };
 		A30F2CF9641BCB1CF72756B1 /* FileOperationsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileOperationsService.swift; sourceTree = "<group>"; };
 		A45AD517F1F9959BE32288AC /* Frontmatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Frontmatter.swift; sourceTree = "<group>"; };
 		A46F7DB71EFAD51E6F68887F /* PluginStateManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginStateManager.swift; sourceTree = "<group>"; };
 		A4FF6DD99B2BB0D5BAE645EA /* DocumentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentTests.swift; sourceTree = "<group>"; };
+		AA1111111111111111111111 /* PluginPermission.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginPermission.swift; sourceTree = "<group>"; };
+		AA2222222222222222222222 /* PermissionValidator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionValidator.swift; sourceTree = "<group>"; };
+		AA3333333333333333333333 /* RegistryClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegistryClient.swift; sourceTree = "<group>"; };
+		AA4444444444444444444444 /* PluginRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginRegistry.swift; sourceTree = "<group>"; };
+		AA5555555555555555555555 /* PluginDownloader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginDownloader.swift; sourceTree = "<group>"; };
+		AA6666666666666666666666 /* ScriptPluginRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptPluginRuntime.swift; sourceTree = "<group>"; };
+		AA7777777777777777777777 /* ScriptPluginLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptPluginLoader.swift; sourceTree = "<group>"; };
+		AA8888888888888888888888 /* SignatureVerifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignatureVerifier.swift; sourceTree = "<group>"; };
+		AA9999999999999999999999 /* PluginMarketplaceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginMarketplaceView.swift; sourceTree = "<group>"; };
+		DDDDDDDDDDDDDDDDDDDDDDDD /* PermissionApprovalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionApprovalView.swift; sourceTree = "<group>"; };
 		AA9F5C74D8D8BCE8F4833EE8 /* WordPressExportPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordPressExportPlugin.swift; sourceTree = "<group>"; };
+		AAAAAAAAAAAAAAAAAAAAAAAA /* EditorService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorService.swift; sourceTree = "<group>"; };
 		AB59E47AD0065CA436508F9B /* PreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewView.swift; sourceTree = "<group>"; };
 		AF44F644D4838B28FE57CE3C /* WordPressExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordPressExporter.swift; sourceTree = "<group>"; };
 		B0156E7722ABE9C05DF1F731 /* KeychainHelperTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainHelperTests.swift; sourceTree = "<group>"; };
 		B0E5DA78D0CA3123C96C226E /* CommandService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandService.swift; sourceTree = "<group>"; };
+		B1C2D3E4F5A67890ABCDEF12 /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
 		B474561C00E71F6745A5E2EC /* WebhookService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebhookService.swift; sourceTree = "<group>"; };
 		B4D6B46740BE8D48B0AE4D44 /* ServiceLayerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceLayerTests.swift; sourceTree = "<group>"; };
 		BA184191BD7CF2351917BF09 /* PluginManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginManager.swift; sourceTree = "<group>"; };
@@ -165,6 +191,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				08E1151D2F09C1B800715862 /* static-libgit2 in Frameworks */,
 				44C9EC0A5F1705F5DDA39DB4 /* Markdown in Frameworks */,
 				C111723A48C278B80C849A4F /* Highlightr in Frameworks */,
 			);
@@ -174,6 +201,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				08E1151E2F09C1B800715862 /* static-libgit2 in Frameworks */,
 				A0C1A349130E3823E43D6E6F /* Markdown in Frameworks */,
 				4736DA30C7F3F7DC0E78C8D8 /* Highlightr in Frameworks */,
 			);
@@ -231,6 +259,8 @@
 				10F3421D68E47CDF840F9C3E /* GitDiffView.swift */,
 				981FE2880B4272514D49D4E1 /* GitHistoryView.swift */,
 				04D5D249B1E0D9522DC31B13 /* GitPanelView.swift */,
+				DDDDDDDDDDDDDDDDDDDDDDDD /* PermissionApprovalView.swift */,
+				AA9999999999999999999999 /* PluginMarketplaceView.swift */,
 				E299168D4FA7A93C215ADDA5 /* PluginSettingsView.swift */,
 				AB59E47AD0065CA436508F9B /* PreviewView.swift */,
 				01C4E9AE9B11934ADF3EECDF /* SettingsView.swift */,
@@ -238,6 +268,7 @@
 				88B2DBA7D9522CD29903334F /* StatusBarView.swift */,
 				202A124662CA36EAB065C707 /* TabBarView.swift */,
 				FCD5C5034F2BC8E6E35DA54E /* WebhookSettingsView.swift */,
+				B1C2D3E4F5A67890ABCDEF12 /* WelcomeView.swift */,
 				02CB28301D7474A6011A8E50 /* WordPressSettingsView.swift */,
 			);
 			path = Views;
@@ -266,11 +297,12 @@
 			children = (
 				B0E5DA78D0CA3123C96C226E /* CommandService.swift */,
 				85EE24A649BD5C78AB3264E8 /* DocumentManager.swift */,
+				AAAAAAAAAAAAAAAAAAAAAAAA /* EditorService.swift */,
 				0372580A357BD6A52AF35D12 /* ExportService.swift */,
 				A30F2CF9641BCB1CF72756B1 /* FileOperationsService.swift */,
 				FF213603A438FA52BA947AA0 /* FolderScanCache.swift */,
 				257E04A65FE2964255AFD71A /* FrontmatterCacheService.swift */,
-				03A4A20D734230B360E5F310 /* GitService.swift */,
+				A1B2C3D4E5F6789012345678 /* LibGit2Service.swift */,
 				41241BF1D6E79CF0AF4731CA /* ImageUploadService.swift */,
 				D9C91904AB2D98448618E6A0 /* LogService.swift */,
 				96E6E1A7880A8366FCCB091D /* MarkdownRenderer.swift */,
@@ -293,6 +325,42 @@
 				AA9F5C74D8D8BCE8F4833EE8 /* WordPressExportPlugin.swift */,
 			);
 			path = Builtin;
+			sourceTree = "<group>";
+		};
+		CC1111111111111111111111 /* Permissions */ = {
+			isa = PBXGroup;
+			children = (
+				AA1111111111111111111111 /* PluginPermission.swift */,
+				AA2222222222222222222222 /* PermissionValidator.swift */,
+			);
+			path = Permissions;
+			sourceTree = "<group>";
+		};
+		CC2222222222222222222222 /* Registry */ = {
+			isa = PBXGroup;
+			children = (
+				AA5555555555555555555555 /* PluginDownloader.swift */,
+				AA4444444444444444444444 /* PluginRegistry.swift */,
+				AA3333333333333333333333 /* RegistryClient.swift */,
+			);
+			path = Registry;
+			sourceTree = "<group>";
+		};
+		CC3333333333333333333333 /* ScriptRuntime */ = {
+			isa = PBXGroup;
+			children = (
+				AA7777777777777777777777 /* ScriptPluginLoader.swift */,
+				AA6666666666666666666666 /* ScriptPluginRuntime.swift */,
+			);
+			path = ScriptRuntime;
+			sourceTree = "<group>";
+		};
+		CC4444444444444444444444 /* Signature */ = {
+			isa = PBXGroup;
+			children = (
+				AA8888888888888888888888 /* SignatureVerifier.swift */,
+			);
+			path = Signature;
 			sourceTree = "<group>";
 		};
 		D0B7EE2D9565E09F37D7E3DB /* tibok */ = {
@@ -341,6 +409,10 @@
 				76BB744E67609F3D510C4CDC /* SlashCommandRegistry.swift */,
 				F81F612F41D0E63505032CCA /* TibokPlugin.swift */,
 				C6A228CFBAEBF6F88F19607A /* Builtin */,
+				CC1111111111111111111111 /* Permissions */,
+				CC2222222222222222222222 /* Registry */,
+				CC3333333333333333333333 /* ScriptRuntime */,
+				CC4444444444444444444444 /* Signature */,
 			);
 			path = Plugins;
 			sourceTree = "<group>";
@@ -364,6 +436,7 @@
 			packageProductDependencies = (
 				666A9D51EA6E192D8030B9F9 /* Markdown */,
 				FB2CC699B91638269396375D /* Highlightr */,
+				C3D4E5F6A7B8901234567891 /* static-libgit2 */,
 			);
 			productName = tibok;
 			productReference = 7C372C97D15D4CF705635CFB /* tibok.app */;
@@ -385,6 +458,7 @@
 			packageProductDependencies = (
 				B6288F92F575FED62ABC517F /* Markdown */,
 				0751CEB0515C26183F3289D1 /* Highlightr */,
+				C3D4E5F6A7B8901234567892 /* static-libgit2 */,
 			);
 			productName = tibokTests;
 			productReference = 318943FC0A2CA8C38CCFA82F /* tibokTests.xctest */;
@@ -397,7 +471,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 1430;
+				LastUpgradeCheck = 2620;
 				TargetAttributes = {
 					2BACD867A8B2C9D0CA47A617 = {
 						DevelopmentTeam = F2PFRMGC9V;
@@ -422,8 +496,8 @@
 			packageReferences = (
 				C2EBDC3020034DB9974D9D70 /* XCRemoteSwiftPackageReference "Highlightr" */,
 				212E4309329B0A2992001F4B /* XCRemoteSwiftPackageReference "swift-markdown" */,
+				C3D4E5F6A7B8901234567890 /* XCRemoteSwiftPackageReference "static-libgit2" */,
 			);
-			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -469,7 +543,8 @@
 				7FC5F2E076648E7EF7342CCE /* GitModels.swift in Sources */,
 				42049BB86E68F64C3E7FE110 /* GitPanelManager.swift in Sources */,
 				195D049CF3EA8771778B86D5 /* GitPanelView.swift in Sources */,
-				119A1904C05393D6CF418195 /* GitService.swift in Sources */,
+				A1B2C3D4E5F6789012345679 /* LibGit2Service.swift in Sources */,
+				B1C2D3E4F5A67890ABCDEF13 /* WelcomeView.swift in Sources */,
 				48F435885AFCC6DE8373453D /* ImageUploadService.swift in Sources */,
 				80FFE7D29167C29E91E29AD4 /* KeyboardShortcuts.swift in Sources */,
 				DDCA4BFC2B5E2400E722098F /* KeychainHelper.swift in Sources */,
@@ -481,6 +556,7 @@
 				B4863E8D519A805BDCDD2950 /* PluginLoadingError.swift in Sources */,
 				5D4AEB8909DF1B656B4A18BD /* PluginManager.swift in Sources */,
 				BD6FBFF24EED4BF58ED1B502 /* PluginManifest.swift in Sources */,
+				CCCCCCCCCCCCCCCCCCCCCCCC /* PermissionApprovalView.swift in Sources */,
 				A58038DE8BF451C6DDF57759 /* PluginSettingsView.swift in Sources */,
 				EAF5AD81F0C4684CB2A06AFF /* PluginStateManager.swift in Sources */,
 				AD0D39C5F2CB843172B2FA3E /* PreviewView.swift in Sources */,
@@ -502,6 +578,16 @@
 				E4FE6172A989A3992D0ED3C4 /* WorkspaceMonitor.swift in Sources */,
 				B8A4AF9C33BE8D0F23CC04F0 /* WorkspaceService.swift in Sources */,
 				DBDDCE5AD045625C90EA6E17 /* tibokApp.swift in Sources */,
+				BB1111111111111111111111 /* PluginPermission.swift in Sources */,
+				BB2222222222222222222222 /* PermissionValidator.swift in Sources */,
+				BB3333333333333333333333 /* RegistryClient.swift in Sources */,
+				BB4444444444444444444444 /* PluginRegistry.swift in Sources */,
+				BB5555555555555555555555 /* PluginDownloader.swift in Sources */,
+				BB6666666666666666666666 /* ScriptPluginRuntime.swift in Sources */,
+				BB7777777777777777777777 /* ScriptPluginLoader.swift in Sources */,
+				BB8888888888888888888888 /* SignatureVerifier.swift in Sources */,
+				BB9999999999999999999999 /* PluginMarketplaceView.swift in Sources */,
+				BBBBBBBBBBBBBBBBBBBBBBBB /* EditorService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -539,8 +625,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = "tibok/Resources/tibok-dmg.entitlements";
+				CODE_SIGN_ENTITLEMENTS = "tibok/Resources/tibok-appstore.entitlements";
 				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				ENABLE_USER_SELECTED_FILES = readwrite;
 				EXECUTABLE_NAME = tibok;
 				INFOPLIST_FILE = tibok/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -549,6 +639,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				PRODUCT_BUNDLE_IDENTIFIER = app.tibok.editor;
+				REGISTER_APP_GROUPS = YES;
 				SDKROOT = macosx;
 			};
 			name = Release;
@@ -589,10 +680,12 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = F2PFRMGC9V;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -606,6 +699,7 @@
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.9;
@@ -648,10 +742,12 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = F2PFRMGC9V;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -672,6 +768,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.9;
@@ -683,6 +780,8 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -700,6 +799,8 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -716,8 +817,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = "tibok/Resources/tibok-dmg.entitlements";
+				CODE_SIGN_ENTITLEMENTS = "tibok/Resources/tibok-appstore.entitlements";
 				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				ENABLE_USER_SELECTED_FILES = readwrite;
 				EXECUTABLE_NAME = tibok;
 				INFOPLIST_FILE = tibok/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -726,6 +831,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				PRODUCT_BUNDLE_IDENTIFIER = app.tibok.editor;
+				REGISTER_APP_GROUPS = YES;
 				SDKROOT = macosx;
 			};
 			name = Debug;
@@ -779,6 +885,14 @@
 				minimumVersion = 2.1.0;
 			};
 		};
+		C3D4E5F6A7B8901234567890 /* XCRemoteSwiftPackageReference "static-libgit2" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/bdewey/static-libgit2.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.5.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -796,6 +910,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 212E4309329B0A2992001F4B /* XCRemoteSwiftPackageReference "swift-markdown" */;
 			productName = Markdown;
+		};
+		C3D4E5F6A7B8901234567891 /* static-libgit2 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C3D4E5F6A7B8901234567890 /* XCRemoteSwiftPackageReference "static-libgit2" */;
+			productName = "static-libgit2";
+		};
+		C3D4E5F6A7B8901234567892 /* static-libgit2 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C3D4E5F6A7B8901234567890 /* XCRemoteSwiftPackageReference "static-libgit2" */;
+			productName = "static-libgit2";
 		};
 		FB2CC699B91638269396375D /* Highlightr */ = {
 			isa = XCSwiftPackageProductDependency;

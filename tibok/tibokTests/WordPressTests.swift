@@ -10,6 +10,7 @@ import XCTest
 import Foundation
 @testable import tibok
 
+@MainActor
 final class WordPressTests: XCTestCase {
 
     var tempDir: URL!
@@ -140,12 +141,14 @@ final class WordPressTests: XCTestCase {
     // MARK: - Document Model Tests
 
     func testWordPressModel_PostAttributes() {
-        let post = WordPressPost(
+        let post = WordPressPostRequest(
             title: "Test Post",
             content: "Test Content",
             status: "draft",
-            categories: [],
-            excerpt: "Test excerpt"
+            categories: nil,
+            excerpt: "Test excerpt",
+            tags: nil,
+            author: nil
         )
 
         XCTAssertEqual(post.title, "Test Post")
@@ -158,29 +161,33 @@ final class WordPressTests: XCTestCase {
         let statuses = ["draft", "publish", "pending", "private"]
 
         for status in statuses {
-            let post = WordPressPost(
+            let post = WordPressPostRequest(
                 title: "Test",
                 content: "Content",
                 status: status,
-                categories: [],
-                excerpt: nil
+                categories: nil,
+                excerpt: nil,
+                tags: nil,
+                author: nil
             )
             XCTAssertEqual(post.status, status)
         }
     }
 
     func testWordPressModel_PostWithCategories() {
-        let categories = ["Tech", "iOS", "Development"]
-        let post = WordPressPost(
+        let categories = [1, 2, 3]  // Category IDs
+        let post = WordPressPostRequest(
             title: "Test Post",
             content: "Content",
             status: "publish",
             categories: categories,
-            excerpt: nil
+            excerpt: nil,
+            tags: nil,
+            author: nil
         )
 
-        XCTAssertEqual(post.categories.count, 3)
-        XCTAssert(post.categories.contains("Tech"))
+        XCTAssertEqual(post.categories?.count, 3)
+        XCTAssert(post.categories?.contains(1) ?? false)
     }
 
     // MARK: - Keychain Integration Tests
@@ -244,17 +251,19 @@ final class WordPressTests: XCTestCase {
     // MARK: - Integration Tests
 
     func testWordPressExporter_CreatePostObject_FromDocument() {
-        let post = WordPressPost(
+        let post = WordPressPostRequest(
             title: "Integration Test",
             content: "Test content with **markdown**",
             status: "draft",
-            categories: ["Testing"],
-            excerpt: "Brief description"
+            categories: [1],  // Category ID
+            excerpt: "Brief description",
+            tags: nil,
+            author: nil
         )
 
         XCTAssertEqual(post.title, "Integration Test")
         XCTAssertTrue(post.content.contains("**markdown**"))
-        XCTAssertEqual(post.categories.count, 1)
+        XCTAssertEqual(post.categories?.count, 1)
     }
 
     func testWordPressExporter_PreparesAuthHeader() {
@@ -295,12 +304,14 @@ final class WordPressTests: XCTestCase {
     // MARK: - Data Serialization Tests
 
     func testWordPressExporter_SerializesPostToJSON() {
-        let post = WordPressPost(
+        let post = WordPressPostRequest(
             title: "Test",
             content: "Content",
             status: "draft",
-            categories: ["Tech"],
-            excerpt: nil
+            categories: [1],  // Category ID
+            excerpt: nil,
+            tags: nil,
+            author: nil
         )
 
         // Verify the post can be encoded to JSON
@@ -324,7 +335,6 @@ final class WordPressTests: XCTestCase {
         """
 
         let jsonData = jsonString.data(using: .utf8) ?? Data()
-        let decoder = JSONDecoder()
 
         // Verify JSON can be decoded (basic test)
         XCTAssertFalse(jsonData.isEmpty)

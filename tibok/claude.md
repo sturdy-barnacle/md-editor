@@ -45,7 +45,7 @@ git push origin apple-store-distro
 # - Notify when complete
 ```
 
-Monitor builds at: https://appstoreconnect.apple.com → Xcode Cloud → Builds
+Monitor builds at: https://appstoreconnect.apple.com → Xcode Cloud → Builds .
 
 ### GitHub Release Distribution (Direct Download DMG)
 
@@ -151,19 +151,28 @@ tibok/
 ### Sandbox Configuration (CRITICAL)
 
 **DMG Distribution**: Sandbox DISABLED (`com.apple.security.app-sandbox = false`)
-- Required for git subprocess execution (`/usr/bin/git`)
-- App sandbox blocks Process() calls to external binaries
-- Hardened runtime still enabled for notarization
+- Hardened runtime enabled for notarization
+- Uses LibGit2Service (same as App Store)
 
 **App Store Distribution**: Sandbox ENABLED (`com.apple.security.app-sandbox = true`)
 - Required by Mac App Store guidelines
 - Uses security-scoped bookmarks for .git access
-- Git operations may have limitations
+- Full git functionality via LibGit2Service
 
-**Why this matters:**
-- Sandboxed apps cannot execute `/usr/bin/git` - will show "xcrun: error: cannot be used within an App Sandbox"
-- DMG users expect full git functionality, so sandbox must be disabled
-- App Store requires sandbox, so git features may be limited or require workarounds
+**Git Implementation: LibGit2Service**
+
+As of January 2026, all git operations use `LibGit2Service.swift` which wraps the libgit2 C library (via `static-libgit2` Swift package). This provides:
+- **Full sandbox compatibility**: libgit2 compiles INTO the app binary, no subprocess calls needed
+- **Cross-platform operations**: commit, push, pull, fetch, branch, diff, history all work in sandbox
+- **No external dependencies**: Works without `/usr/bin/git` installed
+
+The original `GitService.swift` (subprocess-based) was removed because:
+- Sandboxed apps cannot execute `/usr/bin/git` - shows "xcrun: error: cannot be used within an App Sandbox"
+- Process() calls to external binaries are blocked by App Sandbox
+
+**Key files:**
+- `tibok/Services/LibGit2Service.swift` - libgit2 wrapper (~1100 lines)
+- `Package.swift` - includes `static-libgit2` dependency
 
 ### Important Build Settings
 

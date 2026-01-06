@@ -396,6 +396,9 @@ struct FindableTextEditor: NSViewRepresentable {
         context.coordinator.focusModeEnabled = focusMode
         slashState.textView = textView
 
+        // Register with EditorService for plugin access
+        EditorService.shared.register(textView)
+
         // Wire up document URL closure for image handling
         textView.getDocumentURL = documentURL
         textView.showToast = showToast
@@ -500,6 +503,13 @@ struct FindableTextEditor: NSViewRepresentable {
             if syntaxHighlighting, let textStorage = textView.textStorage {
                 SyntaxHighlighter.highlight(textStorage, baseFont: newFont, paragraphStyle: paragraphStyle)
             }
+        }
+    }
+
+    static func dismantleNSView(_ scrollView: NSScrollView, coordinator: Coordinator) {
+        // Unregister from EditorService when view is dismantled
+        if let textView = scrollView.documentView as? NSTextView {
+            EditorService.shared.unregister(textView)
         }
     }
 
@@ -848,6 +858,24 @@ struct FindableTextEditor: NSViewRepresentable {
                 }
                 handleFrontmatterCommand(insertText)
                 SlashCommandService.syncShared.recordUsage(command.id)
+                return
+            }
+
+            // Handle dynamic plugin commands (JavaScript execute functions)
+            if insertText.hasPrefix("{{DYNAMIC:") && insertText.hasSuffix("}}") {
+                dismissSlashMenu()
+                // Remove the slash command text first
+                if textView.shouldChangeText(in: range, replacementString: "") {
+                    textView.replaceCharacters(in: range, with: "")
+                    textView.didChangeText()
+                }
+                // Extract the command ID: {{DYNAMIC:pluginId:commandName}}
+                let commandId = String(insertText.dropFirst(10).dropLast(2))
+                let commandIdToRecord = command.id
+                Task { @MainActor in
+                    ScriptPluginLoader.shared.executeSlashCommand(commandId)
+                    SlashCommandService.syncShared.recordUsage(commandIdToRecord)
+                }
                 return
             }
 

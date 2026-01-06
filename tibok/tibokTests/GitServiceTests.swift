@@ -9,6 +9,7 @@
 import XCTest
 @testable import tibok
 
+@MainActor
 final class GitServiceTests: XCTestCase {
 
     var gitService: GitService!

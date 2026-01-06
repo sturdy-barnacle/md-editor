@@ -1,0 +1,22 @@
+{
+  "identifier": "com.example.writing-tools",
+  "name": "Writing Tools",
+  "version": "1.0.0",
+  "description": "Helpful tools for writers: word count, text transforms, and quick inserts",
+  "icon": "pencil.and.outline",
+  "author": "Your Name",
+  "plugin_type": "script",
+  "permissions": [
+    "slash-commands",
+    "command-palette",
+    "read-current-document",
+    "insert-text",
+    "read-selection"
+  ],
+  "entry_point": {
+    "script": "main.js"
+  },
+  "homepage": "https://github.com/yourusername/writing-tools",
+  "license": "MIT",
+  "keywords": ["writing", "productivity", "word-count", "transform"]
+}

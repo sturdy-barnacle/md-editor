@@ -26,6 +26,7 @@ struct ContentView: View {
     @State private var preFocusSidebarVisible = true
     @State private var preFocusPreviewVisible = true
 
+
     private var windowTitle: String {
         let docName = appState.currentDocument.fileURL?.lastPathComponent ?? "Untitled.md"
         let modified = appState.currentDocument.isModified ? " •" : ""
@@ -113,9 +114,21 @@ struct ContentView: View {
                     }
                 }
             }
+
         }
         .sheet(isPresented: $showCommandPalette) {
             CommandPaletteSheet(isPresented: $showCommandPalette)
+        }
+        .sheet(isPresented: $appState.showWelcomeSheet) {
+            WelcomeView(
+                onDismiss: {
+                    appState.showWelcomeSheet = false
+                },
+                onOpenFolder: {
+                    appState.openWorkspace()
+                }
+            )
+            .environmentObject(appState)
         }
         .onReceive(NotificationCenter.default.publisher(for: .showCommandPalette)) { _ in
             showCommandPalette = true
@@ -726,8 +739,8 @@ struct CommandPaletteSheet: View {
         for command in filteredCommands {
             groups[command.category, default: []].append(command)
         }
-        // Sort by category order
-        let categoryOrder: [CommandCategory] = [.file, .edit, .view, .export, .git]
+        // Sort by category order (include all categories)
+        let categoryOrder: [CommandCategory] = [.file, .edit, .view, .insert, .export, .git, .general]
         return categoryOrder.compactMap { category in
             if let commands = groups[category], !commands.isEmpty {
                 return (category, commands)

@@ -92,7 +92,7 @@ struct GitHistoryView: View {
 
     private func loadCommits() {
         Task {
-            let commitList = GitService.shared.getCommitLog(for: repoURL, limit: 100)
+            let commitList = LibGit2Service.shared.getCommitLog(for: repoURL, limit: 100)
 
             await MainActor.run {
                 if commitList.isEmpty {
@@ -237,8 +237,8 @@ struct GitCommitDetailView: View {
 
     private func loadCommitDetail() {
         Task {
-            let fileList = GitService.shared.getCommitFiles(hash: commit.hash, in: repoURL)
-            let diff = GitService.shared.getCommitDiff(hash: commit.hash, in: repoURL)
+            let fileList = LibGit2Service.shared.getCommitFiles(hash: commit.hash, in: repoURL)
+            let diff = LibGit2Service.shared.getCommitDiff(hash: commit.hash, in: repoURL)
 
             await MainActor.run {
                 files = fileList
