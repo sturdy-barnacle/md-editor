@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		01AA9649170C98A133B0D494 /* Frontmatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A45AD517F1F9959BE32288AC /* Frontmatter.swift */; };
+		PRIVACY22222222222222222 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = PRIVACY11111111111111111 /* PrivacyInfo.xcprivacy */; };
 		08E1151D2F09C1B800715862 /* static-libgit2 in Frameworks */ = {isa = PBXBuildFile; productRef = C3D4E5F6A7B8901234567891 /* static-libgit2 */; };
 		08E1151E2F09C1B800715862 /* static-libgit2 in Frameworks */ = {isa = PBXBuildFile; productRef = C3D4E5F6A7B8901234567892 /* static-libgit2 */; };
 		16F60EDE4CE6E295FFF23067 /* CommandService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0E5DA78D0CA3123C96C226E /* CommandService.swift */; };
@@ -184,6 +185,7 @@
 		FC14559B2BB3A58BDF5546CA /* FolderScanCacheTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderScanCacheTests.swift; sourceTree = "<group>"; };
 		FCD5C5034F2BC8E6E35DA54E /* WebhookSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebhookSettingsView.swift; sourceTree = "<group>"; };
 		FF213603A438FA52BA947AA0 /* FolderScanCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderScanCache.swift; sourceTree = "<group>"; };
+		PRIVACY11111111111111111 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -278,6 +280,7 @@
 			isa = PBXGroup;
 			children = (
 				E8CBC6EBE9EE37E4E032D61B /* Assets.xcassets */,
+				PRIVACY11111111111111111 /* PrivacyInfo.xcprivacy */,
 			);
 			name = Resources;
 			path = tibok/Resources;
@@ -513,6 +516,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4023395F79A02BA2CCB8B90F /* Assets.xcassets in Resources */,
+				PRIVACY22222222222222222 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
