@@ -1,9 +1,9 @@
 # tibok markdown editor
-
-<img style="float:right;" width="256" height="256" alt="tibok markdown editor app icon" src="https://github.com/user-attachments/assets/e3896bd3-594f-4dfd-bfdb-cbc07e505241" />
-
 A native macOS markdown editor built with SwiftUI for Apple Silicon. Fast, local-first, and extensible. 
 **Website:** [tibok.app](https://www.tibok.app)
+
+<a href="https://apps.apple.com/us/app/tibok-markdown-editor/id6756894454?mt=12&itscg=30200&itsct=apps_box_badge&mttnsubad=6756894454" style="display: inline-block;"><img src="https://toolbox.marketingtools.apple.com/api/v2/badges/download-on-the-app-store/black/en-us?releaseDate=1768176000" alt="Download on the App Store" style="width: 246px; height: 82px; vertical-align: middle; object-fit: contain;" /></a>
+    
 
 ## Features
 
@@ -24,7 +24,10 @@ A native macOS markdown editor built with SwiftUI for Apple Silicon. Fast, local
 
 ## Installation
 
-Coming soon to the App Store.
+### macOS App Store
+
+<a href="https://apps.apple.com/us/app/tibok-markdown-editor/id6756894454?mt=12&itscg=30200&itsct=apps_box_badge&mttnsubad=6756894454" style="display: inline-block;"><img src="https://toolbox.marketingtools.apple.com/api/v2/badges/download-on-the-app-store/black/en-us?releaseDate=1768176000" alt="Download on the App Store" style="width: 246px; height: 82px; vertical-align: middle; object-fit: contain;" /></a>
+    
 
 ### Download the latest release here on GitHub
 
