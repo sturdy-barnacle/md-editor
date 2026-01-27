@@ -170,18 +170,56 @@ The Git menu provides access to all Git operations:
 
 ## How It Works
 
-tibok uses your system's Git installation (`/usr/bin/git`) to execute commands. This means:
+tibok uses libgit2 for native Git operations. This means:
 
 - **Authentication**: Uses your existing SSH keys and credentials
 - **Configuration**: Respects your `.gitconfig` settings
 - **Compatibility**: Works with any Git remote (GitHub, GitLab, Bitbucket, etc.)
+
+### SSH Authentication
+
+For SSH remotes (git@github.com:user/repo.git), tibok supports multiple authentication methods:
+
+1. **SSH Agent** - First tries to use keys from ssh-agent
+2. **Direct Keys** - Falls back to reading keys from `~/.ssh/` directory
+
+Supported key types (in order of preference):
+- `~/.ssh/id_ed25519` (Ed25519 - recommended)
+- `~/.ssh/id_rsa` (RSA - most common)
+- `~/.ssh/id_ecdsa` (ECDSA)
+- `~/.ssh/id_dsa` (DSA - legacy)
+
+**Note**: If your SSH key has a passphrase, you may need to add it to ssh-agent first:
+```bash
+ssh-add ~/.ssh/id_rsa
+```
 
 If `git push` works in Terminal, it will work in tibok.
 
 ## Requirements
 
 - Git must be installed on your system (included with Xcode Command Line Tools)
-- For push/pull: Git credentials configured (SSH keys or credential helper)
+- For push/pull with SSH: SSH keys configured in `~/.ssh/` directory
+- For push/pull with HTTPS: Git credential helper configured
+
+## Troubleshooting
+
+### Push/Pull Fails with Authentication Error
+
+**Error**: "Authentication failed. Check your SSH keys are added to ssh-agent."
+
+**Solutions**:
+1. Ensure your SSH key exists in `~/.ssh/` directory with matching `.pub` file
+2. For encrypted keys, add to ssh-agent: `ssh-add ~/.ssh/id_rsa`
+3. Test SSH connection: `ssh -T git@github.com`
+4. Verify remote URL uses SSH format: check with `git remote -v` in Terminal
+
+### Permission Denied (publickey)
+
+This means your SSH key is not authorized on the remote server:
+1. Add your public key to GitHub/GitLab/Bitbucket account settings
+2. Copy public key: `cat ~/.ssh/id_rsa.pub`
+3. Add to your account under Settings → SSH Keys
 
 ## Tips
 

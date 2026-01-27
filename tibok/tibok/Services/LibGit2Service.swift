@@ -785,6 +785,58 @@ class LibGit2Service: ObservableObject {
 
     // MARK: - Remote Operations
 
+    /// Helper function to create SSH credentials with fallback
+    /// Tries SSH agent first, then falls back to reading SSH keys from ~/.ssh directory
+    private static func createSSHCredentials(
+        out: UnsafeMutablePointer<OpaquePointer?>?,
+        username: UnsafePointer<CChar>?
+    ) -> Int32 {
+        // Try SSH agent first (current behavior)
+        let agentResult = git_credential_ssh_key_from_agent(out, username)
+        if agentResult == 0 {
+            return agentResult
+        }
+        
+        // SSH agent failed, try loading keys directly from ~/.ssh
+        let homeDir = FileManager.default.homeDirectoryForCurrentUser.path
+        let sshDir = "\(homeDir)/.ssh"
+        
+        // Common SSH key filenames in order of preference
+        let keyFiles = [
+            "id_ed25519",  // Ed25519 (modern, recommended)
+            "id_rsa",      // RSA (most common)
+            "id_ecdsa",    // ECDSA
+            "id_dsa"       // DSA (legacy)
+        ]
+        
+        for keyFile in keyFiles {
+            let privateKeyPath = "\(sshDir)/\(keyFile)"
+            let publicKeyPath = "\(sshDir)/\(keyFile).pub"
+            
+            // Check if both private and public key files exist
+            if FileManager.default.fileExists(atPath: privateKeyPath) &&
+               FileManager.default.fileExists(atPath: publicKeyPath) {
+                
+                // Try to create credential with this key pair
+                // Pass empty string for passphrase (will prompt if needed, or fail gracefully)
+                let result = git_credential_ssh_key_new(
+                    out,
+                    username,
+                    publicKeyPath,
+                    privateKeyPath,
+                    "" // Empty passphrase - libgit2 will handle encrypted keys
+                )
+                
+                if result == 0 {
+                    return result
+                }
+            }
+        }
+        
+        // All methods failed
+        return GIT_PASSTHROUGH.rawValue
+    }
+
     /// Push to remote
     func push(in repoURL: URL) -> (success: Bool, error: String?, alreadyUpToDate: Bool) {
         do {
@@ -820,9 +872,9 @@ class LibGit2Service: ObservableObject {
 
             // Set up credentials callback for SSH
             opts.callbacks.credentials = { (out, url, username_from_url, allowed_types, payload) -> Int32 in
-                // Try SSH agent first
+                // Try SSH authentication (agent first, then direct key files)
                 if allowed_types & GIT_CREDENTIAL_SSH_KEY.rawValue != 0 {
-                    return git_credential_ssh_key_from_agent(out, username_from_url)
+                    return LibGit2Service.createSSHCredentials(out: out, username: username_from_url)
                 }
                 return GIT_PASSTHROUGH.rawValue
             }
@@ -881,8 +933,9 @@ class LibGit2Service: ObservableObject {
 
             // Set up credentials callback
             opts.callbacks.credentials = { (out, url, username_from_url, allowed_types, payload) -> Int32 in
+                // Try SSH authentication (agent first, then direct key files)
                 if allowed_types & GIT_CREDENTIAL_SSH_KEY.rawValue != 0 {
-                    return git_credential_ssh_key_from_agent(out, username_from_url)
+                    return LibGit2Service.createSSHCredentials(out: out, username: username_from_url)
                 }
                 return GIT_PASSTHROUGH.rawValue
             }
