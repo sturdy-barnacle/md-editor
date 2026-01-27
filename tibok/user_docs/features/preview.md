@@ -2,6 +2,16 @@
 
 tibok provides a live preview pane that renders your markdown as you type.
 
+## File Type Support
+
+Preview is **only available for Markdown files** with the following extensions:
+- `.md`
+- `.markdown`
+- `.mdown`
+- `.mkd`
+
+When you open a non-markdown file (e.g., `.tsx`, `.txt`, `.js`), the preview pane will display a message indicating that preview is not available for that file type. You can toggle the preview pane off with `Cmd+\` to maximize your editor space.
+
 ## Showing/Hiding Preview
 
 - **Menu**: View > Toggle Preview
