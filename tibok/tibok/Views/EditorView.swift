@@ -663,7 +663,7 @@ struct FindableTextEditor: NSViewRepresentable {
             // Determine alpha based on appearance (dark mode needs higher opacity for visibility)
             let appearance = NSApp.effectiveAppearance
             let isDarkMode = appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-            let dimmedAlpha: CGFloat = isDarkMode ? 0.5 : 0.3
+            let dimmedAlpha: CGFloat = isDarkMode ? 0.65 : 0.3
 
             // Dim all text first
             let fullRange = NSRange(location: 0, length: textStorage.length)
