@@ -819,13 +819,17 @@ class LibGit2Service: ObservableObject {
                 
                 // Try to create credential with this key pair
                 // Pass empty string for passphrase (will prompt if needed, or fail gracefully)
-                let result = git_credential_ssh_key_new(
-                    out,
-                    username,
-                    publicKeyPath,
-                    privateKeyPath,
-                    "" // Empty passphrase - libgit2 will handle encrypted keys
-                )
+                let result = privateKeyPath.withCString { privateKey in
+                    publicKeyPath.withCString { publicKey in
+                        git_credential_ssh_key_new(
+                            out,
+                            username,
+                            publicKey,
+                            privateKey,
+                            "" // Empty passphrase - libgit2 will handle encrypted keys
+                        )
+                    }
+                }
                 
                 if result == 0 {
                     return result
