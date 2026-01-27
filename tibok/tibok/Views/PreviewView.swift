@@ -462,7 +462,7 @@ struct PreviewUnsupportedView: View {
                     .padding(.top, 4)
             }
             
-            Text("⌘\\ to hide preview")
+            Text("⌘\\ to toggle preview")
                 .font(.system(size: 11))
                 .foregroundColor(.secondary.opacity(0.5))
                 .padding(.top, 4)

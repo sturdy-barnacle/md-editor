@@ -102,4 +102,16 @@ struct DocumentTests {
         #expect(upperDoc.isPreviewSupported == true)
         #expect(mixedDoc.isPreviewSupported == true)
     }
+    
+    @Test("Preview is not supported for files without extensions")
+    func previewIsNotSupportedForFilesWithoutExtensions() {
+        let readmeURL = URL(fileURLWithPath: "/path/to/README")
+        let licenseURL = URL(fileURLWithPath: "/path/to/LICENSE")
+        
+        let readmeDoc = Document(fileURL: readmeURL)
+        let licenseDoc = Document(fileURL: licenseURL)
+        
+        #expect(readmeDoc.isPreviewSupported == false)
+        #expect(licenseDoc.isPreviewSupported == false)
+    }
 }
