@@ -73,4 +73,18 @@ struct Document: Identifiable, Equatable {
     var lineCount: Int {
         content.components(separatedBy: .newlines).count
     }
+    
+    /// Whether the document can be previewed as markdown
+    /// Only markdown files and untitled documents can be previewed
+    var isPreviewSupported: Bool {
+        // If no file URL, it's a new untitled document - support preview
+        guard let fileURL = fileURL else {
+            return true
+        }
+        
+        // Check file extension
+        let ext = fileURL.pathExtension.lowercased()
+        let supportedExtensions = ["md", "markdown", "mdown", "mkd"]
+        return supportedExtensions.contains(ext)
+    }
 }

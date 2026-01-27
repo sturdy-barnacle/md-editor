@@ -100,6 +100,9 @@ struct PreviewView: View {
             if appState.currentDocument.isEmpty {
                 // Empty state
                 PreviewEmptyStateView()
+            } else if !appState.currentDocument.isPreviewSupported {
+                // Unsupported file type
+                PreviewUnsupportedView(fileExtension: appState.currentDocument.fileURL?.pathExtension ?? "")
             } else {
                 // Preview content using WKWebView
                 MarkdownWebView(html: renderedHTML, baseURL: resourceBaseURL)
@@ -424,6 +427,46 @@ struct PreviewEmptyStateView: View {
                 .foregroundColor(.secondary.opacity(0.5))
                 .padding(.top, 4)
 
+            Spacer()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+// MARK: - Preview Unsupported State
+
+struct PreviewUnsupportedView: View {
+    let fileExtension: String
+    
+    var body: some View {
+        VStack(spacing: 16) {
+            Spacer()
+            
+            Image(systemName: "doc.text")
+                .font(.system(size: 40))
+                .foregroundColor(.secondary.opacity(0.4))
+            
+            Text("Preview Not Available")
+                .font(.headline)
+                .foregroundColor(.secondary)
+            
+            Text("Preview is only available for Markdown files")
+                .font(.subheadline)
+                .foregroundColor(.secondary.opacity(0.7))
+                .multilineTextAlignment(.center)
+            
+            if !fileExtension.isEmpty {
+                Text("Current file type: .\(fileExtension)")
+                    .font(.system(size: 11))
+                    .foregroundColor(.secondary.opacity(0.5))
+                    .padding(.top, 4)
+            }
+            
+            Text("⌘\\ to hide preview")
+                .font(.system(size: 11))
+                .foregroundColor(.secondary.opacity(0.5))
+                .padding(.top, 4)
+            
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
