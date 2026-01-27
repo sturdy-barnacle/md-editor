@@ -92,6 +92,9 @@ Use View > Toggle Preview or press Cmd+\.
 ### Does the preview update in real-time?
 Yes, the preview updates as you type.
 
+### Why does the preview show "Preview Not Available"?
+Preview is only available for Markdown files (`.md`, `.markdown`, `.mdown`, `.mkd`). When you open other file types (like `.tsx`, `.txt`, `.js`), the preview pane will display a message indicating that preview is not supported for that file type. You can hide the preview with Cmd+\ to maximize your editor space.
+
 ### How do I create nested lists?
 Use 2-space indentation per nesting level:
 ```markdown
