@@ -180,8 +180,8 @@ tibok uses libgit2 for native Git operations. This means:
 
 For SSH remotes (git@github.com:user/repo.git), tibok supports multiple authentication methods:
 
-1. **SSH Agent** - First tries to use keys from ssh-agent
-2. **Direct Keys** - Falls back to reading keys from `~/.ssh/` directory
+1. **SSH Agent** - First tries to use keys from ssh-agent (supports encrypted keys)
+2. **Direct Keys** - Falls back to reading unencrypted keys from `~/.ssh/` directory
 
 Supported key types (in order of preference):
 - `~/.ssh/id_ed25519` (Ed25519 - recommended)
@@ -189,10 +189,10 @@ Supported key types (in order of preference):
 - `~/.ssh/id_ecdsa` (ECDSA)
 - `~/.ssh/id_dsa` (DSA - legacy)
 
-**Note**: If your SSH key has a passphrase, you may need to add it to ssh-agent first:
-```bash
-ssh-add ~/.ssh/id_rsa
-```
+**Important**: 
+- **Passphrase-protected keys MUST be added to ssh-agent** for authentication to work
+- Unencrypted keys (no passphrase) work automatically if present in `~/.ssh/`
+- To add an encrypted key to ssh-agent: `ssh-add ~/.ssh/id_rsa`
 
 If `git push` works in Terminal, it will work in tibok.
 
@@ -206,13 +206,16 @@ If `git push` works in Terminal, it will work in tibok.
 
 ### Push/Pull Fails with Authentication Error
 
-**Error**: "Authentication failed. Check your SSH keys are added to ssh-agent."
+**Error**: "Authentication failed. Ensure SSH keys exist in ~/.ssh/ directory (without passphrase) or are added to ssh-agent."
 
 **Solutions**:
-1. Ensure your SSH key exists in `~/.ssh/` directory with matching `.pub` file
-2. For encrypted keys, add to ssh-agent: `ssh-add ~/.ssh/id_rsa`
-3. Test SSH connection: `ssh -T git@github.com`
-4. Verify remote URL uses SSH format: check with `git remote -v` in Terminal
+1. **For unencrypted keys**: Ensure your SSH key exists in `~/.ssh/` directory with matching `.pub` file
+2. **For passphrase-protected keys**: Add to ssh-agent with `ssh-add ~/.ssh/id_rsa`
+3. **Test SSH connection**: `ssh -T git@github.com` (should authenticate successfully)
+4. **Verify remote URL**: Check it uses SSH format with `git remote -v` in Terminal
+5. **Check key permissions**: Private keys should have 600 permissions (`chmod 600 ~/.ssh/id_rsa`)
+
+**Note**: Direct key loading (method 2) only works with unencrypted SSH keys. If your key has a passphrase, you must use ssh-agent (method 1).
 
 ### Permission Denied (publickey)
 

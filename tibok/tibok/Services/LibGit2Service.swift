@@ -38,12 +38,12 @@ struct LibGit2Error: Error, LocalizedError {
 
         // Authentication errors
         if lowercased.contains("authentication") || lowercased.contains("credentials") {
-            return "Authentication failed. Check your SSH keys are added to ssh-agent."
+            return "Authentication failed. Ensure SSH keys exist in ~/.ssh/ directory (without passphrase) or are added to ssh-agent."
         }
 
         // Permission errors
         if lowercased.contains("permission denied") || lowercased.contains("publickey") {
-            return "Permission denied. Ensure your SSH key is configured correctly."
+            return "Permission denied. Ensure your SSH key is configured correctly and added to your Git hosting service."
         }
 
         // Network errors
@@ -787,6 +787,7 @@ class LibGit2Service: ObservableObject {
 
     /// Helper function to create SSH credentials with fallback
     /// Tries SSH agent first, then falls back to reading SSH keys from ~/.ssh directory
+    /// Note: Direct key loading only works with unencrypted SSH keys
     private static func createSSHCredentials(
         out: UnsafeMutablePointer<OpaquePointer?>?,
         username: UnsafePointer<CChar>?
@@ -794,8 +795,15 @@ class LibGit2Service: ObservableObject {
         // Try SSH agent first (current behavior)
         let agentResult = git_credential_ssh_key_from_agent(out, username)
         if agentResult == 0 {
+            #if DEBUG
+            print("[LibGit2] SSH authentication: using key from ssh-agent")
+            #endif
             return agentResult
         }
+        
+        #if DEBUG
+        print("[LibGit2] SSH agent auth failed, trying direct key files from ~/.ssh")
+        #endif
         
         // SSH agent failed, try loading keys directly from ~/.ssh
         let homeDir = FileManager.default.homeDirectoryForCurrentUser.path
@@ -817,8 +825,13 @@ class LibGit2Service: ObservableObject {
             if FileManager.default.fileExists(atPath: privateKeyPath) &&
                FileManager.default.fileExists(atPath: publicKeyPath) {
                 
+                #if DEBUG
+                print("[LibGit2] Found SSH key pair: \(keyFile)")
+                #endif
+                
                 // Try to create credential with this key pair
-                // Pass empty string for passphrase (will prompt if needed, or fail gracefully)
+                // Note: Empty passphrase only works with unencrypted keys
+                // Passphrase-protected keys must be added to ssh-agent
                 let result = privateKeyPath.withCString { privateKey in
                     publicKeyPath.withCString { publicKey in
                         git_credential_ssh_key_new(
@@ -826,16 +839,27 @@ class LibGit2Service: ObservableObject {
                             username,
                             publicKey,
                             privateKey,
-                            "" // Empty passphrase - libgit2 will handle encrypted keys
+                            "" // Empty passphrase - only works for unencrypted keys
                         )
                     }
                 }
                 
                 if result == 0 {
+                    #if DEBUG
+                    print("[LibGit2] Successfully authenticated with \(keyFile)")
+                    #endif
                     return result
+                } else {
+                    #if DEBUG
+                    print("[LibGit2] Failed to authenticate with \(keyFile) (may be encrypted)")
+                    #endif
                 }
             }
         }
+        
+        #if DEBUG
+        print("[LibGit2] All SSH authentication methods failed")
+        #endif
         
         // All methods failed
         return GIT_PASSTHROUGH.rawValue
